@@ -1,0 +1,29 @@
+@import "tailwindcss";
+
+:root {
+  --color-brand-blue: #004aad;
+  --color-brand-black: #000000;
+  --color-brand-slate: #0f172a;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  font-family: "Inter", "Roboto", "Helvetica", "Arial", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #fbfbfb;
+  overflow-x: hidden;
+  width: 100%;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+}
