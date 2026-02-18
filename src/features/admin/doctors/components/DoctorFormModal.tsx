@@ -1,6 +1,8 @@
 import React from 'react';
-import { Modal, Form, Input, Select } from 'antd';
+import { Form, Input, Select } from 'antd';
 import type { Doctor } from '../types/doctor.types';
+import SharedModal from '@/shared/components/SharedModal';
+import { ACCOUNT_STATUSES } from '@/shared/constants/app.constants';
 
 const { Option } = Select;
 
@@ -20,7 +22,7 @@ const DoctorFormModal: React.FC<DoctorFormModalProps> = ({
     onCancel,
 }) => {
     return (
-        <Modal
+        <SharedModal
             title={editingDoctor ? "Edit Doctor" : "Onboard New Doctor"}
             open={visible}
             onOk={onOk}
@@ -57,8 +59,9 @@ const DoctorFormModal: React.FC<DoctorFormModalProps> = ({
                         style={{ flex: 1 }}
                     >
                         <Select>
-                            <Option value="active">Active</Option>
-                            <Option value="inactive">Inactive</Option>
+                            {ACCOUNT_STATUSES.map(as => (
+                                <Option key={as.value} value={as.value}>{as.label}</Option>
+                            ))}
                         </Select>
                     </Form.Item>
                 </div>
@@ -96,7 +99,7 @@ const DoctorFormModal: React.FC<DoctorFormModalProps> = ({
                     </Form.Item>
                 )}
             </Form>
-        </Modal>
+        </SharedModal>
     );
 };
 

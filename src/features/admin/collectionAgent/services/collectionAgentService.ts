@@ -8,7 +8,13 @@ export interface CollectionAgent {
     status: string;
     vehicle_type?: string;
     vehicle_no?: string;
+    address?: string;
+    latitude?: number;
+    longitude?: number;
     user_id?: number;
+    _count?: {
+        lab_orders: number;
+    };
     createdAt: string;
 }
 
@@ -20,6 +26,7 @@ export interface CollectionAgentFormData {
     status?: string;
     vehicle_type?: string;
     vehicle_no?: string;
+    address?: string;
 }
 
 export const collectionAgentService = {

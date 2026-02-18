@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Drawer, Descriptions, Tag, Divider, Typography, Space, List, Badge, Empty, Card, Select } from 'antd';
+import { Drawer, Descriptions, Tag, Divider, Typography, Space, List, Badge, Empty, Card, Select, Modal, Button } from 'antd';
 import {
     UserOutlined,
     EnvironmentOutlined,
@@ -13,9 +13,23 @@ import {
     UserAddOutlined
 } from '@ant-design/icons';
 import type { LabOrder } from '../types/labOrder.types';
-import { ORDER_STATUSES, PRIORITIES } from '@/shared/constants/labOrder.constants';
+import { ORDER_STATUSES, PRIORITIES } from '@/shared/constants/app.constants';
 import { collectionAgentService, type CollectionAgent } from '@/features/admin/collectionAgent/services/collectionAgentService';
 import dayjs from 'dayjs';
+import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from '@react-google-maps/api';
+
+const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
+
+const mapContainerStyle = {
+    width: '100%',
+    height: '350px',
+    borderRadius: '12px'
+};
+
+const center = {
+    lat: 26.4499, // default Kanpur
+    lng: 80.3319
+};
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -30,6 +44,12 @@ interface LabOrderDetailDrawerProps {
 const LabOrderDetailDrawer: React.FC<LabOrderDetailDrawerProps> = ({ visible, order, onClose, onAssignAgent }) => {
     const [agents, setAgents] = useState<CollectionAgent[]>([]);
     const [assigning, setAssigning] = useState(false);
+    const [selectedMapAgent, setSelectedMapAgent] = useState<CollectionAgent | null>(null);
+
+    const { isLoaded } = useJsApiLoader({
+        id: 'google-map-script',
+        googleMapsApiKey: GOOGLE_MAPS_API_KEY
+    });
 
     useEffect(() => {
         if (visible) {
@@ -46,14 +66,30 @@ const LabOrderDetailDrawer: React.FC<LabOrderDetailDrawerProps> = ({ visible, or
         }
     };
 
-    const handleAssign = async (agentId: number | null) => {
+    const handleAssign = (agentId: number | null) => {
         if (!order || !onAssignAgent) return;
-        try {
-            setAssigning(true);
-            await onAssignAgent(order.id, agentId);
-        } finally {
-            setAssigning(false);
-        }
+
+        const agentName = agentId
+            ? agents.find(a => a.id === agentId)?.name
+            : 'None';
+
+        Modal.confirm({
+            title: agentId ? 'Assign Collection Agent' : 'Unassign Agent',
+            content: agentId
+                ? `Are you sure you want to assign "${agentName}" for sample pickup for order ${order.order_code}?`
+                : `Are you sure you want to remove the assigned agent from order ${order.order_code}?`,
+            okText: 'Confirm Assignment',
+            cancelText: 'Cancel',
+            centered: true,
+            onOk: async () => {
+                try {
+                    setAssigning(true);
+                    await onAssignAgent(order.id, agentId);
+                } finally {
+                    setAssigning(false);
+                }
+            }
+        });
     };
 
     if (!order) return null;
@@ -135,6 +171,11 @@ const LabOrderDetailDrawer: React.FC<LabOrderDetailDrawerProps> = ({ visible, or
                         <Tag color={getStatusColor(order.status)} style={{ margin: 0, borderRadius: '12px' }}>
                             {getStatusLabel(order.status).toUpperCase()}
                         </Tag>
+                        {order.assignment_status && order.assignment_status !== 'not_assigned' && (
+                            <Tag color="cyan" style={{ margin: 0, borderRadius: '12px' }}>
+                                AGENT: {order.assignment_status.toUpperCase()}
+                            </Tag>
+                        )}
                         {getPriorityTag(order.priority)}
                     </Space>
                 </div>
@@ -246,7 +287,7 @@ const LabOrderDetailDrawer: React.FC<LabOrderDetailDrawerProps> = ({ visible, or
                             <Descriptions.Item label="Paid">
                                 <Text>₹{order.paid_amount || 0}</Text>
                             </Descriptions.Item>
-                            <Descriptions.Item label="Balance">
+                            <Descriptions.Item label="Remaining Amount">
                                 <Text type="danger" strong>₹{Number(order.total_amount) - Number(order.paid_amount || 0)}</Text>
                             </Descriptions.Item>
                         </Descriptions>
@@ -262,6 +303,88 @@ const LabOrderDetailDrawer: React.FC<LabOrderDetailDrawerProps> = ({ visible, or
                         </div>
                     </div>
                 )}
+
+                <Divider style={{ margin: '12px 0' }} />
+
+                {/* Map Section */}
+                <div>
+                    <Title level={5}><EnvironmentOutlined /> Pickup & Agent Locations</Title>
+                    <div style={{ position: 'relative', width: '100%', height: '350px', marginBottom: '24px' }}>
+                        {isLoaded ? (
+                            <GoogleMap
+                                mapContainerStyle={mapContainerStyle}
+                                center={order.latitude && order.longitude ? { lat: order.latitude, lng: order.longitude } : center}
+                                zoom={13}
+                            >
+                                {/* Pickup Location Marker */}
+                                {order.latitude && order.longitude && (
+                                    <Marker
+                                        position={{ lat: order.latitude, lng: order.longitude }}
+                                        icon={{
+                                            url: 'http://maps.google.com/mapfiles/ms/icons/red-pushpin.png'
+                                        }}
+                                        label="PICKUP"
+                                    />
+                                )}
+
+                                {/* Agent Markers */}
+                                {agents.map(agent => (
+                                    agent.latitude && agent.longitude && (
+                                        <Marker
+                                            key={agent.id}
+                                            position={{ lat: agent.latitude, lng: agent.longitude }}
+                                            onClick={() => setSelectedMapAgent(agent)}
+                                            icon={{
+                                                url: (agent._count?.lab_orders || 0) > 0
+                                                    ? 'http://maps.google.com/mapfiles/ms/icons/yellow-dot.png'
+                                                    : 'http://maps.google.com/mapfiles/ms/icons/green-dot.png'
+                                            }}
+                                        />
+                                    )
+                                ))}
+
+                                {selectedMapAgent && (
+                                    <InfoWindow
+                                        position={{ lat: selectedMapAgent.latitude!, lng: selectedMapAgent.longitude! }}
+                                        onCloseClick={() => setSelectedMapAgent(null)}
+                                    >
+                                        <div style={{ padding: '8px' }}>
+                                            <Text strong>{selectedMapAgent.name}</Text>
+                                            <br />
+                                            <Text type="secondary">{selectedMapAgent.phone}</Text>
+                                            <br />
+                                            <Badge
+                                                status={(selectedMapAgent._count?.lab_orders || 0) > 0 ? 'warning' : 'success'}
+                                                text={(selectedMapAgent._count?.lab_orders || 0) > 0 ? 'Occupied' : 'Available'}
+                                            />
+                                            <div style={{ marginTop: '8px' }}>
+                                                <Button
+                                                    size="small"
+                                                    type="primary"
+                                                    onClick={() => {
+                                                        handleAssign(selectedMapAgent.id);
+                                                        setSelectedMapAgent(null);
+                                                    }}
+                                                >
+                                                    Assign Here
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </InfoWindow>
+                                )}
+                            </GoogleMap>
+                        ) : (
+                            <div style={{ height: '350px', background: '#f5f5f5', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <Text type="secondary">Loading Map...</Text>
+                            </div>
+                        )}
+                        {!order.latitude && (
+                            <div style={{ marginTop: '8px' }}>
+                                <Badge status="warning" text="Exact pickup coordinates not available for this order." />
+                            </div>
+                        )}
+                    </div>
+                </div>
 
                 <Divider style={{ margin: '12px 0' }} />
 
@@ -284,7 +407,15 @@ const LabOrderDetailDrawer: React.FC<LabOrderDetailDrawerProps> = ({ visible, or
                                         <br />
                                         <Text type="secondary"><PhoneOutlined /> {order.collection_agent.phone}</Text>
                                     </div>
-                                    <Tag color="success">ASSIGNED</Tag>
+                                    <Space direction="vertical" size={0}>
+                                        <Tag color={
+                                            order.assignment_status === 'pending' ? 'gold' :
+                                                order.assignment_status === 'accepted' ? 'cyan' :
+                                                    order.assignment_status === 'collected' ? 'success' : 'processing'
+                                        }>
+                                            {order.assignment_status?.toUpperCase() || 'ASSIGNED'}
+                                        </Tag>
+                                    </Space>
                                 </div>
                             ) : (
                                 <Text type="warning" strong>No agent assigned for sample pickup</Text>
@@ -302,11 +433,22 @@ const LabOrderDetailDrawer: React.FC<LabOrderDetailDrawerProps> = ({ visible, or
                                     onChange={handleAssign}
                                     allowClear
                                 >
-                                    {agents.map(agent => (
-                                        <Option key={agent.id} value={agent.id}>
-                                            {agent.name} ({agent.phone})
-                                        </Option>
-                                    ))}
+                                    {agents.map(agent => {
+                                        const activeOrders = agent._count?.lab_orders || 0;
+                                        const isOccupied = activeOrders > 0;
+                                        return (
+                                            <Option key={agent.id} value={agent.id}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                    <span>{agent.name} <Text type="secondary" style={{ fontSize: '12px' }}>({agent.phone})</Text></span>
+                                                    <Badge
+                                                        status={isOccupied ? 'warning' : 'success'}
+                                                        text={isOccupied ? `${activeOrders} Active` : 'Free'}
+                                                        style={{ fontSize: '11px' }}
+                                                    />
+                                                </div>
+                                            </Option>
+                                        );
+                                    })}
                                 </Select>
                             </div>
                         </Space>

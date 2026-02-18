@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Card, Button, Form, Typography, Space, Badge } from 'antd';
 import { PlusOutlined, ExperimentOutlined } from '@ant-design/icons';
+import { useSearchParams } from 'react-router-dom';
 import { useLabOrders } from '../hooks/useLabOrders';
 import { LabOrderTable, LabOrderFilters, LabOrderFormModal, LabOrderDetailDrawer } from '../components';
 import type { LabOrder } from '../types/labOrder.types';
@@ -8,6 +9,9 @@ import type { LabOrder } from '../types/labOrder.types';
 const { Title } = Typography;
 
 const LabOrderManager: React.FC = () => {
+    const [searchParams] = useSearchParams();
+    const statusParam = searchParams.get('status');
+
     const {
         orders,
         loading,
@@ -30,6 +34,15 @@ const LabOrderManager: React.FC = () => {
     const [form] = Form.useForm();
 
     const selectedOrder = orders.find(o => o.id === selectedOrderId) || null;
+
+    // Sync URL status param with filters
+    React.useEffect(() => {
+        if (statusParam) {
+            setFilters(prev => ({ ...prev, status: statusParam, page: 1 }));
+        } else {
+            setFilters(prev => ({ ...prev, status: undefined, page: 1 }));
+        }
+    }, [statusParam, setFilters]);
 
     const handleSearch = (value: string) => {
         setFilters((prev) => ({ ...prev, search: value, page: 1 }));

@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, Row, Col, Input, Select, DatePicker } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import type { LabOrderQueryParams } from '../types/labOrder.types';
-import { ORDER_STATUSES, PRIORITIES, SORT_OPTIONS } from '@/shared/constants/labOrder.constants';
+import { ORDER_STATUSES, SORT_OPTIONS, PRIORITIES } from '@/shared/constants/app.constants';
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;

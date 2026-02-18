@@ -12,7 +12,7 @@ import {
 } from '@ant-design/icons';
 import InfiniteScrollTable from '@/shared/components/InfiniteScrollTable';
 import type { LabOrder } from '../types/labOrder.types';
-import { ORDER_STATUSES, PRIORITIES } from '@/shared/constants/labOrder.constants';
+import { ORDER_STATUSES, PRIORITIES } from '@/shared/constants/app.constants';
 import dayjs from 'dayjs';
 
 const { Text } = Typography;

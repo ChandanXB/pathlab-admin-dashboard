@@ -1,30 +1,103 @@
-import React from 'react';
-import { Typography, Card, Row, Col, Statistic, List, Tag, Badge, Space, Button } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Typography, Card, Row, Col, Statistic, List, Tag, Badge, Space, Button, message } from 'antd';
 import {
     ExperimentOutlined,
     CheckCircleOutlined,
     ClockCircleOutlined,
-    CarOutlined
+    CarOutlined,
+    EnvironmentOutlined
 } from '@ant-design/icons';
+import apiClient from '@/config/apiClient';
 import { useAuthStore } from '@/store/authStore';
 
 const { Title, Text } = Typography;
 
 const AgentDashboard: React.FC = () => {
     const { user } = useAuthStore();
+    const [loading, setLoading] = useState(false);
+    const [stats, setStats] = useState({
+        pendingPickups: 0,
+        completedToday: 0,
+        totalPickups: 0
+    });
+    const [assignedTasks, setAssignedTasks] = useState<any[]>([]);
 
-    // Mock data for now
-    const stats = {
-        pendingPickups: 3,
-        completedToday: 5,
-        totalPickups: 125,
+    useEffect(() => {
+        if (user?.agentId) {
+            fetchDashboardData();
+            startLocationTracking();
+        }
+    }, [user?.agentId]);
+
+    const fetchDashboardData = async () => {
+        if (!user?.agentId) return;
+        setLoading(true);
+        try {
+            const [ordersRes] = await Promise.all([
+                apiClient.get(`/lab-orders?agent_id=${user.agentId}`)
+            ]);
+
+            const orders = ordersRes.data.data;
+            setAssignedTasks(orders.filter((o: any) => o.status !== 'completed' && o.status !== 'cancelled'));
+
+            // Set stats based on real data
+            setStats({
+                pendingPickups: orders.filter((o: any) => o.assignment_status === 'pending').length,
+                completedToday: orders.filter((o: any) => o.status === 'collected').length,
+                totalPickups: orders.length
+            });
+        } catch (error) {
+            console.error('Failed to fetch dashboard data', error);
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const recentTasks = [
-        { id: 1, orderCode: 'ORD-12345', patient: 'John Doe', address: '123 Street, City', status: 'pending', priority: 'urgent' },
-        { id: 2, orderCode: 'ORD-12346', patient: 'Jane Smith', address: '456 Avenue, City', status: 'pending', priority: 'normal' },
-        { id: 3, orderCode: 'ORD-12347', patient: 'Bob Wilson', address: '789 Road, City', status: 'collected', priority: 'normal' },
-    ];
+    const startLocationTracking = () => {
+        if (!navigator.geolocation) return;
+
+        const updateLocation = () => {
+            navigator.geolocation.getCurrentPosition(
+                async (position) => {
+                    const { latitude, longitude } = position.coords;
+                    try {
+                        await apiClient.put(`/collection-agents/${user?.agentId}/location`, { latitude, longitude });
+                        console.log('Location updated');
+                    } catch (e) {
+                        console.error('Failed to update agent location', e);
+                    }
+                },
+                (err) => console.error('Geolocation error', err),
+                { enableHighAccuracy: true }
+            );
+        };
+
+        // Update every 1 minute
+        updateLocation();
+        const interval = setInterval(updateLocation, 60000);
+        return () => clearInterval(interval);
+    };
+
+    const handleAcceptAssignment = async (id: number) => {
+        try {
+            await apiClient.put(`/lab-orders/${id}/assignment-status`, { assignment_status: 'accepted' });
+            message.success('Pickup accepted!');
+            fetchDashboardData();
+        } catch (error) {
+            message.error('Failed to accept assignment');
+        }
+    };
+
+    const handleMarkCollected = async (id: number) => {
+        try {
+            await apiClient.put(`/lab-orders/${id}`, { status: 'collected' });
+            await apiClient.put(`/lab-orders/${id}/assignment-status`, { assignment_status: 'collected' });
+            message.success('Sample marked as collected');
+            fetchDashboardData();
+        } catch (error) {
+            message.error('Failed to update status');
+        }
+    };
 
     return (
         <div style={{ padding: '4px' }}>
@@ -64,34 +137,47 @@ const AgentDashboard: React.FC = () => {
             </Row>
 
             <Card
-                title={<Space><ExperimentOutlined /> <Text strong>Today's Assigned Pickups</Text></Space>}
+                title={<Space><ExperimentOutlined /> <Text strong>Active Assignments</Text></Space>}
                 style={{ marginTop: 24, borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}
-                extra={<Button type="link">View All</Button>}
+                loading={loading}
+                extra={<Button type="link" href="/agent/pickups">View History</Button>}
             >
                 <List
                     itemLayout="horizontal"
-                    dataSource={recentTasks}
+                    dataSource={assignedTasks}
+                    locale={{ emptyText: 'No assigned tasks for today.' }}
                     renderItem={(item) => (
                         <List.Item
                             actions={[
-                                <Button type="primary" size="small" disabled={item.status === 'collected'}>
-                                    {item.status === 'pending' ? 'Mark Collected' : 'Collected'}
-                                </Button>
+                                item.assignment_status === 'pending' ? (
+                                    <Button type="primary" size="small" onClick={() => handleAcceptAssignment(item.id)} style={{ background: '#52c41a', borderColor: '#52c41a' }}>
+                                        Accept Pickup
+                                    </Button>
+                                ) : (
+                                    <Button type="primary" size="small" disabled={item.status === 'collected'} onClick={() => handleMarkCollected(item.id)}>
+                                        {item.status === 'collected' ? 'Collected' : 'Mark Collected'}
+                                    </Button>
+                                )
                             ]}
                         >
                             <List.Item.Meta
                                 title={
                                     <Space>
-                                        <Text strong>{item.orderCode}</Text>
+                                        <Text strong>{item.order_code}</Text>
                                         {item.priority === 'urgent' && <Tag color="error">URGENT</Tag>}
-                                        <Badge status={item.status === 'pending' ? 'processing' : 'success'} text={item.status.toUpperCase()} />
+                                        <Tag color={
+                                            item.assignment_status === 'pending' ? 'gold' :
+                                                item.assignment_status === 'accepted' ? 'processing' : 'success'
+                                        }>
+                                            {item.assignment_status?.toUpperCase() || 'ASSIGNED'}
+                                        </Tag>
                                     </Space>
                                 }
                                 description={
                                     <div>
-                                        <Text strong>{item.patient}</Text>
+                                        <Text strong>{item.patient?.full_name}</Text>
                                         <br />
-                                        <Text type="secondary">{item.address}</Text>
+                                        <Text type="secondary"><EnvironmentOutlined /> {item.address}</Text>
                                     </div>
                                 }
                             />

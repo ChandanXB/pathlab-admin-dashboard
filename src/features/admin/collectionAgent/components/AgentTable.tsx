@@ -36,6 +36,24 @@ const AgentTable: React.FC<AgentTableProps> = ({ agents, loading, onEdit, onDele
             ),
         },
         {
+            title: 'Address',
+            dataIndex: 'address',
+            key: 'address',
+            ellipsis: true,
+        },
+        {
+            title: 'Availability',
+            key: 'availability',
+            render: (_: any, record: CollectionAgent) => {
+                const activeOrders = record._count?.lab_orders || 0;
+                return (
+                    <Tag color={activeOrders > 0 ? 'warning' : 'success'}>
+                        {activeOrders > 0 ? `Occupied (${activeOrders})` : 'FREE'}
+                    </Tag>
+                );
+            }
+        },
+        {
             title: 'Status',
             dataIndex: 'status',
             key: 'status',

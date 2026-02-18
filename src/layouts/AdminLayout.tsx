@@ -13,6 +13,8 @@ import {
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import colors from '@/styles/colors';
 import { useAuthStore } from '@/store/authStore';
+import { ORDER_STATUSES } from '@/shared/constants/app.constants';
+import { labOrderService } from '@/features/admin/labOrder/services/labOrderService';
 
 const { Header, Content, Sider } = Layout;
 const { Text } = Typography;
@@ -25,11 +27,27 @@ const AdminLayout: React.FC = () => {
     const { token: themeToken } = theme.useToken();
     const { user, logout } = useAuthStore();
 
+    const [orderStats, setOrderStats] = useState<any>(null);
+
     useEffect(() => {
         const handleResize = () => setScreenSize(window.innerWidth);
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
     }, []);
+
+    useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                const response = await labOrderService.getOrderStats();
+                if (response.success) {
+                    setOrderStats(response.data);
+                }
+            } catch (error) {
+                console.error('Failed to fetch order stats', error);
+            }
+        };
+        fetchStats();
+    }, [location.pathname]);
 
     const handleLogout = () => {
         logout();
@@ -40,7 +58,61 @@ const AdminLayout: React.FC = () => {
         { key: '/', icon: <DashboardOutlined />, label: 'Dashboard' },
         { key: '/patients', icon: <UserOutlined />, label: 'Patients' },
         { key: '/doctors', icon: <UserOutlined />, label: 'Doctors' },
-        { key: '/lab-orders', icon: <ExperimentOutlined />, label: 'Lab Orders' },
+        {
+            key: '/lab-orders-parent',
+            icon: <ExperimentOutlined />,
+            label: 'Lab Orders',
+            children: [
+                {
+                    key: '/lab-orders',
+                    label: (
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', paddingRight: '12px' }}>
+                            <span style={{ fontSize: '13px', opacity: 0.85 }}>All Orders</span>
+                            {orderStats?.totalOrders > 0 && (
+                                <div style={{
+                                    fontSize: '11px',
+                                    fontWeight: '700',
+                                    color: '#1890ff',
+                                    background: 'rgba(24, 144, 255, 0.15)',
+                                    padding: '0 7px',
+                                    height: '20px',
+                                    borderRadius: '10px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    boxShadow: '0 0 10px rgba(24, 144, 255, 0.1)'
+                                }}>
+                                    {orderStats.totalOrders}
+                                </div>
+                            )}
+                        </div>
+                    )
+                },
+                ...ORDER_STATUSES.map((status: any) => ({
+                    key: `/lab-orders?status=${status.value}`,
+                    label: (
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', paddingRight: '12px' }}>
+                            <span style={{ fontSize: '13px', opacity: 0.85 }}>{status.label}</span>
+                            {orderStats?.statusCounts?.[status.value] > 0 && (
+                                <div style={{
+                                    fontSize: '11px',
+                                    fontWeight: '700',
+                                    color: status.color,
+                                    background: `${status.color}15`, // Translucent background
+                                    padding: '0 7px',
+                                    height: '20px',
+                                    borderRadius: '10px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    boxShadow: `0 0 10px ${status.color}20` // Subtle glow matching image 4
+                                }}>
+                                    {orderStats.statusCounts[status.value]}
+                                </div>
+                            )}
+                        </div>
+                    ),
+                }))
+            ]
+        },
         { key: '/collection-agents', icon: <UserOutlined />, label: 'Collection Agents' },
         { key: '/tests-packages', icon: <ExperimentOutlined />, label: 'Tests & Packages' },
     ];
@@ -58,7 +130,7 @@ const AdminLayout: React.FC = () => {
         ],
     };
 
-    const currentPath = location.pathname === '/' ? '/' : location.pathname;
+    const currentPath = location.pathname + location.search;
 
     return (
         <Layout style={{ minHeight: '100vh', background: colors.background }}>
