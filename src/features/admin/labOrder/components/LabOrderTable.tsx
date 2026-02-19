@@ -8,7 +8,8 @@ import {
     DownOutlined,
     BarcodeOutlined,
     ExperimentOutlined,
-    ClockCircleOutlined
+    ClockCircleOutlined,
+    SmileOutlined
 } from '@ant-design/icons';
 import InfiniteScrollTable from '@/shared/components/InfiniteScrollTable';
 import type { LabOrder } from '../types/labOrder.types';
@@ -25,6 +26,7 @@ interface LabOrderTableProps {
     onEdit: (record: LabOrder) => void;
     onDelete: (id: number) => void;
     onStatusUpdate: (id: number, status: string) => void;
+    onAssign: (record: LabOrder) => void;
     onLoadMore: () => void;
     onRowClick: (record: LabOrder) => void;
     scroll?: { x?: number | string; y?: number | string };
@@ -38,6 +40,7 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
     onEdit,
     onDelete,
     onStatusUpdate,
+    onAssign,
     onLoadMore,
     onRowClick,
     scroll,
@@ -146,7 +149,7 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
             title: 'Status',
             dataIndex: 'status',
             key: 'status',
-            width: 140,
+            width: 120,
             render: (status: string, record: LabOrder) => (
                 <Dropdown menu={getStatusMenu(record)} trigger={['click']}>
                     <Tag
@@ -165,6 +168,14 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
             fixed: 'right' as const,
             render: (_: any, record: LabOrder) => (
                 <Space size="small">
+                    <Tooltip title="Assign Agent">
+                        <Button
+                            type="text"
+                            icon={<SmileOutlined style={{ color: record.collection_agent ? '#52c41a' : '#faad14' }} />}
+                            onClick={() => onAssign(record)}
+                            size="small"
+                        />
+                    </Tooltip>
                     <Tooltip title="Edit Order">
                         <Button
                             type="text"

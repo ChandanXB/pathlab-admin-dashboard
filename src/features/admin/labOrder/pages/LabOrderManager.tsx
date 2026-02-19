@@ -3,7 +3,7 @@ import { Card, Button, Form, Typography, Space, Badge } from 'antd';
 import { PlusOutlined, ExperimentOutlined } from '@ant-design/icons';
 import { useSearchParams } from 'react-router-dom';
 import { useLabOrders } from '../hooks/useLabOrders';
-import { LabOrderTable, LabOrderFilters, LabOrderFormModal, LabOrderDetailDrawer } from '../components';
+import { LabOrderTable, LabOrderFilters, LabOrderFormModal, LabOrderDetailDrawer, AssignAgentModal } from '../components';
 import type { LabOrder } from '../types/labOrder.types';
 
 const { Title } = Typography;
@@ -31,6 +31,7 @@ const LabOrderManager: React.FC = () => {
     const [isDrawerVisible, setIsDrawerVisible] = useState(false);
     const [editingOrder, setEditingOrder] = useState<LabOrder | null>(null);
     const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
+    const [isAssignModalVisible, setIsAssignModalVisible] = useState(false);
     const [form] = Form.useForm();
 
     const selectedOrder = orders.find(o => o.id === selectedOrderId) || null;
@@ -159,6 +160,10 @@ const LabOrderManager: React.FC = () => {
                     onEdit={handleEdit}
                     onDelete={handleDelete}
                     onStatusUpdate={handleStatusUpdate}
+                    onAssign={(order) => {
+                        setSelectedOrderId(order.id);
+                        setIsAssignModalVisible(true);
+                    }}
                     onLoadMore={loadMore}
                     onRowClick={handleRowClick}
                     scroll={{ y: 'calc(100vh - 350px)' }}
@@ -177,6 +182,12 @@ const LabOrderManager: React.FC = () => {
                 visible={isDrawerVisible}
                 order={selectedOrder}
                 onClose={handleDrawerClose}
+            />
+
+            <AssignAgentModal
+                visible={isAssignModalVisible}
+                order={selectedOrder}
+                onClose={() => setIsAssignModalVisible(false)}
                 onAssignAgent={assignAgent}
             />
         </div>
