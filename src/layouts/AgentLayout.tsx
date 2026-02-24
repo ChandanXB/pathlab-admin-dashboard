@@ -7,6 +7,7 @@ import {
     LogoutOutlined,
     MenuUnfoldOutlined,
     MenuFoldOutlined,
+    IdcardOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation, Outlet, Navigate } from 'react-router-dom';
 import colors from '@/styles/colors';
@@ -43,7 +44,8 @@ const AgentLayout: React.FC = () => {
 
     const menuItems = [
         { key: '/agent', icon: <DashboardOutlined />, label: 'My Dashboard' },
-        { key: '/agent/pickups', icon: <ExperimentOutlined />, label: 'Assigned Pickups' },
+        { key: '/agent/pickups', icon: <ExperimentOutlined />, label: 'All Pickups' },
+        { key: '/agent/profile', icon: <IdcardOutlined />, label: 'My Profile' },
     ];
 
     const userMenu = {

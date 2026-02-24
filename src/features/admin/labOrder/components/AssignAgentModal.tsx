@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Select, Space, Typography, Badge, Button, Alert, Card, Tag } from 'antd';
+import { Modal, Select, Space, Typography, Badge, Button, Alert, Card, Spin } from 'antd';
 import {
     EnvironmentOutlined,
     UserAddOutlined,
-    PhoneOutlined,
     CompassOutlined,
     CheckCircleOutlined,
     ReloadOutlined,
@@ -12,6 +11,8 @@ import {
 import { GoogleMap, useJsApiLoader, Marker, InfoWindow, DirectionsRenderer, Polyline } from '@react-google-maps/api';
 import type { LabOrder } from '../types/labOrder.types';
 import { collectionAgentService, type CollectionAgent } from '@/features/admin/collectionAgent/services/collectionAgentService';
+
+import { labOrderService } from '../services/labOrderService';
 
 const { Text, Title } = Typography;
 const { Option } = Select;
@@ -32,12 +33,6 @@ const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: numbe
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
 
-const mapContainerStyle = {
-    width: '100%',
-    height: '400px',
-    borderRadius: '12px'
-};
-
 const center = {
     lat: 26.4499, // default Kanpur
     lng: 80.3319
@@ -48,9 +43,10 @@ interface AssignAgentModalProps {
     order: LabOrder | null;
     onClose: () => void;
     onAssignAgent: (orderId: number, agentId: number | null) => Promise<any>;
+    onBroadcast?: (orderId: number) => Promise<any>;
 }
 
-const AssignAgentModal: React.FC<AssignAgentModalProps> = ({ visible, order, onClose, onAssignAgent }) => {
+const AssignAgentModal: React.FC<AssignAgentModalProps> = ({ visible, order, onClose, onAssignAgent, onBroadcast }) => {
     const [agents, setAgents] = useState<CollectionAgent[]>([]);
     const [assigning, setAssigning] = useState(false);
     const [selectedMapAgent, setSelectedMapAgent] = useState<CollectionAgent | null>(null);
@@ -59,18 +55,86 @@ const AssignAgentModal: React.FC<AssignAgentModalProps> = ({ visible, order, onC
     const [fetchingAgents, setFetchingAgents] = useState(false);
     const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null);
 
+    const [map, setMap] = useState<google.maps.Map | null>(null);
+
     const { isLoaded } = useJsApiLoader({
         id: 'google-map-script',
         googleMapsApiKey: GOOGLE_MAPS_API_KEY
     });
 
+    const geocodeAddress = async (address: string, orderId?: number, force = false) => {
+        if (!window.google) return;
+        const geocoder = new window.google.maps.Geocoder();
+        geocoder.geocode({ address }, async (results, status) => {
+            if (status === 'OK' && results && results[0]) {
+                const location = {
+                    lat: results[0].geometry.location.lat(),
+                    lng: results[0].geometry.location.lng()
+                };
+                setGeocodedPickup(location);
+                setMapCenter(location);
+                if (map) map.panTo(location);
+
+                // Auto-save coordinates if they were missing or if we forced it
+                if (orderId && (!order?.latitude || force)) {
+                    try {
+                        await labOrderService.updateOrder(orderId, {
+                            latitude: location.lat,
+                            longitude: location.lng
+                        });
+                    } catch (err) {
+                        console.error('Failed to save order coordinates', err);
+                    }
+                }
+            } else {
+                console.warn('Geocode failed for address:', address, status);
+            }
+        });
+    };
+
+    const fitAllMarkers = (mapInstance: google.maps.Map, pickup: any, agentsList: CollectionAgent[]) => {
+        if (!window.google || !mapInstance) return;
+        const bounds = new window.google.maps.LatLngBounds();
+        let hasPoints = false;
+
+        if (pickup) {
+            bounds.extend(pickup);
+            hasPoints = true;
+        }
+
+        agentsList.forEach(agent => {
+            if (agent.latitude && agent.longitude) {
+                // Ensure they are numbers
+                bounds.extend({ lat: Number(agent.latitude), lng: Number(agent.longitude) });
+                hasPoints = true;
+            }
+        });
+
+        if (hasPoints) {
+            mapInstance.fitBounds(bounds);
+            // Limit zoom level on auto-fit
+            const listener = window.google.maps.event.addListener(mapInstance, 'idle', () => {
+                if (mapInstance.getZoom()! > 16) mapInstance.setZoom(16);
+                window.google.maps.event.removeListener(listener);
+            });
+        }
+    };
+
+    // Auto-fit bounds logic
+    useEffect(() => {
+        if (map && isLoaded && (geocodedPickup || agents.length > 0)) {
+            fitAllMarkers(map, geocodedPickup, agents);
+        }
+    }, [map, isLoaded, geocodedPickup, agents]);
+
     useEffect(() => {
         if (visible && isLoaded && order) {
             fetchAgents();
+            // Geocode if missing coordinates entirely
             if (!order.latitude && order.address) {
-                geocodeAddress(order.address);
+                geocodeAddress(order.address, order.id);
             } else if (order.latitude && order.longitude) {
-                const loc = { lat: order.latitude, lng: order.longitude };
+                const loc = { lat: Number(order.latitude), lng: Number(order.longitude) };
                 setGeocodedPickup(loc);
                 setMapCenter(loc);
             }
@@ -83,7 +147,10 @@ const AssignAgentModal: React.FC<AssignAgentModalProps> = ({ visible, order, onC
             directionsService.route(
                 {
                     origin: geocodedPickup,
-                    destination: { lat: selectedMapAgent.latitude!, lng: selectedMapAgent.longitude! },
+                    destination: {
+                        lat: Number(selectedMapAgent.latitude!),
+                        lng: Number(selectedMapAgent.longitude!)
+                    },
                     travelMode: window.google.maps.TravelMode.DRIVING,
                 },
                 (result, status) => {
@@ -99,22 +166,7 @@ const AssignAgentModal: React.FC<AssignAgentModalProps> = ({ visible, order, onC
         }
     }, [selectedMapAgent, geocodedPickup, isLoaded]);
 
-    const geocodeAddress = (address: string) => {
-        if (!window.google) return;
-        const geocoder = new window.google.maps.Geocoder();
-        geocoder.geocode({ address }, (results, status) => {
-            if (status === 'OK' && results && results[0]) {
-                const location = {
-                    lat: results[0].geometry.location.lat(),
-                    lng: results[0].geometry.location.lng()
-                };
-                setGeocodedPickup(location);
-                setMapCenter(location);
-            }
-        });
-    };
-
-    const fetchAgents = async () => {
+    const fetchAgents = async (forceGeocode = false) => {
         try {
             setFetchingAgents(true);
             const response = await collectionAgentService.getAgents({ status: 'active' });
@@ -123,14 +175,30 @@ const AssignAgentModal: React.FC<AssignAgentModalProps> = ({ visible, order, onC
             if (window.google) {
                 const geocoder = new window.google.maps.Geocoder();
                 const processedAgents = await Promise.all(agentsData.map(async (agent: any) => {
-                    if (!agent.latitude && agent.address) {
+                    // Re-geocode if coordinates are missing (0, null) OR if we are forcing a refresh
+                    const hasCoordinates = agent.latitude && agent.latitude !== 0;
+
+                    if ((!hasCoordinates || forceGeocode) && agent.address) {
                         return new Promise((resolve) => {
-                            geocoder.geocode({ address: agent.address }, (results, status) => {
+                            geocoder.geocode({ address: agent.address }, async (results, status) => {
                                 if (status === 'OK' && results?.[0]) {
+                                    const lat = results[0].geometry.location.lat();
+                                    const lng = results[0].geometry.location.lng();
+
+                                    // Save the new coordinates back to the database
+                                    try {
+                                        await collectionAgentService.updateAgent(agent.id, {
+                                            latitude: lat,
+                                            longitude: lng
+                                        });
+                                    } catch (err) {
+                                        console.error(`Failed to save agent ${agent.name} coordinates`, err);
+                                    }
+
                                     resolve({
                                         ...agent,
-                                        latitude: results[0].geometry.location.lat(),
-                                        longitude: results[0].geometry.location.lng()
+                                        latitude: lat,
+                                        longitude: lng
                                     });
                                 } else {
                                     resolve(agent);
@@ -153,8 +221,8 @@ const AssignAgentModal: React.FC<AssignAgentModalProps> = ({ visible, order, onC
 
     const sortedAgents = [...agents].sort((a, b) => {
         if (!geocodedPickup || !a.latitude || !b.latitude) return 0;
-        const distA = parseFloat(calculateDistance(geocodedPickup.lat, geocodedPickup.lng, a.latitude, a.longitude!));
-        const distB = parseFloat(calculateDistance(geocodedPickup.lat, geocodedPickup.lng, b.latitude, b.longitude!));
+        const distA = parseFloat(calculateDistance(geocodedPickup.lat, geocodedPickup.lng, Number(a.latitude), Number(a.longitude!)));
+        const distB = parseFloat(calculateDistance(geocodedPickup.lat, geocodedPickup.lng, Number(b.latitude), Number(b.longitude!)));
         return distA - distB;
     });
 
@@ -164,9 +232,24 @@ const AssignAgentModal: React.FC<AssignAgentModalProps> = ({ visible, order, onC
         try {
             setAssigning(true);
             await onAssignAgent(order.id, agentId);
-            onClose(); // Close modal on success
         } catch (error) {
             console.error('Failed to assign agent', error);
+        } finally {
+            setAssigning(false);
+        }
+    };
+
+    const handleBroadcast = async () => {
+        if (!order || !onBroadcast) return;
+
+        try {
+            setAssigning(true);
+            const success = await onBroadcast(order.id);
+            if (success) {
+                onClose();
+            }
+        } catch (error) {
+            console.error('Failed to broadcast order', error);
         } finally {
             setAssigning(false);
         }
@@ -187,9 +270,9 @@ const AssignAgentModal: React.FC<AssignAgentModalProps> = ({ visible, order, onC
             footer={null}
             width={850}
             centered
-            styles={{ body: { padding: '24px' } }}
+            styles={{ body: { padding: '20px 24px', maxHeight: 'calc(100vh - 100px)', overflowY: 'auto' } }}
         >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 {/* Upper Info Section */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div style={{ flex: 1 }}>
@@ -197,6 +280,13 @@ const AssignAgentModal: React.FC<AssignAgentModalProps> = ({ visible, order, onC
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
                             <EnvironmentOutlined style={{ color: '#ff4d4f' }} />
                             <Text strong>{order.address || order.patient?.address || 'Address not provided'}</Text>
+                            <Button
+                                type="text"
+                                size="small"
+                                icon={<ReloadOutlined style={{ fontSize: '12px' }} />}
+                                onClick={() => geocodeAddress(order.address || order.patient?.address || '', order.id, true)}
+                                title="Recalculate Pickup Location"
+                            />
                         </div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
@@ -204,6 +294,8 @@ const AssignAgentModal: React.FC<AssignAgentModalProps> = ({ visible, order, onC
                         <div style={{ marginTop: '4px' }}>
                             {order.collection_agent ? (
                                 <Badge status="success" text={order.collection_agent.name} />
+                            ) : order.assignment_status === 'broadcasted' ? (
+                                <Badge status="processing" text="Broadcasted (Waiting)" color="blue" />
                             ) : (
                                 <Badge status="warning" text="Unassigned" />
                             )}
@@ -220,142 +312,240 @@ const AssignAgentModal: React.FC<AssignAgentModalProps> = ({ visible, order, onC
                     />
                 )}
 
-                {/* Map and Selection Container */}
-                <div style={{ display: 'flex', gap: '20px' }}>
+                <div style={{ display: 'flex', gap: '16px', flex: 1 }}>
                     {/* Map Side */}
                     <div style={{ flex: 2, position: 'relative' }}>
-                        {isLoaded ? (
-                            <GoogleMap
-                                mapContainerStyle={mapContainerStyle}
-                                center={mapCenter}
-                                zoom={14}
-                                options={{
-                                    streetViewControl: false,
-                                    mapTypeControl: false,
-                                }}
-                            >
-                                {/* Pickup Location */}
-                                {geocodedPickup && (
-                                    <Marker
-                                        position={geocodedPickup}
-                                        icon={{
-                                            url: 'http://maps.google.com/mapfiles/ms/icons/red-pushpin.png'
-                                        }}
-                                        title="Patient Location"
-                                        zIndex={100}
-                                    />
-                                )}
-
-                                {/* Road Directions or Fallback Line */}
-                                {directions ? (
-                                    <DirectionsRenderer
-                                        directions={directions}
-                                        options={{
-                                            suppressMarkers: true,
-                                            polylineOptions: {
-                                                strokeColor: '#1890ff',
-                                                strokeWeight: 4,
-                                                strokeOpacity: 0.7
+                        <div style={{ height: '370px', borderRadius: '12px', overflow: 'hidden', border: '1px solid #f0f0f0' }}>
+                            {isLoaded ? (
+                                <GoogleMap
+                                    mapContainerStyle={{ width: '100%', height: '100%' }}
+                                    center={mapCenter}
+                                    zoom={12}
+                                    onLoad={map => setMap(map)}
+                                    options={{
+                                        disableDefaultUI: true,
+                                        zoomControl: true,
+                                        styles: [
+                                            {
+                                                featureType: 'poi',
+                                                elementType: 'labels',
+                                                stylers: [{ visibility: 'off' }]
                                             }
-                                        }}
-                                    />
-                                ) : (
-                                    geocodedPickup && selectedMapAgent?.latitude && (
-                                        <Polyline
-                                            path={[
-                                                geocodedPickup,
-                                                { lat: selectedMapAgent.latitude, lng: selectedMapAgent.longitude! }
-                                            ]}
-                                            options={{
-                                                strokeColor: '#ff4d4f',
-                                                strokeOpacity: 0.5,
-                                                strokeWeight: 2,
-                                                visible: true,
-                                                zIndex: 1
-                                            }}
-                                        />
-                                    )
-                                )}
-
-                                {/* Agent Markers */}
-                                {agents.map(agent => (
-                                    agent.latitude && agent.longitude && (
+                                        ]
+                                    }}
+                                >
+                                    {/* Pickup Marker */}
+                                    {geocodedPickup && (
                                         <Marker
-                                            key={agent.id}
-                                            position={{ lat: agent.latitude, lng: agent.longitude }}
-                                            onClick={() => setSelectedMapAgent(agent)}
+                                            position={geocodedPickup}
                                             icon={{
-                                                url: (agent._count?.lab_orders || 0) > 0
-                                                    ? 'http://maps.google.com/mapfiles/ms/icons/yellow-dot.png'
-                                                    : 'http://maps.google.com/mapfiles/ms/icons/green-dot.png'
+                                                url: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png'
+                                            }}
+                                            zIndex={10}
+                                        />
+                                    )}
+
+                                    {/* Road Directions or Fallback Line */}
+                                    {directions ? (
+                                        <DirectionsRenderer
+                                            directions={directions}
+                                            options={{
+                                                suppressMarkers: true,
+                                                polylineOptions: {
+                                                    strokeColor: '#1890ff',
+                                                    strokeWeight: 4,
+                                                    strokeOpacity: 0.7
+                                                }
                                             }}
                                         />
-                                    )
-                                ))}
+                                    ) : (
+                                        geocodedPickup && selectedMapAgent?.latitude && (
+                                            <Polyline
+                                                path={[
+                                                    geocodedPickup,
+                                                    { lat: selectedMapAgent.latitude, lng: selectedMapAgent.longitude! }
+                                                ]}
+                                                options={{
+                                                    strokeColor: '#ff4d4f',
+                                                    strokeOpacity: 0.5,
+                                                    strokeWeight: 2,
+                                                    visible: true,
+                                                    zIndex: 1
+                                                }}
+                                            />
+                                        )
+                                    )}
 
-                                {selectedMapAgent && (
-                                    <InfoWindow
-                                        position={{ lat: selectedMapAgent.latitude!, lng: selectedMapAgent.longitude! }}
-                                        onCloseClick={() => setSelectedMapAgent(null)}
-                                    >
-                                        <div style={{ padding: '8px', minWidth: '180px' }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                <Title level={5} style={{ margin: 0 }}>{selectedMapAgent.name}</Title>
-                                                {directions?.routes[0]?.legs[0] && (
-                                                    <Tag color="cyan">
-                                                        <SendOutlined /> {directions.routes[0].legs[0].distance?.text}
-                                                    </Tag>
-                                                )}
+                                    {/* Agent Markers */}
+                                    {agents.map(agent => (
+                                        agent.latitude && agent.longitude && (
+                                            <Marker
+                                                key={agent.id}
+                                                position={{ lat: agent.latitude, lng: agent.longitude }}
+                                                onClick={() => setSelectedMapAgent(agent)}
+                                                icon={{
+                                                    url: (agent._count?.lab_orders || 0) > 0
+                                                        ? 'http://maps.google.com/mapfiles/ms/icons/yellow-dot.png'
+                                                        : 'http://maps.google.com/mapfiles/ms/icons/green-dot.png'
+                                                }}
+                                            />
+                                        )
+                                    ))}
+
+                                    {selectedMapAgent && (
+                                        <InfoWindow
+                                            position={{ lat: selectedMapAgent.latitude!, lng: selectedMapAgent.longitude! }}
+                                            onCloseClick={() => setSelectedMapAgent(null)}
+                                        >
+                                            <div style={{ padding: '4px' }}>
+                                                <Text strong style={{ fontSize: '12px', display: 'block' }}>{selectedMapAgent.name}</Text>
+                                                <Text type="secondary" style={{ fontSize: '10px' }}>{selectedMapAgent.phone}</Text>
+                                                <div style={{ marginTop: '8px' }}>
+                                                    <Button
+                                                        type="primary"
+                                                        size="small"
+                                                        disabled={(selectedMapAgent._count?.lab_orders || 0) > 0 || assigning}
+                                                        onClick={() => {
+                                                            Modal.confirm({
+                                                                title: 'Confirm Assignment',
+                                                                content: `Assign this order to ${selectedMapAgent.name}?`,
+                                                                onOk: () => handleAssign(selectedMapAgent.id)
+                                                            });
+                                                        }}
+                                                        style={{ borderRadius: '6px', fontSize: '11px' }}
+                                                    >
+                                                        Assign Sample
+                                                    </Button>
+                                                </div>
                                             </div>
-                                            <Text type="secondary"><PhoneOutlined /> {selectedMapAgent.phone}</Text>
-                                            <div style={{ marginTop: '8px' }}>
-                                                <Badge
-                                                    status={(selectedMapAgent._count?.lab_orders || 0) > 0 ? 'warning' : 'success'}
-                                                    text={(selectedMapAgent._count?.lab_orders || 0) > 0 ? `${selectedMapAgent._count?.lab_orders} Active Orders` : 'Available Now'}
-                                                />
+                                        </InfoWindow>
+                                    )}
+                                </GoogleMap>
+                            ) : (
+                                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', background: '#f5f5f5' }}>
+                                    <Spin tip="Loading Map..." />
+                                </div>
+                            )}
+
+                            {isLoaded && (
+                                <div style={{ position: 'absolute', top: '10px', right: '10px', zIndex: 1 }}>
+                                    <Button
+                                        size="small"
+                                        icon={<CompassOutlined />}
+                                        onClick={() => map && fitAllMarkers(map, geocodedPickup, agents)}
+                                        title="Fit all markers in view"
+                                        style={{ borderRadius: '6px', border: 'none', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}
+                                    >
+                                        Fit to View
+                                    </Button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Selector Side */}
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        {onBroadcast && (
+                            <Card
+                                size="small"
+                                title={<span style={{ fontSize: '13px' }}>Dispatch to All</span>}
+                                style={{ borderRadius: '8px', border: '1px dashed #1890ff' }}
+                                bodyStyle={{ padding: '8px 12px' }}
+                            >
+                                <Button
+                                    type="primary"
+                                    ghost
+                                    block
+                                    size="small"
+                                    icon={<SendOutlined />}
+                                    onClick={() => {
+                                        Modal.confirm({
+                                            title: 'Confirm Broadcast',
+                                            content: 'This will notify all active agents about this pickup. The first agent to accept will be assigned.',
+                                            okText: 'Broadcast Now',
+                                            cancelText: 'Cancel',
+                                            onOk: handleBroadcast
+                                        });
+                                    }}
+                                    loading={assigning}
+                                    disabled={order.assignment_status === 'broadcasted'}
+                                >
+                                    {order.assignment_status === 'broadcasted' ? 'Broadcasting Active' : 'Broadcast to All Agents'}
+                                </Button>
+                                {order.assignment_status === 'broadcasted' && (
+                                    <Text type="secondary" style={{ fontSize: '10px', marginTop: '4px', display: 'block' }}>
+                                        Waiting for first agent to accept...
+                                    </Text>
+                                )}
+                            </Card>
+                        )}
+
+                        {/* Recommended Agent Quick Action */}
+                        {!order.collection_agent && !assigning && sortedAgents.length > 0 && sortedAgents.find(a => (a._count?.lab_orders || 0) === 0) && (
+                            <Card
+                                size="small"
+                                title={<Space size={4}><CompassOutlined style={{ color: '#52c41a' }} /><span style={{ fontSize: '12px' }}>Recommended Agent</span></Space>}
+                                style={{ borderRadius: '8px', border: '1px solid #b7eb8f', background: '#f6ffed' }}
+                                bodyStyle={{ padding: '8px 12px' }}
+                            >
+                                {(() => {
+                                    const recommended = sortedAgents.find(a => (a._count?.lab_orders || 0) === 0);
+                                    if (!recommended) return null;
+                                    const dist = geocodedPickup && recommended.latitude
+                                        ? calculateDistance(geocodedPickup.lat, geocodedPickup.lng, recommended.latitude, recommended.longitude!)
+                                        : null;
+
+                                    return (
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                            <div>
+                                                <Text strong style={{ fontSize: '12px', display: 'block' }}>{recommended.name}</Text>
+                                                <Text type="secondary" style={{ fontSize: '11px' }}>
+                                                    Nearest Available {dist ? `(${dist} km away)` : ''}
+                                                </Text>
                                             </div>
                                             <Button
                                                 type="primary"
                                                 size="small"
                                                 block
-                                                style={{ marginTop: '12px' }}
-                                                onClick={() => handleAssign(selectedMapAgent.id)}
-                                                loading={assigning}
+                                                style={{ background: '#52c41a', borderColor: '#52c41a' }}
+                                                onClick={() => {
+                                                    Modal.confirm({
+                                                        title: 'Confirm Assignment',
+                                                        content: `Assign this order to ${recommended.name}?`,
+                                                        okText: 'Confirm',
+                                                        cancelText: 'Cancel',
+                                                        onOk: () => handleAssign(recommended.id)
+                                                    });
+                                                }}
                                             >
-                                                Assign This Agent
+                                                Quick Assign
                                             </Button>
                                         </div>
-                                    </InfoWindow>
-                                )}
-                            </GoogleMap>
-                        ) : (
-                            <div style={{ height: '400px', background: '#f5f5f5', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <CompassOutlined spin style={{ fontSize: '32px', color: '#bfbfbf' }} />
-                            </div>
+                                    );
+                                })()}
+                            </Card>
                         )}
-                    </div>
 
-                    {/* Selector Side */}
-                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '16px' }}>
                         <Card
                             size="small"
                             title={
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px' }}>
                                     <span>Quick Selection</span>
                                     <Button
                                         type="text"
                                         icon={<ReloadOutlined spin={fetchingAgents} />}
                                         size="small"
-                                        onClick={fetchAgents}
-                                        title="Refresh Locations"
+                                        onClick={() => fetchAgents(true)}
+                                        title="Force Refresh All Agent Locations"
                                     />
                                 </div>
                             }
                             style={{ borderRadius: '8px' }}
+                            bodyStyle={{ padding: '8px 12px' }}
                         >
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                                 <div>
-                                    <Text type="secondary" style={{ fontSize: '11px', display: 'block', marginBottom: '8px' }}>
+                                    <Text type="secondary" style={{ fontSize: '10px', display: 'block', marginBottom: '4px' }}>
                                         AGENTS BY PROXIMITY
                                     </Text>
                                     <Select
@@ -363,10 +553,22 @@ const AssignAgentModal: React.FC<AssignAgentModalProps> = ({ visible, order, onC
                                         style={{ width: '100%' }}
                                         loading={assigning || fetchingAgents}
                                         value={order.collection_agent_id || undefined}
-                                        onChange={handleAssign}
+                                        onChange={(agentId) => {
+                                            if (!agentId) {
+                                                handleAssign(null);
+                                                return;
+                                            }
+                                            const agent = agents.find(a => a.id === agentId);
+                                            Modal.confirm({
+                                                title: 'Confirm Assignment',
+                                                content: `Are you sure you want to assign this order to ${agent?.name}?`,
+                                                onOk: () => handleAssign(agentId)
+                                            });
+                                        }}
                                         allowClear
                                         showSearch
                                         optionFilterProp="children"
+                                        size="small"
                                     >
                                         {sortedAgents.map(agent => {
                                             const activeOrders = agent._count?.lab_orders || 0;
@@ -375,13 +577,13 @@ const AssignAgentModal: React.FC<AssignAgentModalProps> = ({ visible, order, onC
                                                 : null;
 
                                             return (
-                                                <Option key={agent.id} value={agent.id}>
+                                                <Option key={agent.id} value={agent.id} disabled={activeOrders > 0}>
                                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                        <Space>
-                                                            <span>{agent.name}</span>
-                                                            {dist && <Text type="secondary" style={{ fontSize: '11px' }}>({dist} km)</Text>}
+                                                        <Space size={4}>
+                                                            <span style={{ fontSize: '12px' }}>{agent.name}</span>
+                                                            {dist && <Text type="secondary" style={{ fontSize: '10px' }}>({dist} km)</Text>}
                                                         </Space>
-                                                        <Badge count={activeOrders} color={activeOrders > 0 ? 'orange' : 'green'} />
+                                                        <Badge count={activeOrders} color={activeOrders > 0 ? 'orange' : 'green'} style={{ fontSize: '10px' }} />
                                                     </div>
                                                 </Option>
                                             );
@@ -393,9 +595,19 @@ const AssignAgentModal: React.FC<AssignAgentModalProps> = ({ visible, order, onC
                                     <Button
                                         danger
                                         block
+                                        size="small"
                                         icon={<CheckCircleOutlined />}
-                                        onClick={() => handleAssign(null)}
+                                        onClick={() => {
+                                            Modal.confirm({
+                                                title: 'Confirm Unassign',
+                                                content: 'Are you sure you want to remove the current agent?',
+                                                okText: 'Unassign',
+                                                okButtonProps: { danger: true },
+                                                onOk: () => handleAssign(null)
+                                            });
+                                        }}
                                         loading={assigning}
+                                        style={{ fontSize: '12px' }}
                                     >
                                         Unassign Current Agent
                                     </Button>
@@ -403,12 +615,12 @@ const AssignAgentModal: React.FC<AssignAgentModalProps> = ({ visible, order, onC
                             </div>
                         </Card>
 
-                        <div style={{ background: '#e6f7ff', padding: '12px', borderRadius: '8px', border: '1px solid #91d5ff' }}>
-                            <Title level={5} style={{ color: '#0050b3', marginBottom: '8px', fontSize: '14px' }}>Legend</Title>
-                            <Space direction="vertical" size={4}>
-                                <Space><Badge status="success" /> <Text style={{ fontSize: '12px' }}>Agent Available</Text></Space>
-                                <Space><Badge status="warning" /> <Text style={{ fontSize: '12px' }}>Agent Occupied</Text></Space>
-                                <Space><Badge status="error" /> <Text style={{ fontSize: '12px' }}>Pickup Location</Text></Space>
+                        <div style={{ background: '#e6f7ff', padding: '8px 12px', borderRadius: '8px', border: '1px solid #91d5ff' }}>
+                            <Title level={5} style={{ color: '#0050b3', marginBottom: '4px', fontSize: '13px' }}>Legend</Title>
+                            <Space direction="vertical" size={2}>
+                                <Space size={8}><Badge status="success" style={{ fontSize: '11px' }} /> <Text style={{ fontSize: '11px' }}>Agent Available</Text></Space>
+                                <Space size={8}><Badge status="warning" style={{ fontSize: '11px' }} /> <Text style={{ fontSize: '11px' }}>Agent Occupied</Text></Space>
+                                <Space size={8}><Badge status="error" style={{ fontSize: '11px' }} /> <Text style={{ fontSize: '11px' }}>Pickup Location</Text></Space>
                             </Space>
                         </div>
                     </div>

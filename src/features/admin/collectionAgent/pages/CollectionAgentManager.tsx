@@ -12,6 +12,7 @@ import {
     SearchOutlined
 } from '@ant-design/icons';
 import { collectionAgentService, type CollectionAgent } from '../services/collectionAgentService';
+import { useNavigate } from 'react-router-dom';
 import { AgentTable, AgentFormModal } from '../components';
 
 const CollectionAgentManager: React.FC = () => {
@@ -21,6 +22,7 @@ const CollectionAgentManager: React.FC = () => {
     const [editingAgent, setEditingAgent] = useState<CollectionAgent | null>(null);
     const [form] = Form.useForm();
     const [searchText, setSearchText] = useState('');
+    const navigate = useNavigate();
 
     const fetchAgents = async () => {
         try {
@@ -60,6 +62,10 @@ const CollectionAgentManager: React.FC = () => {
         } catch (error) {
             message.error('Failed to delete agent');
         }
+    };
+
+    const handleRowClick = (agent: CollectionAgent) => {
+        navigate(`/collection-agents/${agent.id}`);
     };
 
     const handleModalOk = async () => {
@@ -103,6 +109,7 @@ const CollectionAgentManager: React.FC = () => {
                     loading={loading}
                     onEdit={handleEdit}
                     onDelete={handleDelete}
+                    onRowClick={handleRowClick}
                 />
             </Card>
 

@@ -9,8 +9,11 @@ import {
     BarcodeOutlined,
     ExperimentOutlined,
     ClockCircleOutlined,
-    SmileOutlined
+    UserAddOutlined,
+    UserSwitchOutlined,
+    FileImageOutlined
 } from '@ant-design/icons';
+
 import InfiniteScrollTable from '@/shared/components/InfiniteScrollTable';
 import type { LabOrder } from '../types/labOrder.types';
 import { ORDER_STATUSES, PRIORITIES } from '@/shared/constants/app.constants';
@@ -80,10 +83,10 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
         {
             title: 'Order Details',
             key: 'order_info',
-            width: 220,
+            width: 170,
             render: (_: any, record: LabOrder) => (
                 <Space direction="vertical" size={0} style={{ width: '100%' }}>
-                    <Text strong style={{ whiteSpace: 'nowrap' }}>
+                    <Text strong style={{ whiteSpace: 'nowrap' }} ellipsis={{ tooltip: record.order_code }}>
                         <BarcodeOutlined /> {record.order_code}
                     </Text>
                     <Text type="secondary" style={{ fontSize: '12px', whiteSpace: 'nowrap' }}>
@@ -96,9 +99,12 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
         {
             title: 'Patient',
             key: 'patient',
+            width: 160,
             render: (_: any, record: LabOrder) => (
-                <Space direction="vertical" size={0}>
-                    <Text strong><UserOutlined /> {record.patient?.full_name || 'N/A'}</Text>
+                <Space direction="vertical" size={0} style={{ width: '100%' }}>
+                    <Text strong ellipsis={{ tooltip: record.patient?.full_name }}>
+                        <UserOutlined /> {record.patient?.full_name || 'N/A'}
+                    </Text>
                     <Text type="secondary" style={{ fontSize: '12px' }}>{record.patient?.patient_code}</Text>
                 </Space>
             )
@@ -106,8 +112,9 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
         {
             title: 'Tests',
             key: 'tests',
+            width: 160,
             render: (_: any, record: LabOrder) => (
-                <div style={{ maxWidth: '250px' }}>
+                <div style={{ maxWidth: '160px' }}>
                     {record.test_results?.map((tr, idx) => (
                         <Tag key={idx} icon={<ExperimentOutlined />} style={{ marginBottom: '4px' }}>
                             {tr.test?.test_name}
@@ -120,11 +127,13 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
         {
             title: 'Agent',
             key: 'agent',
-            width: 150,
+            width: 120,
             render: (_: any, record: LabOrder) => (
                 record.collection_agent ? (
-                    <Space direction="vertical" size={0}>
-                        <Text strong style={{ fontSize: '12px' }}>{record.collection_agent.name}</Text>
+                    <Space direction="vertical" size={0} style={{ width: '100%' }}>
+                        <Text strong style={{ fontSize: '12px' }} ellipsis={{ tooltip: record.collection_agent.name }}>
+                            {record.collection_agent.name}
+                        </Text>
                         <Text type="secondary" style={{ fontSize: '11px' }}>{record.collection_agent.phone}</Text>
                     </Space>
                 ) : (
@@ -135,7 +144,7 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
         {
             title: 'Amount',
             key: 'amount',
-            width: 120,
+            width: 100,
             render: (_: any, record: LabOrder) => (
                 <Space direction="vertical" size={0}>
                     <Text>₹{record.total_amount}</Text>
@@ -146,57 +155,89 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
             )
         },
         {
+            title: 'Proof',
+            key: 'proof',
+            width: 80,
+            render: (_: any, record: LabOrder) => (
+                <Space>
+                    {record.sample_photo_url && (
+                        <Tooltip title="Sample Photo Uploaded">
+                            <FileImageOutlined style={{ color: '#52c41a', fontSize: '18px' }} />
+                        </Tooltip>
+                    )}
+                    {record.payment_proof_url && (
+                        <Tooltip title="Payment Proof Uploaded">
+                            <ExperimentOutlined style={{ color: '#1890ff', fontSize: '18px' }} />
+                        </Tooltip>
+                    )}
+                    {!record.sample_photo_url && !record.payment_proof_url && (
+                        <Text type="secondary" style={{ fontSize: '12px' }}>-</Text>
+                    )}
+                </Space>
+            )
+        },
+        {
             title: 'Status',
             dataIndex: 'status',
             key: 'status',
-            width: 120,
+            width: 100,
             render: (status: string, record: LabOrder) => (
-                <Dropdown menu={getStatusMenu(record)} trigger={['click']}>
-                    <Tag
-                        color={getStatusColor(status)}
-                        style={{ cursor: 'pointer', borderRadius: '12px', padding: '0 10px' }}
-                    >
-                        {getStatusLabel(status)} <DownOutlined style={{ fontSize: '10px' }} />
-                    </Tag>
-                </Dropdown>
+                <div onClick={(e) => e.stopPropagation()}>
+                    <Dropdown menu={getStatusMenu(record)} trigger={['click']}>
+                        <Tag
+                            color={getStatusColor(status)}
+                            style={{ cursor: 'pointer', borderRadius: '12px', padding: '0 10px' }}
+                        >
+                            {getStatusLabel(status)} <DownOutlined style={{ fontSize: '10px' }} />
+                        </Tag>
+                    </Dropdown>
+                </div>
             )
         },
         {
             title: 'Actions',
             key: 'actions',
             width: 100,
-            fixed: 'right' as const,
             render: (_: any, record: LabOrder) => (
-                <Space size="small">
-                    <Tooltip title="Assign Agent">
-                        <Button
-                            type="text"
-                            icon={<SmileOutlined style={{ color: record.collection_agent ? '#52c41a' : '#faad14' }} />}
-                            onClick={() => onAssign(record)}
-                            size="small"
-                        />
-                    </Tooltip>
-                    <Tooltip title="Edit Order">
-                        <Button
-                            type="text"
-                            icon={<EditOutlined />}
-                            onClick={() => onEdit(record)}
-                            size="small"
-                        />
-                    </Tooltip>
-                    <Popconfirm
-                        title="Delete Order"
-                        description="Are you sure you want to delete this order?"
-                        onConfirm={() => onDelete(record.id)}
-                        okText="Yes"
-                        cancelText="No"
-                        okButtonProps={{ danger: true }}
-                    >
-                        <Tooltip title="Delete">
-                            <Button type="text" danger icon={<DeleteOutlined />} size="small" />
+                <div onClick={(e) => e.stopPropagation()}>
+                    <Space size="small">
+                        <Tooltip
+                            title={
+                                record.status === 'assigned'
+                                    ? (record.collection_agent ? "Reassign Agent" : "Assign Agent")
+                                    : `Cannot assign agent in ${record.status} status`
+                            }
+                        >
+                            <Button
+                                type="text"
+                                icon={record.collection_agent ? <UserSwitchOutlined style={{ color: record.status === 'assigned' ? '#52c41a' : '#bfbfbf' }} /> : <UserAddOutlined style={{ color: record.status === 'assigned' ? '#faad14' : '#bfbfbf' }} />}
+                                onClick={() => onAssign(record)}
+                                size="small"
+                                disabled={record.status !== 'assigned'}
+                            />
                         </Tooltip>
-                    </Popconfirm>
-                </Space>
+                        <Tooltip title="Edit Order">
+                            <Button
+                                type="text"
+                                icon={<EditOutlined />}
+                                onClick={() => onEdit(record)}
+                                size="small"
+                            />
+                        </Tooltip>
+                        <Popconfirm
+                            title="Delete Order"
+                            description="Are you sure you want to delete this order?"
+                            onConfirm={() => onDelete(record.id)}
+                            okText="Yes"
+                            cancelText="No"
+                            okButtonProps={{ danger: true }}
+                        >
+                            <Tooltip title="Delete">
+                                <Button type="text" danger icon={<DeleteOutlined />} size="small" />
+                            </Tooltip>
+                        </Popconfirm>
+                    </Space>
+                </div>
             ),
         },
     ];

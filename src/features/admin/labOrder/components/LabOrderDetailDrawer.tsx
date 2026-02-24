@@ -1,5 +1,5 @@
 import React from 'react';
-import { Drawer, Descriptions, Tag, Divider, Typography, Space, List, Badge, Empty, Card } from 'antd';
+import { Drawer, Descriptions, Tag, Divider, Typography, Space, List, Badge, Empty, Card, Row, Col, Image } from 'antd';
 import {
     UserOutlined,
     EnvironmentOutlined,
@@ -10,7 +10,10 @@ import {
     CreditCardOutlined,
     BarcodeOutlined,
     PhoneOutlined,
-    UserAddOutlined
+    UserAddOutlined,
+    GlobalOutlined,
+    ShopOutlined,
+    FileImageOutlined
 } from '@ant-design/icons';
 import type { LabOrder } from '../types/labOrder.types';
 import { ORDER_STATUSES, PRIORITIES } from '@/shared/constants/app.constants';
@@ -48,23 +51,29 @@ const LabOrderDetailDrawer: React.FC<LabOrderDetailDrawerProps> = ({ visible, or
     };
 
     const displayAddress = () => {
+        // 1. Direct order address (New system)
         if (order.address) return order.address;
-        if (order.patient?.address) return order.patient.address;
 
+        // 2. Legacy fallback: Check if address is hidden in notes with specific delimiter
         if (order.notes && order.notes.includes('| Address:')) {
             const parts = order.notes.split('| Address:');
             return parts[parts.length - 1].trim();
         }
-        return 'N/A';
+
+        // 3. Last resort: Patient's default address
+        return order.patient?.address || 'N/A';
     };
 
     const displayNotes = () => {
         if (!order.notes) return null;
+
+        // If it's a legacy note containing a hidden address, strip the address part for display
         if (order.notes.includes('| Address:')) {
             const parts = order.notes.split('| Address:');
             const cleanNotes = parts.slice(0, -1).join('| Address:').trim();
             return cleanNotes || null;
         }
+
         return order.notes;
     };
 
@@ -85,23 +94,62 @@ const LabOrderDetailDrawer: React.FC<LabOrderDetailDrawerProps> = ({ visible, or
         >
             <Space direction="vertical" size="large" style={{ width: '100%' }}>
                 {/* Header Info */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
-                    <Space direction="vertical" size={4}>
-                        <Title level={4} style={{ margin: 0 }}>ORD-{order.order_code.split('-').pop()}</Title>
-                        <Text type="secondary">
-                            <ClockCircleOutlined /> Created on {dayjs(order.createdAt).format('DD MMM YYYY, hh:mm A')}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
+                    <div>
+                        <Title level={4} style={{ margin: 0 }}>{order.order_code}</Title>
+                        <Text type="secondary" style={{ fontSize: '13px' }}>
+                            <CalendarOutlined /> Created on {new Date(order.createdAt).toLocaleDateString('en-GB', {
+                                day: '2-digit',
+                                month: 'short',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                hour12: true
+                            })}
                         </Text>
-                    </Space>
-                    <Space direction="vertical" align="end" size={4}>
-                        <Tag color={getStatusColor(order.status)} style={{ margin: 0, borderRadius: '12px' }}>
+                        {(order.scheduled_date || order.scheduled_time) && (
+                            <div style={{ marginTop: 8, padding: '8px', background: '#f6ffed', border: '1px solid #b7eb8f', borderRadius: '4px' }}>
+                                <Text strong style={{ color: '#52c41a', display: 'block', fontSize: '12px' }}>
+                                    <ClockCircleOutlined /> SCHEDULED COLLECTION
+                                </Text>
+                                <Space direction="vertical" size={0}>
+                                    {order.scheduled_date && (
+                                        <Text style={{ fontSize: '13px' }}>
+                                            Date: {new Date(order.scheduled_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                        </Text>
+                                    )}
+                                    {order.scheduled_time && (
+                                        <Text style={{ fontSize: '13px' }}>
+                                            Slot: {order.scheduled_time}
+                                        </Text>
+                                    )}
+                                </Space>
+                            </div>
+                        )}
+                    </div>
+                    <Space direction="vertical" align="end" size={8}>
+                        <Tag color={getStatusColor(order.status)} style={{ margin: 0, padding: '2px 12px', borderRadius: '12px', fontWeight: 600 }}>
                             {getStatusLabel(order.status).toUpperCase()}
                         </Tag>
-                        {order.assignment_status && order.assignment_status !== 'not_assigned' && (
-                            <Tag color="cyan" style={{ margin: 0, borderRadius: '12px' }}>
+
+                        <Space size={4}>
+                            <Tag color="cyan" icon={<GlobalOutlined />} style={{ borderRadius: '4px' }}>
+                                {order.order_source?.replace('_', ' ').toUpperCase() || 'WALK-IN'}
+                            </Tag>
+                            <Tag color="blue" icon={<ShopOutlined />} style={{ borderRadius: '4px' }}>
+                                {order.order_type?.replace('_', ' ').toUpperCase() || 'LAB VISIT'}
+                            </Tag>
+                        </Space>
+
+                        {order.order_type === 'home_collection' && order.assignment_status && order.assignment_status !== 'not_assigned' && (
+                            <Tag color="processing" style={{ margin: 0, borderRadius: '4px' }}>
                                 AGENT: {order.assignment_status.toUpperCase()}
                             </Tag>
                         )}
-                        {getPriorityTag(order.priority)}
+
+                        <div style={{ marginTop: 2 }}>
+                            {getPriorityTag(order.priority)}
+                        </div>
                     </Space>
                 </div>
 
@@ -119,10 +167,18 @@ const LabOrderDetailDrawer: React.FC<LabOrderDetailDrawerProps> = ({ visible, or
                                 <Tag color="blue">{order.patient?.patient_code || 'N/A'}</Tag>
                             </Descriptions.Item>
                             <Descriptions.Item label="Contact">
-                                <Space>
-                                    <PhoneOutlined /> {order.patient?.phone || 'N/A'}
+                                <Space direction="vertical" size={0}>
+                                    <Text><PhoneOutlined /> {order.patient?.phone || 'N/A'}</Text>
+                                    {(order.patient as any)?.alternate_phone && (
+                                        <Text type="secondary" style={{ fontSize: '12px' }}>Alt: {(order.patient as any).alternate_phone}</Text>
+                                    )}
                                 </Space>
                             </Descriptions.Item>
+                            {(order.patient as any)?.email && (
+                                <Descriptions.Item label="Email">
+                                    <Text>{(order.patient as any).email}</Text>
+                                </Descriptions.Item>
+                            )}
                             <Descriptions.Item label="Pickup Address">
                                 <Space direction="vertical" size={0}>
                                     <div><EnvironmentOutlined /> {displayAddress()}</div>
@@ -213,11 +269,17 @@ const LabOrderDetailDrawer: React.FC<LabOrderDetailDrawerProps> = ({ visible, or
                     <Title level={5}><CreditCardOutlined /> Payment & Billing</Title>
                     <Card size="small" style={{ borderRadius: '8px' }}>
                         <Descriptions column={2} size="small" layout="horizontal">
-                            <Descriptions.Item label="Total">
+                            <Descriptions.Item label="Total Amount">
                                 <Text strong>₹{order.total_amount}</Text>
                             </Descriptions.Item>
                             <Descriptions.Item label="Status">
                                 <Badge status={order.payment_status === 'paid' ? 'success' : 'warning'} text={order.payment_status.toUpperCase()} />
+                            </Descriptions.Item>
+                            <Descriptions.Item label="Paid Amount">
+                                <Text strong style={{ color: '#52c41a' }}>₹{order.paid_amount || 0}</Text>
+                            </Descriptions.Item>
+                            <Descriptions.Item label="Mode">
+                                <Tag color="blue">{order.payment_mode?.toUpperCase() || 'N/A'}</Tag>
                             </Descriptions.Item>
                         </Descriptions>
                     </Card>
@@ -230,6 +292,48 @@ const LabOrderDetailDrawer: React.FC<LabOrderDetailDrawerProps> = ({ visible, or
                         <div style={{ padding: '12px', background: '#fffbe6', border: '1px solid #ffe58f', borderRadius: '8px' }}>
                             <Text>{displayNotes()}</Text>
                         </div>
+                    </div>
+                )}
+
+                {/* Collection Proof Details */}
+                {(order.sample_photo_url || order.payment_proof_url) && (
+                    <div>
+                        <Divider style={{ margin: '12px 0' }} />
+                        <Title level={5}><FileImageOutlined /> Collection & Payment Proof</Title>
+                        <Row gutter={[16, 16]}>
+                            {order.sample_photo_url && (
+                                <Col span={12}>
+                                    <Text type="secondary" style={{ display: 'block', marginBottom: 8, fontSize: '12px' }}>SAMPLE PHOTO</Text>
+                                    <Image
+                                        src={order.sample_photo_url}
+                                        alt="Sample"
+                                        style={{ width: '100%', borderRadius: '8px', border: '1px solid #f0f0f0' }}
+                                    />
+                                </Col>
+                            )}
+                            {order.payment_proof_url && (
+                                <Col span={12}>
+                                    <Text type="secondary" style={{ display: 'block', marginBottom: 8, fontSize: '12px' }}>PAYMENT SS (UPI)</Text>
+                                    <div style={{ background: '#fff', padding: '4px', borderRadius: '8px', border: '1px solid #f0f0f0' }}>
+                                        <Image
+                                            src={order.payment_proof_url}
+                                            alt="Payment Screenshot"
+                                            style={{ width: '100%', borderRadius: '4px' }}
+                                        />
+                                    </div>
+                                </Col>
+                            )}
+                        </Row>
+                        {order.collected_at && (
+                            <div style={{ marginTop: 12 }}>
+                                <Badge color="green" text={`Collected on ${dayjs(order.collected_at).format('DD MMM YYYY, hh:mm A')}`} />
+                            </div>
+                        )}
+                        {(order as any).reached_at && (
+                            <div style={{ marginTop: 4 }}>
+                                <Badge color="gold" text={`Reached Location at ${dayjs((order as any).reached_at).format('hh:mm A')}`} />
+                            </div>
+                        )}
                     </div>
                 )}
             </Space>

@@ -8,9 +8,10 @@ interface AgentTableProps {
     loading: boolean;
     onEdit: (agent: CollectionAgent) => void;
     onDelete: (id: number) => void;
+    onRowClick: (agent: CollectionAgent) => void;
 }
 
-const AgentTable: React.FC<AgentTableProps> = ({ agents, loading, onEdit, onDelete }) => {
+const AgentTable: React.FC<AgentTableProps> = ({ agents, loading, onEdit, onDelete, onRowClick }) => {
     const columns = [
         {
             title: 'Name',
@@ -96,6 +97,16 @@ const AgentTable: React.FC<AgentTableProps> = ({ agents, loading, onEdit, onDele
             dataSource={agents}
             loading={loading}
             rowKey="id"
+            onRow={(record) => ({
+                onClick: (e: any) => {
+                    // Prevent drawer opening if user clicks on buttons or icons in Actions column
+                    if (e.target.closest('button') || e.target.closest('.anticon')) {
+                        return;
+                    }
+                    onRowClick(record);
+                },
+                style: { cursor: 'pointer' }
+            })}
         />
     );
 };

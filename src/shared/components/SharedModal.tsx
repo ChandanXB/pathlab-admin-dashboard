@@ -1,6 +1,7 @@
 import React from 'react';
 import { Modal } from 'antd';
 import { X } from 'lucide-react';
+import '../../styles/modal-overrides.css';
 
 interface SharedModalProps {
     title: string;
@@ -14,6 +15,7 @@ interface SharedModalProps {
     footer?: React.ReactNode;
     maskClosable?: boolean;
     style?: React.CSSProperties;
+    confirmLoading?: boolean;
 }
 
 const SharedModal: React.FC<SharedModalProps> = ({
@@ -27,7 +29,8 @@ const SharedModal: React.FC<SharedModalProps> = ({
     cancelText = 'Cancel',
     footer,
     maskClosable = true,
-    style = { top: 20 }
+    style = { top: 20 },
+    confirmLoading = false,
 }) => {
     return (
         <Modal
@@ -42,6 +45,7 @@ const SharedModal: React.FC<SharedModalProps> = ({
             maskClosable={maskClosable}
             style={style}
             closeIcon={<X size={20} />}
+            confirmLoading={confirmLoading}
             styles={{
                 mask: {
                     backdropFilter: 'blur(4px)',
@@ -66,31 +70,6 @@ const SharedModal: React.FC<SharedModalProps> = ({
             <div style={{ maxHeight: '70vh', overflowY: 'auto', paddingRight: '8px' }}>
                 {children}
             </div>
-
-            <style>
-                {`
-                /* Hide body scrollbar when modal is open to fix double scroll */
-                .ant-scrolling-effect {
-                    overflow: hidden !important;
-                    touch-action: none;
-                }
-                
-                /* Custom scrollbar for modal content */
-                .ant-modal-body div::-webkit-scrollbar {
-                    width: 6px;
-                }
-                .ant-modal-body div::-webkit-scrollbar-track {
-                    background: transparent;
-                }
-                .ant-modal-body div::-webkit-scrollbar-thumb {
-                    background: #e2e8f0;
-                    borderRadius: 10px;
-                }
-                .ant-modal-body div::-webkit-scrollbar-thumb:hover {
-                    background: #cbd5e1;
-                }
-                `}
-            </style>
         </Modal>
     );
 };

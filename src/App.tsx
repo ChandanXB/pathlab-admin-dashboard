@@ -10,6 +10,7 @@ import LabTestManager from '@/features/admin/labTests/pages/LabTestManager';
 import PatientManager from '@/features/admin/patients/pages/PatientManager';
 import LabOrderManager from '@/features/admin/labOrder/pages/LabOrderManager';
 import CollectionAgentManager from '@/features/admin/collectionAgent/pages/CollectionAgentManager';
+import AgentProfilePage from '@/features/admin/collectionAgent/pages/AgentProfilePage';
 import DoctorManager from '@/features/admin/doctors/pages/DoctorManager';
 import ProtectedRoute from '@/shared/components/ProtectedRoute';
 import AdminLayout from '@/layouts/AdminLayout';
@@ -17,6 +18,7 @@ import AgentLayout from '@/layouts/AgentLayout';
 import DoctorLayout from '@/layouts/DoctorLayout';
 import AgentDashboard from '@/features/agent/dashboard/pages/AgentDashboard';
 import AgentPickups from '@/features/agent/pickups/pages/AgentPickups';
+import AgentProfile from '@/features/agent/profile/pages/AgentProfile';
 import DoctorDashboard from '@/features/doctor/dashboard/pages/DoctorDashboard';
 
 function App() {
@@ -40,6 +42,7 @@ function App() {
               <Route path="patients" element={<PatientManager />} />
               <Route path="lab-orders" element={<LabOrderManager />} />
               <Route path="collection-agents" element={<CollectionAgentManager />} />
+              <Route path="collection-agents/:id" element={<AgentProfilePage />} />
               <Route path="doctors" element={<DoctorManager />} />
               {/* Fallback for development/typos */}
               <Route path="*" element={<Navigate to="/" replace />} />
@@ -56,6 +59,7 @@ function App() {
             >
               <Route index element={<AgentDashboard />} />
               <Route path="pickups" element={<AgentPickups />} />
+              <Route path="profile" element={<AgentProfile />} />
             </Route>
 
             {/* Doctor Portal */}

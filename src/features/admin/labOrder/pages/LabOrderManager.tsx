@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Card, Button, Form, Typography, Space, Badge } from 'antd';
 import { PlusOutlined, ExperimentOutlined } from '@ant-design/icons';
 import { useSearchParams } from 'react-router-dom';
 import { useLabOrders } from '../hooks/useLabOrders';
 import { LabOrderTable, LabOrderFilters, LabOrderFormModal, LabOrderDetailDrawer, AssignAgentModal } from '../components';
 import type { LabOrder } from '../types/labOrder.types';
+
+import dayjs from 'dayjs';
 
 const { Title } = Typography;
 
@@ -16,6 +18,7 @@ const LabOrderManager: React.FC = () => {
         orders,
         loading,
         loadingMore,
+        submitting,
         pagination,
         filters,
         setFilters,
@@ -23,9 +26,16 @@ const LabOrderManager: React.FC = () => {
         updateOrder,
         updateOrderStatus,
         assignAgent,
+        broadcastOrder,
         deleteOrder,
         loadMore
-    } = useLabOrders();
+    } = useLabOrders({
+        page: 1,
+        limit: 10,
+        sortBy: 'createdAt',
+        sortOrder: 'desc',
+        status: statusParam || undefined
+    });
 
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [isDrawerVisible, setIsDrawerVisible] = useState(false);
@@ -36,12 +46,12 @@ const LabOrderManager: React.FC = () => {
 
     const selectedOrder = orders.find(o => o.id === selectedOrderId) || null;
 
-    // Sync URL status param with filters
-    React.useEffect(() => {
-        if (statusParam) {
-            setFilters(prev => ({ ...prev, status: statusParam, page: 1 }));
-        } else {
-            setFilters(prev => ({ ...prev, status: undefined, page: 1 }));
+    // Track the previous statusParam so we only trigger a re-fetch when it genuinely changes
+    const prevStatusParam = useRef(statusParam);
+    useEffect(() => {
+        if (prevStatusParam.current !== statusParam) {
+            prevStatusParam.current = statusParam;
+            setFilters(prev => ({ ...prev, status: statusParam || undefined, page: 1 }));
         }
     }, [statusParam, setFilters]);
 
@@ -66,6 +76,7 @@ const LabOrderManager: React.FC = () => {
             // Convert strings like "1200.00" to numbers for InputNumber
             total_amount: Number(order.total_amount),
             paid_amount: Number(order.paid_amount),
+            scheduled_date: order.scheduled_date ? dayjs(order.scheduled_date) : null,
         });
         setIsModalVisible(true);
     };
@@ -90,10 +101,17 @@ const LabOrderManager: React.FC = () => {
 
     const handleSubmit = async (values: any) => {
         let success = false;
+
+        // Final transformations
+        const payload = {
+            ...values,
+            scheduled_date: values.scheduled_date ? values.scheduled_date.toISOString() : undefined,
+        };
+
         if (editingOrder) {
-            success = await updateOrder(editingOrder.id, values);
+            success = await updateOrder(editingOrder.id, payload);
         } else {
-            success = await createOrder(values);
+            success = await createOrder(payload);
         }
 
         if (success) {
@@ -103,7 +121,7 @@ const LabOrderManager: React.FC = () => {
     };
 
     return (
-        <div style={{ padding: '24px', height: '100%', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div style={{ padding: '24px 12px', height: '100%', display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Space align="center" size="middle">
                     <div style={{
@@ -176,6 +194,7 @@ const LabOrderManager: React.FC = () => {
                 form={form}
                 onSubmit={handleSubmit}
                 onCancel={() => setIsModalVisible(false)}
+                submitting={submitting}
             />
 
             <LabOrderDetailDrawer
@@ -189,6 +208,7 @@ const LabOrderManager: React.FC = () => {
                 order={selectedOrder}
                 onClose={() => setIsAssignModalVisible(false)}
                 onAssignAgent={assignAgent}
+                onBroadcast={broadcastOrder}
             />
         </div>
     );

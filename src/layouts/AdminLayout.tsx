@@ -15,6 +15,7 @@ import colors from '@/styles/colors';
 import { useAuthStore } from '@/store/authStore';
 import { ORDER_STATUSES } from '@/shared/constants/app.constants';
 import { labOrderService } from '@/features/admin/labOrder/services/labOrderService';
+import { collectionAgentService, type CollectionAgent } from '@/features/admin/collectionAgent/services/collectionAgentService';
 
 const { Header, Content, Sider } = Layout;
 const { Text } = Typography;
@@ -28,12 +29,23 @@ const AdminLayout: React.FC = () => {
     const { user, logout } = useAuthStore();
 
     const [orderStats, setOrderStats] = useState<any>(null);
+    const [agents, setAgents] = useState<CollectionAgent[]>([]);
+    const [openKeys, setOpenKeys] = useState<string[]>([]);
 
     useEffect(() => {
         const handleResize = () => setScreenSize(window.innerWidth);
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
     }, []);
+
+    useEffect(() => {
+        // Auto-open submenu based on current path
+        if (location.pathname.startsWith('/lab-orders')) {
+            setOpenKeys(['/lab-orders-parent']);
+        } else if (location.pathname.startsWith('/collection-agents')) {
+            setOpenKeys(['/collection-agents-parent']);
+        }
+    }, [location.pathname]);
 
     useEffect(() => {
         const fetchStats = async () => {
@@ -46,7 +58,20 @@ const AdminLayout: React.FC = () => {
                 console.error('Failed to fetch order stats', error);
             }
         };
+
+        const fetchAgents = async () => {
+            try {
+                const response = await collectionAgentService.getAgents();
+                if (response.success) {
+                    setAgents(response.data);
+                }
+            } catch (error) {
+                console.error('Failed to fetch agents', error);
+            }
+        };
+
         fetchStats();
+        fetchAgents();
     }, [location.pathname]);
 
     const handleLogout = () => {
@@ -113,7 +138,18 @@ const AdminLayout: React.FC = () => {
                 }))
             ]
         },
-        { key: '/collection-agents', icon: <UserOutlined />, label: 'Collection Agents' },
+        {
+            key: '/collection-agents-parent',
+            icon: <UserOutlined />,
+            label: 'Collection Agents',
+            children: [
+                { key: '/collection-agents', label: 'All Agents' },
+                ...agents.map(agent => ({
+                    key: `/collection-agents/${agent.id}`,
+                    label: agent.name
+                }))
+            ]
+        },
         { key: '/tests-packages', icon: <ExperimentOutlined />, label: 'Tests & Packages' },
     ];
 
@@ -142,7 +178,6 @@ const AdminLayout: React.FC = () => {
                 collapsedWidth={screenSize < 768 ? 0 : 80}
                 width={260}
                 style={{
-                    overflow: 'auto',
                     height: '100vh',
                     position: 'fixed',
                     left: 0,
@@ -150,52 +185,93 @@ const AdminLayout: React.FC = () => {
                     bottom: 0,
                     boxShadow: '2px 0 8px 0 rgba(29,35,41,.05)',
                     zIndex: 100,
+                    background: colors.sidebarBg
                 }}
             >
-                <div style={{
-                    height: 64,
-                    display: 'flex',
-                    alignItems: 'center',
-                    padding: '0 24px',
-                    gap: '12px',
-                    background: `linear-gradient(90deg, ${colors.sidebarBg} 0%, #002140 100%)`,
-                    borderBottom: `1px solid ${colors.sidebarBorder}`
-                }}>
+                <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                    {/* Logo Section */}
                     <div style={{
-                        width: 32,
-                        height: 32,
-                        background: themeToken.colorPrimary,
-                        borderRadius: '8px',
+                        height: 64,
                         display: 'flex',
                         alignItems: 'center',
-                        justifyContent: 'center',
+                        padding: '0 24px',
+                        gap: '12px',
+                        background: `linear-gradient(90deg, ${colors.sidebarBg} 0%, #002140 100%)`,
+                        borderBottom: `1px solid ${colors.sidebarBorder}`,
                         flexShrink: 0
                     }}>
-                        <ExperimentOutlined style={{ color: colors.white, fontSize: 18 }} />
+                        <div style={{
+                            width: 32,
+                            height: 32,
+                            background: themeToken.colorPrimary,
+                            borderRadius: '8px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            flexShrink: 0
+                        }}>
+                            <ExperimentOutlined style={{ color: colors.white, fontSize: 18 }} />
+                        </div>
+                        {!collapsed && <Text strong style={{ color: colors.white, fontSize: 18, whiteSpace: 'nowrap' }}>PathLab</Text>}
                     </div>
-                    {!collapsed && <Text strong style={{ color: colors.white, fontSize: 18, whiteSpace: 'nowrap' }}>PathLab</Text>}
-                </div>
 
-                <Menu
-                    theme="dark"
-                    mode="inline"
-                    selectedKeys={[currentPath]}
-                    onClick={({ key }) => navigate(key)}
-                    style={{ borderRight: 0, marginTop: 16 }}
-                    items={menuItems}
-                />
-
-                <div style={{ position: 'absolute', bottom: 20, width: '100%', padding: '0 16px' }}>
-                    <Button
-                        type="text"
-                        danger
-                        icon={<LogoutOutlined />}
-                        block={!collapsed}
-                        onClick={handleLogout}
-                        style={{ color: 'rgba(255,255,255,0.65)', display: 'flex', alignItems: 'center', justifyContent: collapsed ? 'center' : 'flex-start' }}
+                    {/* Menu Section - Scrollable */}
+                    <div
+                        className="sidebar-menu-container"
+                        style={{
+                            flex: 1,
+                            overflowY: 'auto',
+                            overflowX: 'hidden',
+                            padding: '16px 0'
+                        }}
                     >
-                        {!collapsed && 'Logout'}
-                    </Button>
+                        <Menu
+                            theme="dark"
+                            mode="inline"
+                            selectedKeys={[currentPath]}
+                            openKeys={openKeys}
+                            onOpenChange={(keys) => {
+                                const latestOpenKey = keys.find(key => openKeys.indexOf(key) === -1);
+                                if (latestOpenKey) {
+                                    setOpenKeys([latestOpenKey]);
+                                } else {
+                                    setOpenKeys([]);
+                                }
+                            }}
+                            onClick={({ key }) => navigate(key)}
+                            style={{ borderRight: 0, background: 'transparent' }}
+                            items={menuItems}
+                        />
+                    </div>
+
+                    {/* Bottom Section - Fixed */}
+                    <div style={{
+                        padding: '16px',
+                        borderTop: `1px solid ${colors.sidebarBorder}`,
+                        flexShrink: 0,
+                        background: 'rgba(0, 21, 41, 0.5)',
+                        backdropFilter: 'blur(8px)'
+                    }}>
+
+                        <Button
+                            type="text"
+                            danger
+                            icon={<LogoutOutlined />}
+                            block={!collapsed}
+                            onClick={handleLogout}
+                            style={{
+                                color: 'rgba(255,255,255,0.65)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: collapsed ? 'center' : 'flex-start',
+                                padding: collapsed ? '4px 0' : '4px 8px',
+                                background: 'rgba(255,255,255,0.05)',
+                                borderRadius: '6px'
+                            }}
+                        >
+                            {!collapsed && 'Sign Out'}
+                        </Button>
+                    </div>
                 </div>
             </Sider>
 
@@ -266,12 +342,18 @@ const AdminLayout: React.FC = () => {
             </Layout>
 
             <style>{`
-                .ant-layout-sider-children::-webkit-scrollbar {
-                    width: 6px;
+                .sidebar-menu-container::-webkit-scrollbar {
+                    width: 4px;
                 }
-                .ant-layout-sider-children::-webkit-scrollbar-thumb {
+                .sidebar-menu-container::-webkit-scrollbar-track {
+                    background: transparent;
+                }
+                .sidebar-menu-container::-webkit-scrollbar-thumb {
+                    background: rgba(255, 255, 255, 0.1);
+                    border-radius: 10px;
+                }
+                .sidebar-menu-container:hover::-webkit-scrollbar-thumb {
                     background: rgba(255, 255, 255, 0.2);
-                    border-radius: 3px;
                 }
                 .ant-table-thead > tr > th {
                     background: transparent !important;

@@ -15,6 +15,7 @@ export interface CollectionAgent {
     _count?: {
         lab_orders: number;
     };
+    lab_orders?: any[];
     createdAt: string;
 }
 
@@ -27,6 +28,8 @@ export interface CollectionAgentFormData {
     vehicle_type?: string;
     vehicle_no?: string;
     address?: string;
+    latitude?: number;
+    longitude?: number;
 }
 
 export const collectionAgentService = {
