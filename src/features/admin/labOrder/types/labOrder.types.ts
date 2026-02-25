@@ -6,11 +6,15 @@ export interface LabOrder {
     order_code: string;
     patient_id: number;
     appointment_id?: number;
-    status: 'pending' | 'collected' | 'processing' | 'completed' | 'cancelled';
+    status: 'pending' | 'assigned' | 'collected' | 'processing' | 'completed' | 'cancelled';
     priority: 'normal' | 'urgent' | 'stat';
     total_amount: string | number;
     paid_amount: string | number;
     payment_status: 'unpaid' | 'partial' | 'paid';
+    order_source?: string;
+    order_type?: string;
+    scheduled_date?: string;
+    scheduled_time?: string;
     address?: string;
     latitude?: number;
     longitude?: number;
@@ -22,9 +26,17 @@ export interface LabOrder {
         name: string;
         phone: string;
     };
+    sample_photo_url?: string;
+    signature_url?: string; // Legacy
+    payment_mode?: string;
+    payment_proof_url?: string;
+    collected_at?: string;
     createdAt: string;
     updatedAt: string;
-    patient?: Partial<Patient>;
+    patient?: Partial<Patient> & {
+        email?: string;
+        alternate_phone?: string;
+    };
     test_results?: {
         id: number;
         test_id: number;
@@ -64,6 +76,15 @@ export interface LabOrderFormData {
     paid_amount?: number;
     payment_status?: string;
     notes?: string;
+    address?: string;
+    order_source?: string;
+    order_type?: string;
+    scheduled_date?: any; // Allow Date or string from AntD
+    scheduled_time?: string;
+    email?: string;
+    alternate_phone?: string;
+    latitude?: number;
+    longitude?: number;
 }
 
 export interface LabOrderResponse {

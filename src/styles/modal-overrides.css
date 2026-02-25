@@ -1,0 +1,23 @@
+/* Hide body scrollbar when modal is open to fix double scroll */
+.ant-scrolling-effect {
+    overflow: hidden !important;
+    touch-action: none;
+}
+
+/* Custom scrollbar for modal content */
+.ant-modal-body div::-webkit-scrollbar {
+    width: 6px;
+}
+
+.ant-modal-body div::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.ant-modal-body div::-webkit-scrollbar-thumb {
+    background: #e2e8f0;
+    border-radius: 10px;
+}
+
+.ant-modal-body div::-webkit-scrollbar-thumb:hover {
+    background: #cbd5e1;
+}

@@ -30,7 +30,7 @@ export const patientService = {
         const response = await apiClient.get('/patients/search', {
             params: { q: query },
         });
-        return response.data;
+        return response.data.data;
     },
 
     /**

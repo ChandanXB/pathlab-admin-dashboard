@@ -69,5 +69,13 @@ export const labOrderService = {
     assignAgent: async (id: number, agentId: number | null): Promise<{ success: boolean; data: LabOrder }> => {
         const response = await apiClient.put(`/lab-orders/${id}/assign`, { agent_id: agentId });
         return response.data;
+    },
+
+    /**
+     * Broadcast a lab order to all agents
+     */
+    broadcastOrder: async (id: number): Promise<{ success: boolean; data: LabOrder }> => {
+        const response = await apiClient.put(`/lab-orders/${id}/broadcast`);
+        return response.data;
     }
 };

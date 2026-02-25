@@ -8,14 +8,17 @@ interface AgentTableProps {
     loading: boolean;
     onEdit: (agent: CollectionAgent) => void;
     onDelete: (id: number) => void;
+    onRowClick: (agent: CollectionAgent) => void;
 }
 
-const AgentTable: React.FC<AgentTableProps> = ({ agents, loading, onEdit, onDelete }) => {
+const AgentTable: React.FC<AgentTableProps> = ({ agents, loading, onEdit, onDelete, onRowClick }) => {
     const columns = [
         {
             title: 'Name',
             dataIndex: 'name',
             key: 'name',
+            width: '15%',
+            ellipsis: true,
             render: (text: string) => (
                 <Space>
                     <UserOutlined />
@@ -27,10 +30,14 @@ const AgentTable: React.FC<AgentTableProps> = ({ agents, loading, onEdit, onDele
             title: 'Phone',
             dataIndex: 'phone',
             key: 'phone',
+            width: '14%',
+            ellipsis: true,
         },
         {
             title: 'Vehicle',
             key: 'vehicle',
+            width: '16%',
+            ellipsis: true,
             render: (_: any, record: CollectionAgent) => (
                 <span>{record.vehicle_type} {record.vehicle_no ? `(${record.vehicle_no})` : ''}</span>
             ),
@@ -44,6 +51,7 @@ const AgentTable: React.FC<AgentTableProps> = ({ agents, loading, onEdit, onDele
         {
             title: 'Availability',
             key: 'availability',
+            width: '13%',
             render: (_: any, record: CollectionAgent) => {
                 const activeOrders = record._count?.lab_orders || 0;
                 return (
@@ -57,6 +65,7 @@ const AgentTable: React.FC<AgentTableProps> = ({ agents, loading, onEdit, onDele
             title: 'Status',
             dataIndex: 'status',
             key: 'status',
+            width: '10%',
             render: (status: string) => (
                 <Tag color={status === 'active' ? 'green' : 'red'}>
                     {status.toUpperCase()}
@@ -66,6 +75,7 @@ const AgentTable: React.FC<AgentTableProps> = ({ agents, loading, onEdit, onDele
         {
             title: 'Actions',
             key: 'actions',
+            width: '10%',
             render: (_: any, record: CollectionAgent) => (
                 <Space size="middle">
                     <Button
@@ -91,12 +101,26 @@ const AgentTable: React.FC<AgentTableProps> = ({ agents, loading, onEdit, onDele
     ];
 
     return (
-        <Table
-            columns={columns}
-            dataSource={agents}
-            loading={loading}
-            rowKey="id"
-        />
+        <div style={{ width: '100%', overflow: 'hidden', flex: 1 }}>
+            <Table
+                columns={columns}
+                dataSource={agents}
+                loading={loading}
+                rowKey="id"
+                tableLayout="fixed"
+                style={{ width: '100%' }}
+                scroll={{ y: 'calc(100vh - 340px)' }}
+                onRow={(record) => ({
+                    onClick: (e: any) => {
+                        if (e.target.closest('button') || e.target.closest('.anticon')) {
+                            return;
+                        }
+                        onRowClick(record);
+                    },
+                    style: { cursor: 'pointer' }
+                })}
+            />
+        </div>
     );
 };
 

@@ -1,190 +1,421 @@
 import React, { useState, useEffect } from 'react';
-import { Typography, Card, Row, Col, Statistic, List, Tag, Badge, Space, Button, message } from 'antd';
+import { Typography, Card, Row, Col, List, Tag, Space, Button, Empty, Segmented } from 'antd';
 import {
     ExperimentOutlined,
     CheckCircleOutlined,
     ClockCircleOutlined,
     CarOutlined,
-    EnvironmentOutlined
+    EnvironmentOutlined,
+    UserOutlined,
+    RightOutlined,
+    SendOutlined,
+    InboxOutlined,
 } from '@ant-design/icons';
-import apiClient from '@/config/apiClient';
+import dayjs from 'dayjs';
+import { useAgentOrders } from '../../hooks/useAgentOrders';
 import { useAuthStore } from '@/store/authStore';
+import PickupDetailDrawer from '../../components/PickupDetailDrawer';
+import { WeeklyTrendsChart, ActivityDistributionChart, PerformanceSummaryChart, PriorityBreakdownChart } from '../components/DashboardCharts';
+import type { AgentOrder } from '../../services/agentOrderService';
 
 const { Title, Text } = Typography;
 
 const AgentDashboard: React.FC = () => {
     const { user } = useAuthStore();
-    const [loading, setLoading] = useState(false);
-    const [stats, setStats] = useState({
-        pendingPickups: 0,
-        completedToday: 0,
-        totalPickups: 0
-    });
-    const [assignedTasks, setAssignedTasks] = useState<any[]>([]);
+    const {
+        orders,
+        activeOrders,
+        pendingOrders,
+        acceptedOrders,
+        collectedOrders,
+        loading,
+        stats,
+        profile,
+        acceptPickup,
+        startPickup,
+        markReached,
+        markCollected,
+    } = useAgentOrders();
+
+    const [selectedOrder, setSelectedOrder] = useState<AgentOrder | null>(null);
+    const [drawerVisible, setDrawerVisible] = useState(false);
+    const [activeTab, setActiveTab] = useState<string>('active');
+    const [screenSize, setScreenSize] = useState(window.innerWidth);
 
     useEffect(() => {
-        if (user?.agentId) {
-            fetchDashboardData();
-            startLocationTracking();
-        }
-    }, [user?.agentId]);
+        const handleResize = () => setScreenSize(window.innerWidth);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
-    const fetchDashboardData = async () => {
+    // Location tracking
+    useEffect(() => {
         if (!user?.agentId) return;
-        setLoading(true);
-        try {
-            const [ordersRes] = await Promise.all([
-                apiClient.get(`/lab-orders?agent_id=${user.agentId}`)
-            ]);
-
-            const orders = ordersRes.data.data;
-            setAssignedTasks(orders.filter((o: any) => o.status !== 'completed' && o.status !== 'cancelled'));
-
-            // Set stats based on real data
-            setStats({
-                pendingPickups: orders.filter((o: any) => o.assignment_status === 'pending').length,
-                completedToday: orders.filter((o: any) => o.status === 'collected').length,
-                totalPickups: orders.length
-            });
-        } catch (error) {
-            console.error('Failed to fetch dashboard data', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const startLocationTracking = () => {
-        if (!navigator.geolocation) return;
+        let intervalId: number;
 
         const updateLocation = () => {
+            if (!navigator.geolocation) return;
             navigator.geolocation.getCurrentPosition(
                 async (position) => {
-                    const { latitude, longitude } = position.coords;
                     try {
-                        await apiClient.put(`/collection-agents/${user?.agentId}/location`, { latitude, longitude });
-                        console.log('Location updated');
+                        const { latitude, longitude } = position.coords;
+                        const { agentOrderService } = await import('../../services/agentOrderService');
+                        await agentOrderService.updateLocation(user.agentId!, latitude, longitude);
                     } catch (e) {
-                        console.error('Failed to update agent location', e);
+                        // silently fail location updates
                     }
                 },
-                (err) => console.error('Geolocation error', err),
+                () => { },
                 { enableHighAccuracy: true }
             );
         };
 
-        // Update every 1 minute
         updateLocation();
-        const interval = setInterval(updateLocation, 60000);
-        return () => clearInterval(interval);
+        intervalId = window.setInterval(updateLocation, 60000);
+        return () => clearInterval(intervalId);
+    }, [user?.agentId]);
+
+    const openDrawer = (order: AgentOrder) => {
+        setSelectedOrder(order);
+        setDrawerVisible(true);
     };
 
-    const handleAcceptAssignment = async (id: number) => {
-        try {
-            await apiClient.put(`/lab-orders/${id}/assignment-status`, { assignment_status: 'accepted' });
-            message.success('Pickup accepted!');
-            fetchDashboardData();
-        } catch (error) {
-            message.error('Failed to accept assignment');
+    const getDisplayOrders = () => {
+        switch (activeTab) {
+            case 'pending': return pendingOrders;
+            case 'active': return acceptedOrders;
+            case 'collected': return collectedOrders;
+            default: return activeOrders;
         }
     };
 
-    const handleMarkCollected = async (id: number) => {
-        try {
-            await apiClient.put(`/lab-orders/${id}`, { status: 'collected' });
-            await apiClient.put(`/lab-orders/${id}/assignment-status`, { assignment_status: 'collected' });
-            message.success('Sample marked as collected');
-            fetchDashboardData();
-        } catch (error) {
-            message.error('Failed to update status');
-        }
+    const displayOrders = getDisplayOrders();
+
+    const getAssignmentColor = (status: string | null) => {
+        const map: Record<string, string> = {
+            pending: '#faad14',
+            accepted: '#1890ff',
+            picking_up: '#722ed1',
+            collected: '#52c41a',
+        };
+        return map[status || ''] || '#d9d9d9';
     };
 
     return (
-        <div style={{ padding: '4px' }}>
-            <div style={{ marginBottom: 24 }}>
-                <Title level={3}>Welcome back, {user?.name}!</Title>
-                <Text type="secondary">Here is an overview of your collection tasks today.</Text>
-            </div>
+        <div style={{ padding: '24px', minHeight: '100%', background: '#f8fbfc' }}>
+            <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
+                {/* Welcome Header */}
+                <div style={{
+                    marginBottom: 32,
+                    background: 'linear-gradient(135deg, #1890ff 0%, #003a8c 100%)',
+                    borderRadius: '24px',
+                    padding: '40px',
+                    color: '#fff',
+                    display: 'flex',
+                    flexDirection: screenSize < 576 ? 'column' : 'row',
+                    justifyContent: 'space-between',
+                    alignItems: screenSize < 576 ? 'flex-start' : 'center',
+                    boxShadow: '0 12px 40px rgba(24, 144, 255, 0.25)',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    gap: screenSize < 576 ? '24px' : '0'
+                }}>
+                    <div style={{
+                        position: 'absolute',
+                        top: -60,
+                        right: -60,
+                        width: 240,
+                        height: 240,
+                        background: 'rgba(255,255,255,0.12)',
+                        borderRadius: '50%',
+                        filter: 'blur(50px)',
+                        zIndex: 0
+                    }} />
 
-            <Row gutter={[16, 16]}>
-                <Col xs={24} sm={8}>
-                    <Card bordered={false} style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-                        <Statistic
-                            title="Current Tasks"
-                            value={stats.pendingPickups}
-                            prefix={<ClockCircleOutlined style={{ color: '#faad14' }} />}
-                        />
-                    </Card>
-                </Col>
-                <Col xs={24} sm={8}>
-                    <Card bordered={false} style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-                        <Statistic
-                            title="Completed Today"
-                            value={stats.completedToday}
-                            prefix={<CheckCircleOutlined style={{ color: '#52c41a' }} />}
-                        />
-                    </Card>
-                </Col>
-                <Col xs={24} sm={8}>
-                    <Card bordered={false} style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-                        <Statistic
-                            title="My Vehicle"
-                            value="DL-12C-4567"
-                            prefix={<CarOutlined style={{ color: '#1890ff' }} />}
-                        />
-                    </Card>
-                </Col>
-            </Row>
+                    <div style={{ zIndex: 1, flex: 1 }}>
+                        <Title level={2} style={{ color: '#fff', margin: 0, fontSize: screenSize < 768 ? '24px' : '32px', fontWeight: 700 }}>
+                            {(() => {
+                                const hour = dayjs().hour();
+                                if (hour < 12) return 'Good Morning';
+                                if (hour < 17) return 'Good Afternoon';
+                                return 'Good Evening';
+                            })()}, {user?.name.split(' ')[0]}! 👋
+                        </Title>
+                        <Text style={{ color: 'rgba(255,255,255,0.9)', fontSize: '16px', display: 'block', marginTop: '4px' }}>
+                            {dayjs().format('dddd, DD MMMM YYYY')} • Agent Dashboard
+                        </Text>
+                        {profile?.vehicle_no && (
+                            <div style={{ marginTop: '20px' }}>
+                                <Tag icon={<CarOutlined />} style={{
+                                    background: 'rgba(255,255,255,0.15)',
+                                    color: '#fff',
+                                    fontWeight: 500,
+                                    borderRadius: '100px',
+                                    border: '1px solid rgba(255,255,255,0.2)',
+                                    padding: '6px 16px',
+                                    fontSize: '13px'
+                                }}>
+                                    {profile.vehicle_type || 'Vehicle'}: {profile.vehicle_no}
+                                </Tag>
+                            </div>
+                        )}
+                    </div>
 
-            <Card
-                title={<Space><ExperimentOutlined /> <Text strong>Active Assignments</Text></Space>}
-                style={{ marginTop: 24, borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}
-                loading={loading}
-                extra={<Button type="link" href="/agent/pickups">View History</Button>}
-            >
-                <List
-                    itemLayout="horizontal"
-                    dataSource={assignedTasks}
-                    locale={{ emptyText: 'No assigned tasks for today.' }}
-                    renderItem={(item) => (
-                        <List.Item
-                            actions={[
-                                item.assignment_status === 'pending' ? (
-                                    <Button type="primary" size="small" onClick={() => handleAcceptAssignment(item.id)} style={{ background: '#52c41a', borderColor: '#52c41a' }}>
-                                        Accept Pickup
-                                    </Button>
-                                ) : (
-                                    <Button type="primary" size="small" disabled={item.status === 'collected'} onClick={() => handleMarkCollected(item.id)}>
-                                        {item.status === 'collected' ? 'Collected' : 'Mark Collected'}
-                                    </Button>
-                                )
+                    <div style={{ zIndex: 1, display: 'flex', alignItems: 'center', gap: '16px' }}>
+                        <div style={{
+                            width: 64,
+                            height: 64,
+                            borderRadius: '20px',
+                            background: 'rgba(255,255,255,0.2)',
+                            backdropFilter: 'blur(10px)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            border: '1px solid rgba(255,255,255,0.3)',
+                            fontSize: '24px'
+                        }}>
+                            <UserOutlined />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Stats Row */}
+                <Row gutter={[20, 20]} style={{ marginBottom: 24 }}>
+                    <Col xs={12} sm={6}>
+                        <Card bordered={false} hoverable style={{
+                            borderRadius: 24,
+                            boxShadow: '0 8px 24px rgba(0,0,0,0.04)',
+                            background: '#fff',
+                        }} styles={{ body: { padding: '24px' } }}>
+                            <Space direction="vertical" size={0}>
+                                <div style={{ width: 48, height: 48, borderRadius: '14px', background: '#fff7e6', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+                                    <ClockCircleOutlined style={{ color: '#faad14', fontSize: '24px' }} />
+                                </div>
+                                <Text type="secondary" style={{ fontSize: '14px', fontWeight: 500 }}>New Requests</Text>
+                                <Title level={2} style={{ margin: '4px 0 0', fontSize: '32px', fontWeight: 700 }}>{stats.pendingPickups}</Title>
+                            </Space>
+                        </Card>
+                    </Col>
+                    <Col xs={12} sm={6}>
+                        <Card bordered={false} hoverable style={{
+                            borderRadius: 24,
+                            boxShadow: '0 8px 24px rgba(0,0,0,0.04)',
+                            background: '#fff',
+                        }} styles={{ body: { padding: '24px' } }}>
+                            <Space direction="vertical" size={0}>
+                                <div style={{ width: 48, height: 48, borderRadius: '14px', background: '#e6f7ff', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+                                    <CarOutlined style={{ color: '#1890ff', fontSize: '24px' }} />
+                                </div>
+                                <Text type="secondary" style={{ fontSize: '14px', fontWeight: 500 }}>In Progress</Text>
+                                <Title level={2} style={{ margin: '4px 0 0', fontSize: '32px', fontWeight: 700 }}>{stats.activePickups}</Title>
+                            </Space>
+                        </Card>
+                    </Col>
+                    <Col xs={12} sm={6}>
+                        <Card bordered={false} hoverable style={{
+                            borderRadius: 24,
+                            boxShadow: '0 8px 24px rgba(0,0,0,0.04)',
+                            background: '#fff',
+                        }} styles={{ body: { padding: '24px' } }}>
+                            <Space direction="vertical" size={0}>
+                                <div style={{ width: 48, height: 48, borderRadius: '14px', background: '#f6ffed', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+                                    <CheckCircleOutlined style={{ color: '#52c41a', fontSize: '24px' }} />
+                                </div>
+                                <Text type="secondary" style={{ fontSize: '14px', fontWeight: 500 }}>Collected Today</Text>
+                                <Title level={2} style={{ margin: '4px 0 0', fontSize: '32px', fontWeight: 700 }}>{stats.collectedToday}</Title>
+                            </Space>
+                        </Card>
+                    </Col>
+                    <Col xs={12} sm={6}>
+                        <Card bordered={false} hoverable style={{
+                            borderRadius: 24,
+                            boxShadow: '0 8px 24px rgba(0,0,0,0.04)',
+                            background: '#fff',
+                        }} styles={{ body: { padding: '24px' } }}>
+                            <Space direction="vertical" size={0}>
+                                <div style={{ width: 48, height: 48, borderRadius: '14px', background: '#f9f0ff', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+                                    <ExperimentOutlined style={{ color: '#722ed1', fontSize: '24px' }} />
+                                </div>
+                                <Text type="secondary" style={{ fontSize: '14px', fontWeight: 500 }}>Total Assigned</Text>
+                                <Title level={2} style={{ margin: '4px 0 0', fontSize: '32px', fontWeight: 700 }}>{stats.totalAssigned}</Title>
+                            </Space>
+                        </Card>
+                    </Col>
+                </Row>
+
+                {/* Performance Graphs Row 1 */}
+                <Row gutter={[20, 20]} style={{ marginBottom: 24 }}>
+                    <Col xs={24} lg={16} style={{ display: 'flex' }}>
+                        <WeeklyTrendsChart orders={orders} />
+                    </Col>
+                    <Col xs={24} lg={8} style={{ display: 'flex' }}>
+                        <ActivityDistributionChart orders={orders} />
+                    </Col>
+                </Row>
+
+                {/* Performance Graphs Row 2 */}
+                <Row gutter={[20, 20]} style={{ marginBottom: 24 }}>
+                    <Col xs={24} lg={10} style={{ display: 'flex' }}>
+                        <PerformanceSummaryChart orders={orders} />
+                    </Col>
+                    <Col xs={24} lg={14} style={{ display: 'flex' }}>
+                        <PriorityBreakdownChart orders={orders} />
+                    </Col>
+                </Row>
+
+                {/* Task List */}
+                <Card
+                    title={
+                        <Space size="middle">
+                            <div style={{ padding: '8px', background: '#e6f7ff', borderRadius: '12px' }}>
+                                <ExperimentOutlined style={{ color: '#1890ff', fontSize: '20px' }} />
+                            </div>
+                            <Text strong style={{ fontSize: '20px' }}>Current Pickups</Text>
+                        </Space>
+                    }
+                    extra={
+                        <Segmented
+                            options={[
+                                { label: `New (${pendingOrders.length})`, value: 'pending' },
+                                { label: `Active (${acceptedOrders.length})`, value: 'active' },
+                                { label: `Done (${collectedOrders.length})`, value: 'collected' },
                             ]}
-                        >
-                            <List.Item.Meta
-                                title={
-                                    <Space>
-                                        <Text strong>{item.order_code}</Text>
-                                        {item.priority === 'urgent' && <Tag color="error">URGENT</Tag>}
-                                        <Tag color={
-                                            item.assignment_status === 'pending' ? 'gold' :
-                                                item.assignment_status === 'accepted' ? 'processing' : 'success'
-                                        }>
-                                            {item.assignment_status?.toUpperCase() || 'ASSIGNED'}
+                            value={activeTab}
+                            onChange={(v) => setActiveTab(v as string)}
+                            style={{ background: '#f0f2f5', padding: '4px', borderRadius: '12px' }}
+                        />
+                    }
+                    style={{ borderRadius: 28, boxShadow: '0 8px 32px rgba(0,0,0,0.04)', border: 'none' }}
+                    loading={loading}
+                    styles={{ body: { padding: '0' } }}
+                >
+                    <List
+                        itemLayout="horizontal"
+                        dataSource={displayOrders}
+                        locale={{
+                            emptyText: (
+                                <Empty
+                                    image={<InboxOutlined style={{ fontSize: 48, color: '#d9d9d9' }} />}
+                                    description={`No ${activeTab} pickups`}
+                                    style={{ padding: '40px 0' }}
+                                />
+                            )
+                        }}
+                        renderItem={(item) => (
+                            <List.Item
+                                onClick={() => openDrawer(item)}
+                                style={{
+                                    padding: '16px 20px',
+                                    cursor: 'pointer',
+                                    transition: 'background 0.2s',
+                                    borderLeft: `4px solid ${getAssignmentColor(item.assignment_status)}`,
+                                }}
+                                className="agent-pickup-item"
+                                actions={[
+                                    item.assignment_status === 'pending' ? (
+                                        <Button
+                                            type="primary"
+                                            size="small"
+                                            onClick={(e) => { e.stopPropagation(); acceptPickup(item.id); }}
+                                            style={{ borderRadius: '12px', fontWeight: 600 }}
+                                        >
+                                            Accept
+                                        </Button>
+                                    ) : item.assignment_status === 'accepted' ? (
+                                        <Button
+                                            type="primary"
+                                            size="small"
+                                            onClick={(e) => { e.stopPropagation(); startPickup(item.id); }}
+                                            style={{ background: '#52c41a', borderColor: '#52c41a', borderRadius: '12px', fontWeight: 600 }}
+                                        >
+                                            Start
+                                        </Button>
+                                    ) : item.assignment_status === 'picking_up' ? (
+                                        <Button
+                                            type="primary"
+                                            size="small"
+                                            icon={<SendOutlined />}
+                                            onClick={(e) => { e.stopPropagation(); markCollected(item.id); }}
+                                            style={{ background: '#722ed1', borderColor: '#722ed1', borderRadius: '12px', fontWeight: 600 }}
+                                        >
+                                            Collected
+                                        </Button>
+                                    ) : (
+                                        <Tag color="success" style={{ borderRadius: '10px', padding: '2px 10px', border: 'none', background: '#f6ffed' }}>
+                                            <Space size={4}><CheckCircleOutlined /> <Text strong style={{ color: '#52c41a', fontSize: '12px' }}>Done</Text></Space>
                                         </Tag>
-                                    </Space>
-                                }
-                                description={
-                                    <div>
-                                        <Text strong>{item.patient?.full_name}</Text>
-                                        <br />
-                                        <Text type="secondary"><EnvironmentOutlined /> {item.address}</Text>
-                                    </div>
-                                }
-                            />
-                        </List.Item>
-                    )}
+                                    ),
+                                    <RightOutlined style={{ color: '#bfbfbf', fontSize: '12px' }} />
+                                ]}
+                            >
+                                <List.Item.Meta
+                                    title={
+                                        <Space size="small">
+                                            <Text strong style={{ fontSize: '15px', color: '#141414' }}>{item.order_code}</Text>
+                                            {item.priority === 'urgent' && (
+                                                <Tag color="error" style={{ borderRadius: '6px', border: 'none', fontWeight: 600 }}>
+                                                    URGENT
+                                                </Tag>
+                                            )}
+                                        </Space>
+                                    }
+                                    description={
+                                        <div style={{ marginTop: '4px' }}>
+                                            <Space size="small" style={{ marginBottom: '6px' }}>
+                                                <UserOutlined style={{ color: '#8c8c8c' }} />
+                                                <Text style={{ color: '#595959' }}>{item.patient?.full_name || 'N/A'}</Text>
+                                                {item.patient?.phone && (
+                                                    <Text type="secondary" style={{ fontSize: '12px' }}>• {item.patient.phone}</Text>
+                                                )}
+                                            </Space>
+                                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '4px' }}>
+                                                <EnvironmentOutlined style={{ color: '#ff4d4f', marginTop: '3px' }} />
+                                                <Text type="secondary" style={{ fontSize: '12px', lineHeight: '1.4' }}>
+                                                    {item.address || item.patient?.address || 'No address'}
+                                                </Text>
+                                            </div>
+                                            <div style={{ marginTop: '8px', display: 'flex', gap: '16px' }}>
+                                                <Space size={4}>
+                                                    <ClockCircleOutlined style={{ color: '#bfbfbf', fontSize: '12px' }} />
+                                                    <Text type="secondary" style={{ fontSize: '11px' }}>
+                                                        {dayjs(item.createdAt).format('DD MMM, hh:mm A')}
+                                                    </Text>
+                                                </Space>
+                                                <Space size={4}>
+                                                    <ExperimentOutlined style={{ color: '#bfbfbf', fontSize: '12px' }} />
+                                                    <Text type="secondary" style={{ fontSize: '11px' }}>
+                                                        {item.test_results?.length || 0} Test(s)
+                                                    </Text>
+                                                </Space>
+                                            </div>
+                                        </div>
+                                    }
+                                />
+                            </List.Item>
+                        )}
+                    />
+                </Card>
+
+                {/* Detail Drawer */}
+                <PickupDetailDrawer
+                    visible={drawerVisible}
+                    order={selectedOrder}
+                    onClose={() => { setDrawerVisible(false); setSelectedOrder(null); }}
+                    onAccept={async (id) => { await acceptPickup(id); setDrawerVisible(false); }}
+                    onStartPickup={async (id) => { await startPickup(id); setDrawerVisible(false); }}
+                    onMarkReached={async (id) => { await markReached(id); setDrawerVisible(false); }}
+                    onMarkCollected={async (id, proofData) => { await markCollected(id, proofData); setDrawerVisible(false); }}
                 />
-            </Card>
+
+                <style>{`
+                .agent-pickup-item:hover {
+                    background: #fcfcfc !important;
+                }
+                .agent-pickup-item {
+                    border-bottom: 1px solid #f0f0f0 !important;
+                }
+            `}</style>
+            </div>
         </div>
     );
 };

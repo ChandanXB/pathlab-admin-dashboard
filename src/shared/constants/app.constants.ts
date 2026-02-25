@@ -2,6 +2,7 @@ import colors from '@/styles/colors';
 
 export const ORDER_STATUSES = [
     { label: 'Pending', value: 'pending', color: colors.status.pending },
+    { label: 'Assigned', value: 'assigned', color: colors.status.assigned },
     { label: 'Collected', value: 'collected', color: colors.status.collected },
     { label: 'Processing', value: 'processing', color: colors.status.processing },
     { label: 'Completed', value: 'completed', color: colors.status.completed },

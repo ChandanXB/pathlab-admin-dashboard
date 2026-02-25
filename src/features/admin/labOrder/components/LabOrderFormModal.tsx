@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { Form, Input, Select, Row, Col, Spin, InputNumber, Divider } from 'antd';
+import { Form, Input, Select, Row, Col, Spin, InputNumber, Divider, DatePicker } from 'antd';
 import SharedModal from '@/shared/components/SharedModal';
 import { ORDER_STATUSES, PRIORITIES, PAYMENT_STATUSES } from '@/shared/constants/app.constants';
 import type { LabOrder } from '../types/labOrder.types';
@@ -15,6 +15,7 @@ interface LabOrderFormModalProps {
     form: any;
     onSubmit: (values: any) => void;
     onCancel: () => void;
+    submitting?: boolean;
 }
 
 const LabOrderFormModal: React.FC<LabOrderFormModalProps> = ({
@@ -23,6 +24,7 @@ const LabOrderFormModal: React.FC<LabOrderFormModalProps> = ({
     form,
     onSubmit,
     onCancel,
+    submitting = false,
 }) => {
     const [fetchingPatients, setFetchingPatients] = useState(false);
     const [patientOptions, setPatientOptions] = useState<{ label: string; value: number }[]>([]);
@@ -53,10 +55,11 @@ const LabOrderFormModal: React.FC<LabOrderFormModalProps> = ({
 
             patientService.searchPatients(value).then((patients) => {
                 if (fetchId !== fetchPatientRef.current) return;
-                setPatientOptions(patients.map(p => ({
+                const options = Array.isArray(patients) ? patients.map(p => ({
                     label: `${p.full_name} (${p.patient_code})`,
                     value: p.id,
-                })));
+                })) : [];
+                setPatientOptions(options);
                 setFetchingPatients(false);
             });
         };
@@ -94,8 +97,15 @@ const LabOrderFormModal: React.FC<LabOrderFormModalProps> = ({
             onCancel={onCancel}
             width={800}
             okText={editingOrder ? 'Update Order' : 'Create Order'}
+            confirmLoading={submitting}
         >
-            <Form form={form} layout="vertical" onFinish={onSubmit} initialValues={{ priority: 'normal', status: 'pending', payment_status: 'unpaid' }}>
+            <Form form={form} layout="vertical" onFinish={onSubmit} initialValues={{
+                priority: 'normal',
+                status: 'pending',
+                payment_status: 'unpaid',
+                order_source: 'walk_in',
+                order_type: 'lab_visit'
+            }}>
                 <Row gutter={16}>
                     <Col span={24}>
                         <Form.Item
@@ -173,6 +183,72 @@ const LabOrderFormModal: React.FC<LabOrderFormModalProps> = ({
                                 parser={value => value!.replace(/\₹\s?|(,*)/g, '')}
                                 precision={2}
                             />
+                        </Form.Item>
+                    </Col>
+                </Row>
+
+                <Divider style={{ margin: '12px 0' }}>Schedule Details</Divider>
+                <Row gutter={16}>
+                    <Col span={12}>
+                        <Form.Item name="scheduled_date" label="Scheduled Collection Date">
+                            <DatePicker style={{ width: '100%' }} placeholder="Select date" />
+                        </Form.Item>
+                    </Col>
+                    <Col span={12}>
+                        <Form.Item name="scheduled_time" label="Scheduled Collection Slot">
+                            <Select placeholder="Select time slot" options={[
+                                { label: '07:00 AM - 08:00 AM', value: '07:00 AM - 08:00 AM' },
+                                { label: '08:00 AM - 09:00 AM', value: '08:00 AM - 09:00 AM' },
+                                { label: '09:00 AM - 10:00 AM', value: '09:00 AM - 10:00 AM' },
+                                { label: '10:00 AM - 11:00 AM', value: '10:00 AM - 11:00 AM' },
+                                { label: '11:00 AM - 12:00 PM', value: '11:00 AM - 12:00 PM' },
+                                { label: '12:00 PM - 01:00 PM', value: '12:00 PM - 01:00 PM' },
+                                { label: '01:00 PM - 02:00 PM', value: '01:00 PM - 02:00 PM' },
+                                { label: '02:00 PM - 03:00 PM', value: '02:00 PM - 03:00 PM' },
+                                { label: '03:00 PM - 04:00 PM', value: '03:00 PM - 04:00 PM' },
+                                { label: '04:00 PM - 05:00 PM', value: '04:00 PM - 05:00 PM' },
+                                { label: '05:00 PM - 06:00 PM', value: '05:00 PM - 06:00 PM' },
+                                { label: '06:00 PM - 07:00 PM', value: '06:00 PM - 07:00 PM' },
+                                { label: '07:00 PM - 08:00 PM', value: '07:00 PM - 08:00 PM' },
+                            ]} />
+                        </Form.Item>
+                    </Col>
+                </Row>
+
+                <Row gutter={16}>
+                    <Col span={12}>
+                        <Form.Item name="order_source" label="Order Source">
+                            <Select options={[
+                                { label: 'Walk-in', value: 'walk_in' },
+                                { label: 'Website', value: 'website' },
+                                { label: 'Mobile App', value: 'mobile_app' },
+                                { label: 'Doctor Referral', value: 'doctor_referral' },
+                            ]} />
+                        </Form.Item>
+                    </Col>
+                    <Col span={12}>
+                        <Form.Item name="order_type" label="Order Type">
+                            <Select options={[
+                                { label: 'Lab Visit', value: 'lab_visit' },
+                                { label: 'Home Collection', value: 'home_collection' },
+                            ]} />
+                        </Form.Item>
+                    </Col>
+                </Row>
+
+                <Form.Item name="address" label="Pickup / Collection Address">
+                    <Input placeholder="Enter address for home collection" />
+                </Form.Item>
+
+                <Row gutter={16}>
+                    <Col span={12}>
+                        <Form.Item name="email" label="Contact Email (for Reports)">
+                            <Input placeholder="Direct report email" />
+                        </Form.Item>
+                    </Col>
+                    <Col span={12}>
+                        <Form.Item name="alternate_phone" label="Alternate Phone">
+                            <Input placeholder="Secondary contact number" />
                         </Form.Item>
                     </Col>
                 </Row>

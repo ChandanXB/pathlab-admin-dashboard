@@ -7,6 +7,7 @@ export const useLabOrders = (initialFilters: LabOrderQueryParams = { page: 1, li
     const [orders, setOrders] = useState<LabOrder[]>([]);
     const [loading, setLoading] = useState(false);
     const [loadingMore, setLoadingMore] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
     const [filters, setFilters] = useState<LabOrderQueryParams>(initialFilters);
     const [pagination, setPagination] = useState({
         total: 0,
@@ -16,7 +17,8 @@ export const useLabOrders = (initialFilters: LabOrderQueryParams = { page: 1, li
         hasMore: false
     });
 
-    const fetchOrders = useCallback(async (isLoadMore = false) => {
+    const fetchOrders = useCallback(async () => {
+        const isLoadMore = (filters.page || 1) > 1;
         try {
             if (isLoadMore) setLoadingMore(true);
             else setLoading(true);
@@ -59,6 +61,7 @@ export const useLabOrders = (initialFilters: LabOrderQueryParams = { page: 1, li
 
     const createOrder = async (data: LabOrderFormData) => {
         try {
+            setSubmitting(true);
             const response = await labOrderService.createOrder(data);
             if (response.success) {
                 message.success('Lab order created successfully');
@@ -69,11 +72,14 @@ export const useLabOrders = (initialFilters: LabOrderQueryParams = { page: 1, li
         } catch (error: any) {
             message.error(error.response?.data?.error || 'Failed to create lab order');
             return false;
+        } finally {
+            setSubmitting(false);
         }
     };
 
     const updateOrder = async (id: number, data: Partial<LabOrderFormData>) => {
         try {
+            setSubmitting(true);
             const response = await labOrderService.updateOrder(id, data);
             if (response.success) {
                 message.success('Lab order updated successfully');
@@ -84,6 +90,8 @@ export const useLabOrders = (initialFilters: LabOrderQueryParams = { page: 1, li
         } catch (error: any) {
             message.error(error.response?.data?.error || 'Failed to update lab order');
             return false;
+        } finally {
+            setSubmitting(false);
         }
     };
 
@@ -129,10 +137,26 @@ export const useLabOrders = (initialFilters: LabOrderQueryParams = { page: 1, li
         }
     };
 
+    const broadcastOrder = async (id: number) => {
+        try {
+            const response = await labOrderService.broadcastOrder(id);
+            if (response.success) {
+                message.success('Order broadcasted to all agents');
+                setOrders(prev => prev.map(o => o.id === id ? response.data : o));
+                return true;
+            }
+            return false;
+        } catch (error: any) {
+            message.error(error.response?.data?.error || 'Failed to broadcast order');
+            return false;
+        }
+    };
+
     return {
         orders,
         loading,
         loadingMore,
+        submitting,
         pagination,
         filters,
         setFilters,
@@ -140,6 +164,7 @@ export const useLabOrders = (initialFilters: LabOrderQueryParams = { page: 1, li
         updateOrder,
         updateOrderStatus,
         assignAgent,
+        broadcastOrder,
         deleteOrder,
         loadMore,
         refresh: fetchOrders

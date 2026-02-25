@@ -3,7 +3,6 @@ import {
     Button,
     Card,
     Input,
-    Space,
     Form,
     message
 } from 'antd';
@@ -12,6 +11,7 @@ import {
     SearchOutlined
 } from '@ant-design/icons';
 import { collectionAgentService, type CollectionAgent } from '../services/collectionAgentService';
+import { useNavigate } from 'react-router-dom';
 import { AgentTable, AgentFormModal } from '../components';
 
 const CollectionAgentManager: React.FC = () => {
@@ -21,6 +21,7 @@ const CollectionAgentManager: React.FC = () => {
     const [editingAgent, setEditingAgent] = useState<CollectionAgent | null>(null);
     const [form] = Form.useForm();
     const [searchText, setSearchText] = useState('');
+    const navigate = useNavigate();
 
     const fetchAgents = async () => {
         try {
@@ -62,6 +63,10 @@ const CollectionAgentManager: React.FC = () => {
         }
     };
 
+    const handleRowClick = (agent: CollectionAgent) => {
+        navigate(`/collection-agents/${agent.id}`);
+    };
+
     const handleModalOk = async () => {
         try {
             const values = await form.validateFields();
@@ -80,9 +85,13 @@ const CollectionAgentManager: React.FC = () => {
     };
 
     return (
-        <Space direction="vertical" size="large" style={{ width: '100%' }}>
-            <Card title="Collection Agents Management">
-                <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 24 }}>
+            <Card
+                title="Collection Agents Management"
+                style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}
+                styles={{ body: { flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' } }}
+            >
+                <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', flexShrink: 0 }}>
                     <Input
                         placeholder="Search by name, phone or email"
                         prefix={<SearchOutlined />}
@@ -103,6 +112,7 @@ const CollectionAgentManager: React.FC = () => {
                     loading={loading}
                     onEdit={handleEdit}
                     onDelete={handleDelete}
+                    onRowClick={handleRowClick}
                 />
             </Card>
 
@@ -113,7 +123,7 @@ const CollectionAgentManager: React.FC = () => {
                 onOk={handleModalOk}
                 onCancel={() => setIsModalOpen(false)}
             />
-        </Space>
+        </div>
     );
 };
 

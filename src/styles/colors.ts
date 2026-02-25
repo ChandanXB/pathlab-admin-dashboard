@@ -36,6 +36,7 @@ export const colors = {
     // Order/Status Colors
     status: {
         pending: '#fa8c16',   // Orange
+        assigned: '#13c2c2',  // Cyan
         collected: '#1890ff', // Blue
         processing: '#722ed1',// Purple
         completed: '#52c41a', // Green
