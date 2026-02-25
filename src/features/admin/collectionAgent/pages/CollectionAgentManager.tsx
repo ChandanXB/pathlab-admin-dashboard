@@ -3,7 +3,6 @@ import {
     Button,
     Card,
     Input,
-    Space,
     Form,
     message
 } from 'antd';
@@ -86,9 +85,13 @@ const CollectionAgentManager: React.FC = () => {
     };
 
     return (
-        <Space direction="vertical" size="large" style={{ width: '100%' }}>
-            <Card title="Collection Agents Management">
-                <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 24 }}>
+            <Card
+                title="Collection Agents Management"
+                style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}
+                styles={{ body: { flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' } }}
+            >
+                <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', flexShrink: 0 }}>
                     <Input
                         placeholder="Search by name, phone or email"
                         prefix={<SearchOutlined />}
@@ -120,7 +123,7 @@ const CollectionAgentManager: React.FC = () => {
                 onOk={handleModalOk}
                 onCancel={() => setIsModalOpen(false)}
             />
-        </Space>
+        </div>
     );
 };
 

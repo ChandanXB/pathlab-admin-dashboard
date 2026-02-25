@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Typography, Card, Table, Tag, Button, Space, Input, Select, Row, Col, Tooltip } from 'antd';
 import {
     EnvironmentOutlined,
@@ -14,6 +14,7 @@ import {
     ExperimentOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
+import { useSearchParams } from 'react-router-dom';
 import { useAgentOrders } from '../../hooks/useAgentOrders';
 import PickupDetailDrawer from '../../components/PickupDetailDrawer';
 import type { AgentOrder } from '../../services/agentOrderService';
@@ -32,11 +33,18 @@ const AgentPickups: React.FC = () => {
         markCollected,
     } = useAgentOrders();
 
+    const [searchParams] = useSearchParams();
+    const urlStatus = searchParams.get('status') || 'all';
+
     const [selectedOrder, setSelectedOrder] = useState<AgentOrder | null>(null);
     const [drawerVisible, setDrawerVisible] = useState(false);
     const [searchText, setSearchText] = useState('');
-    const [statusFilter, setStatusFilter] = useState<string>('all');
+    const [statusFilter, setStatusFilter] = useState<string>(urlStatus);
     const [assignmentFilter, setAssignmentFilter] = useState<string>('all');
+
+    useEffect(() => {
+        setStatusFilter(urlStatus);
+    }, [urlStatus]);
 
     const filteredOrders = orders.filter(order => {
         // Search
@@ -148,16 +156,16 @@ const AgentPickups: React.FC = () => {
             )
         },
         {
-            title: 'Order Status',
-            key: 'status',
-            width: 120,
-            render: (_: any, record: AgentOrder) => getOrderStatusTag(record.status)
-        },
-        {
-            title: 'Pickup Status',
-            key: 'assignment',
-            width: 120,
-            render: (_: any, record: AgentOrder) => getAssignmentTag(record.assignment_status)
+            title: 'Status',
+            key: 'combined_status',
+            width: 140,
+            render: (_: any, record: AgentOrder) => (
+                <Space direction="vertical" size={4}>
+                    {getOrderStatusTag(record.status)}
+                    {record.assignment_status && record.assignment_status !== record.status &&
+                        record.assignment_status !== 'broadcasted' && getAssignmentTag(record.assignment_status)}
+                </Space>
+            )
         },
         {
             title: 'Actions',
@@ -172,7 +180,7 @@ const AgentPickups: React.FC = () => {
                                 type="primary"
                                 size="small"
                                 icon={<SendOutlined />}
-                                onClick={() => claimBroadcastedOrder(record.id)}
+                                onClick={(e) => { e.stopPropagation(); claimBroadcastedOrder(record.id); }}
                                 style={{ background: '#1890ff', borderColor: '#1890ff', borderRadius: '6px' }}
                             >
                                 Claim
@@ -182,7 +190,7 @@ const AgentPickups: React.FC = () => {
                             <Button
                                 type="primary"
                                 size="small"
-                                onClick={() => acceptPickup(record.id)}
+                                onClick={(e) => { e.stopPropagation(); acceptPickup(record.id); }}
                                 style={{ background: '#52c41a', borderColor: '#52c41a', borderRadius: '6px' }}
                             >
                                 Accept
@@ -193,7 +201,7 @@ const AgentPickups: React.FC = () => {
                                 type="primary"
                                 size="small"
                                 icon={<CarOutlined />}
-                                onClick={() => startPickup(record.id)}
+                                onClick={(e) => { e.stopPropagation(); startPickup(record.id); }}
                                 style={{ borderRadius: '6px' }}
                             >
                                 Start
@@ -204,7 +212,7 @@ const AgentPickups: React.FC = () => {
                                 type="primary"
                                 size="small"
                                 icon={<SendOutlined />}
-                                onClick={() => openDrawer(record)}
+                                onClick={(e) => { e.stopPropagation(); openDrawer(record); }}
                                 style={{ background: '#722ed1', borderColor: '#722ed1', borderRadius: '6px' }}
                             >
                                 Collected
@@ -219,7 +227,7 @@ const AgentPickups: React.FC = () => {
                             <Button
                                 size="small"
                                 icon={<EyeOutlined />}
-                                onClick={() => openDrawer(record)}
+                                onClick={(e) => { e.stopPropagation(); openDrawer(record); }}
                                 style={{ borderRadius: '6px' }}
                             />
                         </Tooltip>
@@ -252,28 +260,14 @@ const AgentPickups: React.FC = () => {
                             style={{ borderRadius: '8px' }}
                         />
                     </Col>
-                    <Col xs={12} sm={5}>
-                        <Select
-                            value={statusFilter}
-                            onChange={setStatusFilter}
-                            style={{ width: '100%' }}
-                            options={[
-                                { label: 'All Statuses', value: 'all' },
-                                { label: 'Pending', value: 'pending' },
-                                { label: 'Collected', value: 'collected' },
-                                { label: 'Processing', value: 'processing' },
-                                { label: 'Completed', value: 'completed' },
-                                { label: 'Cancelled', value: 'cancelled' },
-                            ]}
-                        />
-                    </Col>
-                    <Col xs={12} sm={5}>
+                    <Col xs={12} sm={8}>
                         <Select
                             value={assignmentFilter}
                             onChange={setAssignmentFilter}
-                            style={{ width: '100%' }}
+                            style={{ width: '100%', borderRadius: '8px' }}
+                            placeholder="Assignment Type"
                             options={[
-                                { label: 'All Pickups', value: 'all' },
+                                { label: 'All Assignments', value: 'all' },
                                 { label: 'Available for Claim', value: 'broadcasted' },
                                 { label: 'Pending Accept', value: 'pending' },
                                 { label: 'Accepted', value: 'accepted' },
@@ -282,8 +276,9 @@ const AgentPickups: React.FC = () => {
                             ]}
                         />
                     </Col>
-                    <Col xs={24} sm={6}>
+                    <Col xs={24} sm={8}>
                         <Button
+                            block
                             icon={<FilterOutlined />}
                             onClick={() => { setSearchText(''); setStatusFilter('all'); setAssignmentFilter('all'); }}
                             style={{ borderRadius: '8px' }}
@@ -295,7 +290,7 @@ const AgentPickups: React.FC = () => {
             </Card>
 
             {/* Table */}
-            <Card style={{ borderRadius: '12px', flex: 1 }} styles={{ body: { padding: 0 } }}>
+            <Card style={{ borderRadius: '12px', flex: 1, overflow: 'hidden' }} styles={{ body: { padding: 0 } }}>
                 <Table
                     columns={columns}
                     dataSource={filteredOrders}
@@ -303,10 +298,12 @@ const AgentPickups: React.FC = () => {
                     rowKey="id"
                     pagination={{ pageSize: 15, showSizeChanger: false }}
                     size="small"
-                    scroll={{ x: 900 }}
-                    rowClassName={(record) =>
-                        record.priority === 'urgent' ? 'urgent-row' : ''
-                    }
+                    scroll={{ x: 900, y: 'calc(100vh - 350px)' }}
+                    rowClassName={(record) => record.priority === 'urgent' ? 'urgent-row' : ''}
+                    onRow={(record) => ({
+                        onClick: () => openDrawer(record),
+                        style: { cursor: 'pointer' }
+                    })}
                 />
             </Card>
 

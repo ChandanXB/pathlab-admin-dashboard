@@ -94,63 +94,66 @@ const LabOrderDetailDrawer: React.FC<LabOrderDetailDrawerProps> = ({ visible, or
         >
             <Space direction="vertical" size="large" style={{ width: '100%' }}>
                 {/* Header Info */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
-                    <div>
-                        <Title level={4} style={{ margin: 0 }}>{order.order_code}</Title>
-                        <Text type="secondary" style={{ fontSize: '13px' }}>
-                            <CalendarOutlined /> Created on {new Date(order.createdAt).toLocaleDateString('en-GB', {
-                                day: '2-digit',
-                                month: 'short',
-                                year: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit',
-                                hour12: true
-                            })}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+                    <div style={{ flex: 1 }}>
+                        <Title level={4} style={{ margin: 0, color: '#262626' }}>{order.order_code}</Title>
+                        <Text type="secondary" style={{ fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px', marginTop: 4 }}>
+                            <CalendarOutlined /> Created on {dayjs(order.createdAt).format('DD MMM YYYY, hh:mm A')}
                         </Text>
+
                         {(order.scheduled_date || order.scheduled_time) && (
-                            <div style={{ marginTop: 8, padding: '8px', background: '#f6ffed', border: '1px solid #b7eb8f', borderRadius: '4px' }}>
-                                <Text strong style={{ color: '#52c41a', display: 'block', fontSize: '12px' }}>
+                            <div style={{
+                                marginTop: 12,
+                                padding: '10px 14px',
+                                background: '#f6ffed',
+                                border: '1px solid #b7eb8f',
+                                borderRadius: '8px',
+                                maxWidth: 'fit-content'
+                            }}>
+                                <Text strong style={{ color: '#52c41a', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', marginBottom: 4 }}>
                                     <ClockCircleOutlined /> SCHEDULED COLLECTION
                                 </Text>
-                                <Space direction="vertical" size={0}>
+                                <Space direction="vertical" size={2}>
                                     {order.scheduled_date && (
-                                        <Text style={{ fontSize: '13px' }}>
-                                            Date: {new Date(order.scheduled_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                        <Text style={{ fontSize: '13px', color: '#595959' }}>
+                                            Date: <span style={{ fontWeight: 600 }}>{dayjs(order.scheduled_date).format('DD MMM YYYY')}</span>
                                         </Text>
                                     )}
                                     {order.scheduled_time && (
-                                        <Text style={{ fontSize: '13px' }}>
-                                            Slot: {order.scheduled_time}
+                                        <Text style={{ fontSize: '13px', color: '#595959' }}>
+                                            Slot: <span style={{ fontWeight: 600 }}>{order.scheduled_time}</span>
                                         </Text>
                                     )}
                                 </Space>
                             </div>
                         )}
                     </div>
-                    <Space direction="vertical" align="end" size={8}>
-                        <Tag color={getStatusColor(order.status)} style={{ margin: 0, padding: '2px 12px', borderRadius: '12px', fontWeight: 600 }}>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px', paddingLeft: 16 }}>
+                        <Tag color={getStatusColor(order.status)} style={{ margin: 0, padding: '4px 16px', borderRadius: '20px', fontWeight: 600, fontSize: '13px' }}>
                             {getStatusLabel(order.status).toUpperCase()}
                         </Tag>
 
-                        <Space size={4}>
-                            <Tag color="cyan" icon={<GlobalOutlined />} style={{ borderRadius: '4px' }}>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', justifyContent: 'flex-end' }}>
+                            <Tag color="cyan" icon={<GlobalOutlined />} style={{ borderRadius: '6px', margin: 0 }}>
                                 {order.order_source?.replace('_', ' ').toUpperCase() || 'WALK-IN'}
                             </Tag>
-                            <Tag color="blue" icon={<ShopOutlined />} style={{ borderRadius: '4px' }}>
+                            <Tag color="blue" icon={<ShopOutlined />} style={{ borderRadius: '6px', margin: 0 }}>
                                 {order.order_type?.replace('_', ' ').toUpperCase() || 'LAB VISIT'}
                             </Tag>
-                        </Space>
+                        </div>
 
-                        {order.order_type === 'home_collection' && order.assignment_status && order.assignment_status !== 'not_assigned' && (
-                            <Tag color="processing" style={{ margin: 0, borderRadius: '4px' }}>
-                                AGENT: {order.assignment_status.toUpperCase()}
-                            </Tag>
-                        )}
+                        {order.order_type === 'home_collection' && order.assignment_status &&
+                            order.assignment_status !== 'not_assigned' && order.assignment_status !== order.status && (
+                                <Tag color="purple" style={{ margin: 0, borderRadius: '6px', fontWeight: 500 }}>
+                                    AGENT: {order.assignment_status.toUpperCase()}
+                                </Tag>
+                            )}
 
                         <div style={{ marginTop: 2 }}>
                             {getPriorityTag(order.priority)}
                         </div>
-                    </Space>
+                    </div>
                 </div>
 
                 <Divider style={{ margin: '12px 0' }} />

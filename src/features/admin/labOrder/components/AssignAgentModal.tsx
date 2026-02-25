@@ -1,42 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Select, Space, Typography, Badge, Button, Alert, Card, Spin } from 'antd';
+import { Modal, Select, Space, Typography, Badge, Button, Alert, Card } from 'antd';
 import {
     EnvironmentOutlined,
     UserAddOutlined,
-    CompassOutlined,
     CheckCircleOutlined,
     ReloadOutlined,
-    SendOutlined
+    SendOutlined,
+    CompassOutlined
 } from '@ant-design/icons';
-import { GoogleMap, useJsApiLoader, Marker, InfoWindow, DirectionsRenderer, Polyline } from '@react-google-maps/api';
 import type { LabOrder } from '../types/labOrder.types';
 import { collectionAgentService, type CollectionAgent } from '@/features/admin/collectionAgent/services/collectionAgentService';
-
 import { labOrderService } from '../services/labOrderService';
+import { calculateDistance } from '@/shared/utils/geo.utils';
+import AgentMap from '@/shared/components/Maps/AgentMap';
 
 const { Text, Title } = Typography;
 const { Option } = Select;
-
-// Helper to calculate distance in KM
-const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
-    const R = 6371; // Radius of the earth in km
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a =
-        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-        Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    const d = R * c;
-    return d.toFixed(1);
-};
-
-const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
-
-const center = {
-    lat: 26.4499, // default Kanpur
-    lng: 80.3319
-};
 
 interface AssignAgentModalProps {
     visible: boolean;
@@ -50,17 +29,9 @@ const AssignAgentModal: React.FC<AssignAgentModalProps> = ({ visible, order, onC
     const [agents, setAgents] = useState<CollectionAgent[]>([]);
     const [assigning, setAssigning] = useState(false);
     const [selectedMapAgent, setSelectedMapAgent] = useState<CollectionAgent | null>(null);
-    const [mapCenter, setMapCenter] = useState(center);
     const [geocodedPickup, setGeocodedPickup] = useState<{ lat: number; lng: number } | null>(null);
     const [fetchingAgents, setFetchingAgents] = useState(false);
     const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null);
-
-    const [map, setMap] = useState<google.maps.Map | null>(null);
-
-    const { isLoaded } = useJsApiLoader({
-        id: 'google-map-script',
-        googleMapsApiKey: GOOGLE_MAPS_API_KEY
-    });
 
     const geocodeAddress = async (address: string, orderId?: number, force = false) => {
         if (!window.google) return;
@@ -72,8 +43,6 @@ const AssignAgentModal: React.FC<AssignAgentModalProps> = ({ visible, order, onC
                     lng: results[0].geometry.location.lng()
                 };
                 setGeocodedPickup(location);
-                setMapCenter(location);
-                if (map) map.panTo(location);
 
                 // Auto-save coordinates if they were missing or if we forced it
                 if (orderId && (!order?.latitude || force)) {
@@ -92,43 +61,8 @@ const AssignAgentModal: React.FC<AssignAgentModalProps> = ({ visible, order, onC
         });
     };
 
-    const fitAllMarkers = (mapInstance: google.maps.Map, pickup: any, agentsList: CollectionAgent[]) => {
-        if (!window.google || !mapInstance) return;
-        const bounds = new window.google.maps.LatLngBounds();
-        let hasPoints = false;
-
-        if (pickup) {
-            bounds.extend(pickup);
-            hasPoints = true;
-        }
-
-        agentsList.forEach(agent => {
-            if (agent.latitude && agent.longitude) {
-                // Ensure they are numbers
-                bounds.extend({ lat: Number(agent.latitude), lng: Number(agent.longitude) });
-                hasPoints = true;
-            }
-        });
-
-        if (hasPoints) {
-            mapInstance.fitBounds(bounds);
-            // Limit zoom level on auto-fit
-            const listener = window.google.maps.event.addListener(mapInstance, 'idle', () => {
-                if (mapInstance.getZoom()! > 16) mapInstance.setZoom(16);
-                window.google.maps.event.removeListener(listener);
-            });
-        }
-    };
-
-    // Auto-fit bounds logic
     useEffect(() => {
-        if (map && isLoaded && (geocodedPickup || agents.length > 0)) {
-            fitAllMarkers(map, geocodedPickup, agents);
-        }
-    }, [map, isLoaded, geocodedPickup, agents]);
-
-    useEffect(() => {
-        if (visible && isLoaded && order) {
+        if (visible && order) {
             fetchAgents();
             // Geocode if missing coordinates entirely
             if (!order.latitude && order.address) {
@@ -136,13 +70,12 @@ const AssignAgentModal: React.FC<AssignAgentModalProps> = ({ visible, order, onC
             } else if (order.latitude && order.longitude) {
                 const loc = { lat: Number(order.latitude), lng: Number(order.longitude) };
                 setGeocodedPickup(loc);
-                setMapCenter(loc);
             }
         }
-    }, [visible, isLoaded, order]);
+    }, [visible, order]);
 
     useEffect(() => {
-        if (selectedMapAgent && geocodedPickup && window.google && isLoaded) {
+        if (selectedMapAgent && geocodedPickup && window.google) {
             const directionsService = new window.google.maps.DirectionsService();
             directionsService.route(
                 {
@@ -164,7 +97,7 @@ const AssignAgentModal: React.FC<AssignAgentModalProps> = ({ visible, order, onC
         } else {
             setDirections(null);
         }
-    }, [selectedMapAgent, geocodedPickup, isLoaded]);
+    }, [selectedMapAgent, geocodedPickup]);
 
     const fetchAgents = async (forceGeocode = false) => {
         try {
@@ -175,7 +108,6 @@ const AssignAgentModal: React.FC<AssignAgentModalProps> = ({ visible, order, onC
             if (window.google) {
                 const geocoder = new window.google.maps.Geocoder();
                 const processedAgents = await Promise.all(agentsData.map(async (agent: any) => {
-                    // Re-geocode if coordinates are missing (0, null) OR if we are forcing a refresh
                     const hasCoordinates = agent.latitude && agent.latitude !== 0;
 
                     if ((!hasCoordinates || forceGeocode) && agent.address) {
@@ -185,7 +117,6 @@ const AssignAgentModal: React.FC<AssignAgentModalProps> = ({ visible, order, onC
                                     const lat = results[0].geometry.location.lat();
                                     const lng = results[0].geometry.location.lng();
 
-                                    // Save the new coordinates back to the database
                                     try {
                                         await collectionAgentService.updateAgent(agent.id, {
                                             latitude: lat,
@@ -226,17 +157,28 @@ const AssignAgentModal: React.FC<AssignAgentModalProps> = ({ visible, order, onC
         return distA - distB;
     });
 
-    const handleAssign = async (agentId: number | null) => {
+    const handleAssign = async (agent: CollectionAgent | number | null) => {
         if (!order) return;
 
-        try {
-            setAssigning(true);
-            await onAssignAgent(order.id, agentId);
-        } catch (error) {
-            console.error('Failed to assign agent', error);
-        } finally {
-            setAssigning(false);
-        }
+        const agentId = typeof agent === 'object' && agent !== null ? agent.id : agent as number | null;
+        const agentName = typeof agent === 'object' && agent !== null ? agent.name : (agents.find(a => a.id === agentId)?.name || 'this agent');
+
+        Modal.confirm({
+            title: agentId ? 'Confirm Assignment' : 'Confirm Unassign',
+            content: agentId ? `Assign this order to ${agentName}?` : 'Are you sure you want to remove the current agent?',
+            okText: agentId ? 'Confirm' : 'Unassign',
+            okButtonProps: { danger: !agentId },
+            onOk: async () => {
+                try {
+                    setAssigning(true);
+                    await onAssignAgent(order.id, agentId);
+                } catch (error) {
+                    console.error('Failed to assign agent', error);
+                } finally {
+                    setAssigning(false);
+                }
+            }
+        });
     };
 
     const handleBroadcast = async () => {
@@ -273,7 +215,6 @@ const AssignAgentModal: React.FC<AssignAgentModalProps> = ({ visible, order, onC
             styles={{ body: { padding: '20px 24px', maxHeight: 'calc(100vh - 100px)', overflowY: 'auto' } }}
         >
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                {/* Upper Info Section */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div style={{ flex: 1 }}>
                         <Text type="secondary" style={{ fontSize: '12px' }}>PICKUP ADDRESS</Text>
@@ -313,134 +254,16 @@ const AssignAgentModal: React.FC<AssignAgentModalProps> = ({ visible, order, onC
                 )}
 
                 <div style={{ display: 'flex', gap: '16px', flex: 1 }}>
-                    {/* Map Side */}
                     <div style={{ flex: 2, position: 'relative' }}>
-                        <div style={{ height: '370px', borderRadius: '12px', overflow: 'hidden', border: '1px solid #f0f0f0' }}>
-                            {isLoaded ? (
-                                <GoogleMap
-                                    mapContainerStyle={{ width: '100%', height: '100%' }}
-                                    center={mapCenter}
-                                    zoom={12}
-                                    onLoad={map => setMap(map)}
-                                    options={{
-                                        disableDefaultUI: true,
-                                        zoomControl: true,
-                                        styles: [
-                                            {
-                                                featureType: 'poi',
-                                                elementType: 'labels',
-                                                stylers: [{ visibility: 'off' }]
-                                            }
-                                        ]
-                                    }}
-                                >
-                                    {/* Pickup Marker */}
-                                    {geocodedPickup && (
-                                        <Marker
-                                            position={geocodedPickup}
-                                            icon={{
-                                                url: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png'
-                                            }}
-                                            zIndex={10}
-                                        />
-                                    )}
-
-                                    {/* Road Directions or Fallback Line */}
-                                    {directions ? (
-                                        <DirectionsRenderer
-                                            directions={directions}
-                                            options={{
-                                                suppressMarkers: true,
-                                                polylineOptions: {
-                                                    strokeColor: '#1890ff',
-                                                    strokeWeight: 4,
-                                                    strokeOpacity: 0.7
-                                                }
-                                            }}
-                                        />
-                                    ) : (
-                                        geocodedPickup && selectedMapAgent?.latitude && (
-                                            <Polyline
-                                                path={[
-                                                    geocodedPickup,
-                                                    { lat: selectedMapAgent.latitude, lng: selectedMapAgent.longitude! }
-                                                ]}
-                                                options={{
-                                                    strokeColor: '#ff4d4f',
-                                                    strokeOpacity: 0.5,
-                                                    strokeWeight: 2,
-                                                    visible: true,
-                                                    zIndex: 1
-                                                }}
-                                            />
-                                        )
-                                    )}
-
-                                    {/* Agent Markers */}
-                                    {agents.map(agent => (
-                                        agent.latitude && agent.longitude && (
-                                            <Marker
-                                                key={agent.id}
-                                                position={{ lat: agent.latitude, lng: agent.longitude }}
-                                                onClick={() => setSelectedMapAgent(agent)}
-                                                icon={{
-                                                    url: (agent._count?.lab_orders || 0) > 0
-                                                        ? 'http://maps.google.com/mapfiles/ms/icons/yellow-dot.png'
-                                                        : 'http://maps.google.com/mapfiles/ms/icons/green-dot.png'
-                                                }}
-                                            />
-                                        )
-                                    ))}
-
-                                    {selectedMapAgent && (
-                                        <InfoWindow
-                                            position={{ lat: selectedMapAgent.latitude!, lng: selectedMapAgent.longitude! }}
-                                            onCloseClick={() => setSelectedMapAgent(null)}
-                                        >
-                                            <div style={{ padding: '4px' }}>
-                                                <Text strong style={{ fontSize: '12px', display: 'block' }}>{selectedMapAgent.name}</Text>
-                                                <Text type="secondary" style={{ fontSize: '10px' }}>{selectedMapAgent.phone}</Text>
-                                                <div style={{ marginTop: '8px' }}>
-                                                    <Button
-                                                        type="primary"
-                                                        size="small"
-                                                        disabled={(selectedMapAgent._count?.lab_orders || 0) > 0 || assigning}
-                                                        onClick={() => {
-                                                            Modal.confirm({
-                                                                title: 'Confirm Assignment',
-                                                                content: `Assign this order to ${selectedMapAgent.name}?`,
-                                                                onOk: () => handleAssign(selectedMapAgent.id)
-                                                            });
-                                                        }}
-                                                        style={{ borderRadius: '6px', fontSize: '11px' }}
-                                                    >
-                                                        Assign Sample
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                        </InfoWindow>
-                                    )}
-                                </GoogleMap>
-                            ) : (
-                                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', background: '#f5f5f5' }}>
-                                    <Spin tip="Loading Map..." />
-                                </div>
-                            )}
-
-                            {isLoaded && (
-                                <div style={{ position: 'absolute', top: '10px', right: '10px', zIndex: 1 }}>
-                                    <Button
-                                        size="small"
-                                        icon={<CompassOutlined />}
-                                        onClick={() => map && fitAllMarkers(map, geocodedPickup, agents)}
-                                        title="Fit all markers in view"
-                                        style={{ borderRadius: '6px', border: 'none', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}
-                                    >
-                                        Fit to View
-                                    </Button>
-                                </div>
-                            )}
-                        </div>
+                        <AgentMap
+                            pickup={geocodedPickup}
+                            agents={agents}
+                            selectedAgent={selectedMapAgent}
+                            onAgentSelect={setSelectedMapAgent}
+                            onAssign={handleAssign}
+                            directions={directions}
+                            assigning={assigning}
+                        />
                     </div>
 
                     {/* Selector Side */}

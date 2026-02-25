@@ -34,6 +34,8 @@ import {
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import dayjs from 'dayjs';
 import { collectionAgentService, type CollectionAgent } from '../services/collectionAgentService';
+import LabOrderDetailDrawer from '../../labOrder/components/LabOrderDetailDrawer';
+import type { LabOrder } from '../../labOrder/types/labOrder.types';
 
 const { Title, Text } = Typography;
 
@@ -42,6 +44,8 @@ const AgentProfilePage: React.FC = () => {
     const navigate = useNavigate();
     const [agent, setAgent] = useState<CollectionAgent | null>(null);
     const [loading, setLoading] = useState(true);
+    const [selectedOrder, setSelectedOrder] = useState<LabOrder | null>(null);
+    const [isDrawerVisible, setIsDrawerVisible] = useState(false);
 
     const fetchAgentDetails = async () => {
         if (!id) return;
@@ -94,6 +98,25 @@ const AgentProfilePage: React.FC = () => {
             case 'cancelled': return 'red';
             default: return 'default';
         }
+    };
+
+    const getAssignmentStatusTag = (status: string | null) => {
+        if (!status || status === 'pending') return null;
+        const colorMap: Record<string, string> = {
+            'accepted': 'cyan',
+            'picking_up': 'geekblue',
+            'reached': 'gold',
+            'collected': 'success',
+            'broadcasted': 'purple'
+        };
+        const labelMap: Record<string, string> = {
+            'accepted': 'Accepted',
+            'picking_up': 'En Route',
+            'reached': 'At Location',
+            'collected': 'Collected',
+            'broadcasted': 'Broadcasted'
+        };
+        return <Tag color={colorMap[status] || 'default'} style={{ fontSize: '10px' }}>{labelMap[status]?.toUpperCase() || status.toUpperCase()}</Tag>;
     };
 
     return (
@@ -213,6 +236,10 @@ const AgentProfilePage: React.FC = () => {
                                             <Card
                                                 size="small"
                                                 hoverable
+                                                onClick={() => {
+                                                    setSelectedOrder(order as any);
+                                                    setIsDrawerVisible(true);
+                                                }}
                                                 style={{ borderRadius: '12px', border: '1px solid #f0f0f0' }}
                                                 title={
                                                     <Space>
@@ -220,7 +247,12 @@ const AgentProfilePage: React.FC = () => {
                                                         <Text strong>{order.order_code}</Text>
                                                     </Space>
                                                 }
-                                                extra={<Tag color={getStatusColor(order.status)}>{order.status.toUpperCase()}</Tag>}
+                                                extra={
+                                                    <Space>
+                                                        {order.assignment_status !== order.status && getAssignmentStatusTag(order.assignment_status)}
+                                                        <Tag color={getStatusColor(order.status)} style={{ borderRadius: '10px' }}>{order.status.toUpperCase()}</Tag>
+                                                    </Space>
+                                                }
                                             >
                                                 <Space direction="vertical" size={12} style={{ width: '100%' }}>
                                                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -240,6 +272,15 @@ const AgentProfilePage: React.FC = () => {
                         )
                     }
                 ]}
+            />
+
+            <LabOrderDetailDrawer
+                visible={isDrawerVisible}
+                order={selectedOrder}
+                onClose={() => {
+                    setIsDrawerVisible(false);
+                    setSelectedOrder(null);
+                }}
             />
         </div>
     );

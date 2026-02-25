@@ -44,7 +44,16 @@ const AgentLayout: React.FC = () => {
 
     const menuItems = [
         { key: '/agent', icon: <DashboardOutlined />, label: 'My Dashboard' },
-        { key: '/agent/pickups', icon: <ExperimentOutlined />, label: 'All Pickups' },
+        {
+            key: 'pickups-dropdown',
+            icon: <ExperimentOutlined />,
+            label: 'Pickups',
+            children: [
+                { key: '/agent/pickups', label: 'All Pickups' },
+                { key: '/agent/pickups?status=pending', label: 'Pending' },
+                { key: '/agent/pickups?status=collected', label: 'Collected' },
+            ]
+        },
         { key: '/agent/profile', icon: <IdcardOutlined />, label: 'My Profile' },
     ];
 
@@ -61,7 +70,8 @@ const AgentLayout: React.FC = () => {
         ],
     };
 
-    const currentPath = location.pathname;
+    const currentPath = location.pathname + location.search;
+    const selectedKey = currentPath.includes('status=') ? currentPath : location.pathname;
 
     return (
         <Layout style={{ minHeight: '100vh', background: colors.background }}>
@@ -110,7 +120,8 @@ const AgentLayout: React.FC = () => {
                 <Menu
                     theme="dark"
                     mode="inline"
-                    selectedKeys={[currentPath]}
+                    selectedKeys={[selectedKey]}
+                    defaultOpenKeys={location.pathname.includes('/agent/pickups') ? ['pickups-dropdown'] : []}
                     onClick={({ key }) => navigate(key)}
                     style={{ borderRight: 0, marginTop: 16 }}
                     items={menuItems}
@@ -136,6 +147,7 @@ const AgentLayout: React.FC = () => {
                 display: 'flex',
                 flexDirection: 'column',
                 height: '100vh',
+                width: screenSize < 768 ? '100%' : `calc(100% - ${collapsed ? 80 : 260}px)`,
                 overflow: 'hidden'
             }}>
                 <Header style={{
@@ -180,7 +192,7 @@ const AgentLayout: React.FC = () => {
 
                 <Content style={{
                     flex: 1,
-                    overflow: 'hidden',
+                    overflow: 'auto',
                     padding: screenSize < 768 ? '16px 12px' : '24px',
                     background: colors.background,
                     display: 'flex',

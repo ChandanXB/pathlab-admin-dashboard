@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Card, Button, Form, Typography, Space, Badge } from 'antd';
+import { Card, Button, Form, Typography, Space, Badge, Checkbox, Divider } from 'antd';
 import { PlusOutlined, ExperimentOutlined } from '@ant-design/icons';
 import { useSearchParams } from 'react-router-dom';
 import { useLabOrders } from '../hooks/useLabOrders';
@@ -42,6 +42,9 @@ const LabOrderManager: React.FC = () => {
     const [editingOrder, setEditingOrder] = useState<LabOrder | null>(null);
     const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
     const [isAssignModalVisible, setIsAssignModalVisible] = useState(false);
+    const [visibleColumns, setVisibleColumns] = useState<string[]>([
+        'order_info', 'patient', 'tests', 'agent', 'amount', 'proof', 'status', 'actions'
+    ]);
     const [form] = Form.useForm();
 
     const selectedOrder = orders.find(o => o.id === selectedOrderId) || null;
@@ -120,6 +123,38 @@ const LabOrderManager: React.FC = () => {
         }
     };
 
+    const columnOptions = [
+        { label: 'Order Info', value: 'order_info' },
+        { label: 'Patient', value: 'patient' },
+        { label: 'Tests', value: 'tests' },
+        { label: 'Agent', value: 'agent' },
+        { label: 'Amount', value: 'amount' },
+        { label: 'Proof', value: 'proof' },
+        { label: 'Status', value: 'status' },
+        { label: 'Actions', value: 'actions' },
+    ];
+
+    const columnPicker = (
+        <div style={{ padding: '8px', minWidth: '180px' }}>
+            <Title level={5} style={{ fontSize: '14px', marginBottom: '12px' }}>Display Columns</Title>
+            <Checkbox.Group
+                style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '8px' }}
+                options={columnOptions}
+                value={visibleColumns}
+                onChange={(values) => setVisibleColumns(values as string[])}
+            />
+            <Divider style={{ margin: '12px 0' }} />
+            <Button
+                type="link"
+                size="small"
+                style={{ padding: 0 }}
+                onClick={() => setVisibleColumns(columnOptions.map(o => o.value))}
+            >
+                Reset to Default
+            </Button>
+        </div>
+    );
+
     return (
         <div style={{ padding: '24px 12px', height: '100%', display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -157,6 +192,7 @@ const LabOrderManager: React.FC = () => {
                 filters={filters}
                 onFilterChange={handleFilterChange}
                 onSearch={handleSearch}
+                columnPickerContent={columnPicker}
             />
 
             <Card
@@ -184,6 +220,7 @@ const LabOrderManager: React.FC = () => {
                     }}
                     onLoadMore={loadMore}
                     onRowClick={handleRowClick}
+                    visibleColumns={visibleColumns}
                     scroll={{ y: 'calc(100vh - 350px)' }}
                 />
             </Card>

@@ -32,6 +32,7 @@ interface LabOrderTableProps {
     onAssign: (record: LabOrder) => void;
     onLoadMore: () => void;
     onRowClick: (record: LabOrder) => void;
+    visibleColumns?: string[];
     scroll?: { x?: number | string; y?: number | string };
 }
 
@@ -46,6 +47,7 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
     onAssign,
     onLoadMore,
     onRowClick,
+    visibleColumns = ['order_info', 'patient', 'tests', 'agent', 'amount', 'proof', 'status', 'actions'],
     scroll,
 }) => {
 
@@ -242,9 +244,13 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
         },
     ];
 
+    // Filter columns based on visibility
+    const filteredColumns = columns.filter(col => visibleColumns.includes(col.key || ''));
+
+
     return (
         <InfiniteScrollTable
-            columns={columns}
+            columns={filteredColumns}
             dataSource={data}
             loading={loading}
             loadingMore={loadingMore}

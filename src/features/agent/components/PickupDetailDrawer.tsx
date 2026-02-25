@@ -218,7 +218,10 @@ const PickupDetailDrawer: React.FC<PickupDetailDrawerProps> = ({
                         </div>
                         <div style={{ textAlign: 'center' }}>
                             <WalletOutlined style={{ color: hasPayment ? '#1890ff' : '#bfbfbf', fontSize: '20px' }} />
-                            <div style={{ fontSize: '11px', marginTop: '4px' }}>Payment {hasPayment ? '✓' : '✗'}</div>
+                            <div style={{ fontSize: '11px', marginTop: '4px' }}>
+                                Payment {hasPayment ? '✓' : '✗'}
+                                {order.payment_mode && ` (${order.payment_mode.toUpperCase()})`}
+                            </div>
                         </div>
                     </Space>
                 </div>
@@ -418,28 +421,32 @@ const PickupDetailDrawer: React.FC<PickupDetailDrawerProps> = ({
                     >
                         <Row gutter={[12, 12]}>
                             {order.sample_photo_url && (
-                                <Col span={12}>
+                                <Col span={order.payment_proof_url ? 12 : 24}>
                                     <div style={{ textAlign: 'center' }}>
                                         <Text type="secondary" style={{ fontSize: '11px', display: 'block', marginBottom: '8px' }}>Sample Photo</Text>
-                                        <img
-                                            src={order.sample_photo_url}
-                                            alt="Sample"
-                                            style={{ width: '100%', borderRadius: '8px', cursor: 'pointer', border: '1px solid #f0f0f0' }}
-                                            onClick={() => window.open(order.sample_photo_url!, '_blank')}
-                                        />
+                                        <div style={{ position: 'relative', width: '100%', paddingTop: '75%', background: '#f5f5f5', borderRadius: '8px', overflow: 'hidden' }}>
+                                            <img
+                                                src={order.sample_photo_url}
+                                                alt="Sample"
+                                                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', cursor: 'pointer' }}
+                                                onClick={() => window.open(order.sample_photo_url!, '_blank')}
+                                            />
+                                        </div>
                                     </div>
                                 </Col>
                             )}
                             {order.payment_proof_url && (
-                                <Col span={12}>
+                                <Col span={order.sample_photo_url ? 12 : 24}>
                                     <div style={{ textAlign: 'center' }}>
                                         <Text type="secondary" style={{ fontSize: '11px', display: 'block', marginBottom: '8px' }}>Payment SS</Text>
-                                        <img
-                                            src={order.payment_proof_url}
-                                            alt="Payment Screenshot"
-                                            style={{ width: '100%', borderRadius: '8px', cursor: 'pointer', border: '1px solid #f0f0f0', background: '#fff' }}
-                                            onClick={() => window.open(order.payment_proof_url!, '_blank')}
-                                        />
+                                        <div style={{ position: 'relative', width: '100%', paddingTop: '75%', background: '#f5f5f5', borderRadius: '8px', overflow: 'hidden' }}>
+                                            <img
+                                                src={order.payment_proof_url}
+                                                alt="Payment Screenshot"
+                                                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', cursor: 'pointer' }}
+                                                onClick={() => window.open(order.payment_proof_url!, '_blank')}
+                                            />
+                                        </div>
                                     </div>
                                 </Col>
                             )}

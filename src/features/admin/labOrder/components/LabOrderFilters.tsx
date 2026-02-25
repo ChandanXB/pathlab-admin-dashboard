@@ -1,6 +1,6 @@
-import React from 'react';
-import { Card, Row, Col, Input, Select, DatePicker } from 'antd';
-import { SearchOutlined } from '@ant-design/icons';
+import React, { useState } from 'react';
+import { Card, Row, Col, Input, Select, DatePicker, Tooltip, Popover, Button } from 'antd';
+import { SearchOutlined, AppstoreOutlined } from '@ant-design/icons';
 import type { LabOrderQueryParams } from '../types/labOrder.types';
 import { ORDER_STATUSES, SORT_OPTIONS, PRIORITIES } from '@/shared/constants/app.constants';
 
@@ -11,16 +11,20 @@ interface LabOrderFiltersProps {
     filters: LabOrderQueryParams;
     onFilterChange: (filters: Partial<LabOrderQueryParams>) => void;
     onSearch: (value: string) => void;
+    columnPickerContent?: React.ReactNode;
 }
 
 const LabOrderFilters: React.FC<LabOrderFiltersProps> = ({
     filters,
     onFilterChange,
     onSearch,
+    columnPickerContent,
 }) => {
+    const [columnsOpen, setColumnsOpen] = useState(false);
+
     return (
         <Card size="small" style={{ marginBottom: 16 }}>
-            <Row gutter={[16, 16]}>
+            <Row gutter={[12, 12]} align="middle">
                 <Col xs={24} sm={12} md={8} lg={6}>
                     <Input
                         placeholder="Search order code, patient..."
@@ -80,7 +84,7 @@ const LabOrderFilters: React.FC<LabOrderFiltersProps> = ({
                     </Select>
                 </Col>
 
-                <Col xs={24} sm={12} md={12} lg={4}>
+                <Col xs={24} sm={12} md={12} lg={3}>
                     <Select
                         placeholder="Sort By"
                         style={{ width: '100%' }}
@@ -99,9 +103,39 @@ const LabOrderFilters: React.FC<LabOrderFiltersProps> = ({
                         ))}
                     </Select>
                 </Col>
+
+                {columnPickerContent && (
+                    <Col flex="none">
+                        <Popover
+                            content={columnPickerContent}
+                            title={null}
+                            trigger="click"
+                            placement="bottomRight"
+                            open={columnsOpen}
+                            onOpenChange={setColumnsOpen}
+                        >
+                            <Tooltip title="Toggle Columns" placement="top">
+                                <Button
+                                    icon={<AppstoreOutlined />}
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        width: 32,
+                                        height: 32,
+                                        borderRadius: '8px',
+                                        color: columnsOpen ? '#1890ff' : '#8c8c8c',
+                                        borderColor: columnsOpen ? '#1890ff' : '#d9d9d9',
+                                    }}
+                                />
+                            </Tooltip>
+                        </Popover>
+                    </Col>
+                )}
             </Row>
         </Card>
     );
 };
 
 export default LabOrderFilters;
+
