@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Form, Input, Select, Row, Col, Spin, InputNumber, Divider } from 'antd';
 import SharedModal from '@/shared/components/SharedModal';
-import { ORDER_STATUSES, PRIORITIES, PAYMENT_STATUSES } from '@/shared/constants/labOrder.constants';
+import { ORDER_STATUSES, PRIORITIES, PAYMENT_STATUSES } from '@/shared/constants/app.constants';
 import type { LabOrder } from '../types/labOrder.types';
 import { patientService } from '@/features/admin/patients/services/patientService';
 import { labTestService } from '@/features/admin/labTests/services/labTestService';

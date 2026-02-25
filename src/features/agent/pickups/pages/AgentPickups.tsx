@@ -34,9 +34,20 @@ const AgentPickups: React.FC = () => {
         fetchMyOrders();
     }, [user?.agentId]);
 
+    const handleAcceptAssignment = async (id: number) => {
+        try {
+            await apiClient.put(`/lab-orders/${id}/assignment-status`, { assignment_status: 'accepted' });
+            message.success('Pickup accepted!');
+            fetchMyOrders();
+        } catch (error) {
+            message.error('Failed to accept assignment');
+        }
+    };
+
     const handleMarkCollected = async (id: number) => {
         try {
             await apiClient.put(`/lab-orders/${id}`, { status: 'collected' });
+            await apiClient.put(`/lab-orders/${id}/assignment-status`, { assignment_status: 'collected' });
             message.success('Sample marked as collected');
             fetchMyOrders();
         } catch (error) {
@@ -72,12 +83,21 @@ const AgentPickups: React.FC = () => {
         },
         {
             title: 'Status',
-            dataIndex: 'status',
             key: 'status',
-            render: (status: string) => (
-                <Tag color={status === 'collected' ? 'green' : 'gold'}>
-                    {status.toUpperCase()}
-                </Tag>
+            render: (_: any, record: any) => (
+                <Space direction="vertical" size={4}>
+                    <Tag color={record.status === 'collected' ? 'green' : 'gold'}>
+                        {record.status.toUpperCase()}
+                    </Tag>
+                    {record.assignment_status && (
+                        <Tag color={
+                            record.assignment_status === 'pending' ? 'warning' :
+                                record.assignment_status === 'accepted' ? 'processing' : 'success'
+                        } style={{ fontSize: '10px' }}>
+                            {record.assignment_status.toUpperCase()}
+                        </Tag>
+                    )}
+                </Space>
             )
         },
         {
@@ -85,15 +105,26 @@ const AgentPickups: React.FC = () => {
             key: 'action',
             render: (_: any, record: any) => (
                 <Space>
-                    <Button
-                        type="primary"
-                        size="small"
-                        icon={<CheckOutlined />}
-                        disabled={record.status === 'collected'}
-                        onClick={() => handleMarkCollected(record.id)}
-                    >
-                        Collected
-                    </Button>
+                    {record.assignment_status === 'pending' ? (
+                        <Button
+                            type="primary"
+                            size="small"
+                            onClick={() => handleAcceptAssignment(record.id)}
+                            style={{ background: '#52c41a', borderColor: '#52c41a' }}
+                        >
+                            Accept
+                        </Button>
+                    ) : (
+                        <Button
+                            type="primary"
+                            size="small"
+                            icon={<CheckOutlined />}
+                            disabled={record.status === 'collected'}
+                            onClick={() => handleMarkCollected(record.id)}
+                        >
+                            Collected
+                        </Button>
+                    )}
                     <Button
                         size="small"
                         icon={<InfoCircleOutlined />}

@@ -1,5 +1,5 @@
-import type { Patient } from './patient.types';
-import type { LabTest } from './labTest.types';
+import type { Patient } from '../../patients/types/patient.types';
+import type { LabTest } from '../../labTests/types/labTest.types';
 
 export interface LabOrder {
     id: number;
@@ -12,7 +12,10 @@ export interface LabOrder {
     paid_amount: string | number;
     payment_status: 'unpaid' | 'partial' | 'paid';
     address?: string;
+    latitude?: number;
+    longitude?: number;
     notes?: string;
+    assignment_status?: string;
     collection_agent_id?: number;
     collection_agent?: {
         id: number;

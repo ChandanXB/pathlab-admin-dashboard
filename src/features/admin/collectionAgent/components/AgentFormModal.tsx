@@ -1,6 +1,8 @@
 import React from 'react';
-import { Modal, Form, Input, Select } from 'antd';
+import { Form, Input, Select } from 'antd';
 import type { CollectionAgent } from '../services/collectionAgentService';
+import SharedModal from '@/shared/components/SharedModal';
+import { VEHICLE_TYPES, ACCOUNT_STATUSES } from '@/shared/constants/app.constants';
 
 const { Option } = Select;
 
@@ -20,42 +22,48 @@ const AgentFormModal: React.FC<AgentFormModalProps> = ({
     onCancel,
 }) => {
     return (
-        <Modal
+        <SharedModal
             title={editingAgent ? "Edit Collection Agent" : "Add New Collection Agent"}
             open={visible}
             onOk={onOk}
             onCancel={onCancel}
             okText={editingAgent ? "Update" : "Create"}
+            width={800}
         >
             <Form
                 form={form}
                 layout="vertical"
                 initialValues={{ status: 'active' }}
             >
-                <Form.Item
-                    name="name"
-                    label="Full Name"
-                    rules={[{ required: true, message: 'Please enter agent name' }]}
-                >
-                    <Input />
-                </Form.Item>
-                <Form.Item
-                    name="phone"
-                    label="Phone Number"
-                    rules={[{ required: true, message: 'Please enter phone number' }]}
-                >
-                    <Input />
-                </Form.Item>
-                <Form.Item
-                    name="email"
-                    label="Email Address (Login ID)"
-                    rules={[
-                        { required: true, message: 'Please enter email' },
-                        { type: 'email', message: 'Invalid email' }
-                    ]}
-                >
-                    <Input type="email" />
-                </Form.Item>
+                <div style={{ display: 'flex', gap: 16 }}>
+                    <Form.Item
+                        name="name"
+                        label="Full Name"
+                        style={{ flex: 1 }}
+                        rules={[{ required: true, message: 'Please enter agent name' }]}
+                    >
+                        <Input />
+                    </Form.Item>
+                    <Form.Item
+                        name="phone"
+                        label="Phone Number"
+                        style={{ flex: 1 }}
+                        rules={[{ required: true, message: 'Please enter phone number' }]}
+                    >
+                        <Input />
+                    </Form.Item>
+                    <Form.Item
+                        name="email"
+                        label="Email Address (Login ID)"
+                        style={{ flex: 1 }}
+                        rules={[
+                            { required: true, message: 'Please enter email' },
+                            { type: 'email', message: 'Invalid email' }
+                        ]}
+                    >
+                        <Input type="email" />
+                    </Form.Item>
+                </div>
 
                 {!editingAgent && (
                     <Form.Item
@@ -74,10 +82,9 @@ const AgentFormModal: React.FC<AgentFormModalProps> = ({
                         style={{ flex: 1 }}
                     >
                         <Select placeholder="Select type">
-                            <Option value="Bike">Bike</Option>
-                            <Option value="Scooter">Scooter</Option>
-                            <Option value="Car">Car</Option>
-                            <Option value="Cycle">Cycle</Option>
+                            {VEHICLE_TYPES.map(vt => (
+                                <Option key={vt.value} value={vt.value}>{vt.label}</Option>
+                            ))}
                         </Select>
                     </Form.Item>
                     <Form.Item
@@ -90,16 +97,25 @@ const AgentFormModal: React.FC<AgentFormModalProps> = ({
                 </div>
 
                 <Form.Item
+                    name="address"
+                    label="Current Address"
+                    rules={[{ required: true, message: 'Please enter current address' }]}
+                >
+                    <Input.TextArea rows={3} placeholder="Enter full address" style={{ borderRadius: '8px' }} />
+                </Form.Item>
+
+                <Form.Item
                     name="status"
                     label="Status"
                 >
                     <Select>
-                        <Option value="active">Active</Option>
-                        <Option value="inactive">Inactive</Option>
+                        {ACCOUNT_STATUSES.map(as => (
+                            <Option key={as.value} value={as.value}>{as.label}</Option>
+                        ))}
                     </Select>
                 </Form.Item>
             </Form>
-        </Modal>
+        </SharedModal>
     );
 };
 

@@ -31,6 +31,15 @@ export const colors = {
         tests: '#f6ffed',
         reports: '#fff1f0',
         revenue: '#fffbe6'
+    },
+
+    // Order/Status Colors
+    status: {
+        pending: '#fa8c16',   // Orange
+        collected: '#1890ff', // Blue
+        processing: '#722ed1',// Purple
+        completed: '#52c41a', // Green
+        cancelled: '#f5222d', // Red
     }
 };
 
