@@ -12,6 +12,7 @@ import {
 import { useNavigate, useLocation, Outlet, Navigate } from 'react-router-dom';
 import colors from '@/styles/colors';
 import { useAuthStore } from '@/store/authStore';
+import { labOrderService } from '@/features/admin/labOrder/services/labOrderService';
 
 const { Header, Content, Sider } = Layout;
 const { Text } = Typography;
@@ -22,12 +23,30 @@ const AgentLayout: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { user, logout, isAuthenticated } = useAuthStore();
+    const [orderStats, setOrderStats] = useState<any>(null);
 
     useEffect(() => {
         const handleResize = () => setScreenSize(window.innerWidth);
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
     }, []);
+
+    useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                const response = await labOrderService.getOrderStats();
+                if (response.success) {
+                    setOrderStats(response.data);
+                }
+            } catch (error) {
+                console.error('Failed to fetch agent order stats', error);
+            }
+        };
+
+        if (isAuthenticated) {
+            fetchStats();
+        }
+    }, [location.pathname, isAuthenticated]);
 
     const handleLogout = () => {
         logout();
@@ -49,9 +68,75 @@ const AgentLayout: React.FC = () => {
             icon: <ExperimentOutlined />,
             label: 'Pickups',
             children: [
-                { key: '/agent/pickups', label: 'All Pickups' },
-                { key: '/agent/pickups?status=pending', label: 'Pending' },
-                { key: '/agent/pickups?status=collected', label: 'Collected' },
+                {
+                    key: '/agent/pickups',
+                    label: (
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', paddingRight: '12px' }}>
+                            <span style={{ fontSize: '13px', opacity: 0.85 }}>All Pickups</span>
+                            {orderStats?.totalOrders > 0 && (
+                                <div style={{
+                                    fontSize: '11px',
+                                    fontWeight: '700',
+                                    color: colors.info,
+                                    background: `${colors.info}${colors.alpha.badgeBg}`,
+                                    padding: '0 7px',
+                                    height: '20px',
+                                    borderRadius: '10px',
+                                    display: 'flex',
+                                    alignItems: 'center'
+                                }}>
+                                    {orderStats.totalOrders}
+                                </div>
+                            )}
+                        </div>
+                    )
+                },
+                {
+                    key: '/agent/pickups?status=pending',
+                    label: (
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', paddingRight: '12px' }}>
+                            <span style={{ fontSize: '13px', opacity: 0.85 }}>Pending</span>
+                            {orderStats?.statusCounts?.pending > 0 && (
+                                <div style={{
+                                    fontSize: '11px',
+                                    fontWeight: '700',
+                                    color: colors.status.pending,
+                                    background: `${colors.status.pending}${colors.alpha.badgeBg}`,
+                                    padding: '0 7px',
+                                    height: '20px',
+                                    borderRadius: '10px',
+                                    display: 'flex',
+                                    alignItems: 'center'
+                                }}>
+                                    {orderStats.statusCounts.pending}
+                                </div>
+                            )}
+                        </div>
+                    )
+                },
+                {
+                    key: '/agent/pickups?status=collected',
+                    label: (
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', paddingRight: '12px' }}>
+                            <span style={{ fontSize: '13px', opacity: 0.85 }}>Collected</span>
+                            {orderStats?.statusCounts?.collected > 0 && (
+                                <div style={{
+                                    fontSize: '11px',
+                                    fontWeight: '700',
+                                    color: colors.status.collected,
+                                    background: `${colors.status.collected}${colors.alpha.badgeBg}`,
+                                    padding: '0 7px',
+                                    height: '20px',
+                                    borderRadius: '10px',
+                                    display: 'flex',
+                                    alignItems: 'center'
+                                }}>
+                                    {orderStats.statusCounts.collected}
+                                </div>
+                            )}
+                        </div>
+                    )
+                },
             ]
         },
         { key: '/agent/profile', icon: <IdcardOutlined />, label: 'My Profile' },
@@ -89,7 +174,7 @@ const AgentLayout: React.FC = () => {
                     left: 0,
                     top: 0,
                     bottom: 0,
-                    boxShadow: '2px 0 8px 0 rgba(29,35,41,.05)',
+                    boxShadow: `2px 0 8px 0 ${colors.layout.agentSiderShadow}`,
                     zIndex: 100,
                 }}
             >
@@ -99,13 +184,13 @@ const AgentLayout: React.FC = () => {
                     alignItems: 'center',
                     padding: '0 24px',
                     gap: '12px',
-                    background: `linear-gradient(90deg, ${colors.sidebarBg} 0%, #002140 100%)`,
+                    background: `linear-gradient(90deg, ${colors.sidebarBg} 0%, ${colors.layout.agentSidebarEnd} 100%)`,
                     borderBottom: `1px solid ${colors.sidebarBorder}`
                 }}>
                     <div style={{
                         width: 32,
                         height: 32,
-                        background: '#52c41a',
+                        background: colors.success,
                         borderRadius: '8px',
                         display: 'flex',
                         alignItems: 'center',
@@ -175,7 +260,7 @@ const AgentLayout: React.FC = () => {
                                 <Avatar
                                     icon={<UserOutlined />}
                                     style={{
-                                        backgroundColor: '#52c41a',
+                                        backgroundColor: colors.success,
                                         verticalAlign: 'middle'
                                     }}
                                 />
@@ -209,7 +294,7 @@ const AgentLayout: React.FC = () => {
                     width: 6px;
                 }
                 .ant-layout-sider-children::-webkit-scrollbar-thumb {
-                    background: rgba(255, 255, 255, 0.2);
+                    background: ${colors.layout.scrollbarThumb};
                     border-radius: 3px;
                 }
             `}</style>

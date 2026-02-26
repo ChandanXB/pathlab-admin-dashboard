@@ -36,7 +36,7 @@ const PatientTable: React.FC<PatientTableProps> = ({
             title: 'Patient Code',
             dataIndex: 'patient_code',
             key: 'patient_code',
-            width: 130,
+            width: 120,
             render: (text: string) => <strong>{text}</strong>,
         },
         {
@@ -54,7 +54,7 @@ const PatientTable: React.FC<PatientTableProps> = ({
             title: 'Gender',
             dataIndex: 'gender',
             key: 'gender',
-            width: 100,
+            width: 90,
             render: (gender: string) => (
                 <Tag color={gender === 'Male' ? 'blue' : gender === 'Female' ? 'pink' : 'default'}>
                     {gender}
@@ -72,42 +72,38 @@ const PatientTable: React.FC<PatientTableProps> = ({
             title: 'Phone',
             dataIndex: 'phone',
             key: 'phone',
-            width: 130,
+            width: 120,
             render: (phone: string) => phone || '-',
         },
         {
             title: 'Registered',
             dataIndex: 'createdAt',
             key: 'createdAt',
-            width: 120,
             render: (date: string) => dayjs(date).format('DD MMM YYYY'),
         },
         {
             title: 'Actions',
             key: 'actions',
-            width: 120,
-            fixed: 'right' as const,
+            width: 80,
             render: (_: any, record: Patient) => (
-                <Space size="small">
+                <Space size="middle">
                     <Button
-                        type="link"
+                        type="text"
                         icon={<EditOutlined />}
                         onClick={() => onEdit(record)}
-                        size="small"
-                    >
-                        Edit
-                    </Button>
+                    />
                     <Popconfirm
-                        title="Delete Patient"
-                        description="Are you sure you want to delete this patient? This will also delete all their appointments."
+                        title="Delete Patient?"
+                        description="Are you sure you want to delete this patient?"
                         onConfirm={() => onDelete(record.id)}
                         okText="Yes"
                         cancelText="No"
-                        okButtonProps={{ danger: true }}
                     >
-                        <Button type="link" danger icon={<DeleteOutlined />} size="small">
-                            Delete
-                        </Button>
+                        <Button
+                            type="text"
+                            danger
+                            icon={<DeleteOutlined />}
+                        />
                     </Popconfirm>
                 </Space>
             ),

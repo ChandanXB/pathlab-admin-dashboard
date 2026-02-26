@@ -65,11 +65,11 @@ const LabTestManager: React.FC = () => {
         const observer = new ResizeObserver((entries) => {
             for (const entry of entries) {
                 if (entry.target === testContainerRef.current) {
-                    // Deduct 100 to account for: Header (~55px) + Filter Row height + bottom margin
-                    setTestTableHeight(Math.max(200, entry.contentRect.height - 100));
+                    // Deduct ~50 to account for the table header height
+                    setTestTableHeight(Math.max(200, entry.contentRect.height - 50));
                 } else if (entry.target === categoryContainerRef.current) {
-                    // Deduct 100 to account for: Header (~55px) + Filter Row height + bottom margin
-                    setCategoryTableHeight(Math.max(200, entry.contentRect.height - 100));
+                    // Deduct ~50 to account for the table header height
+                    setCategoryTableHeight(Math.max(200, entry.contentRect.height - 50));
                 }
             }
         });
@@ -289,11 +289,23 @@ const LabTestManager: React.FC = () => {
             />
 
             <style>{`
+                .ant-tabs {
+                    height: 100%;
+                    display: flex;
+                    flex-direction: column;
+                }
+                .ant-tabs-content-holder {
+                    flex: 1;
+                    display: flex;
+                    flex-direction: column;
+                }
                 .ant-tabs-content {
                     height: 100%;
                 }
                 .ant-tabs-tabpane {
                     height: 100%;
+                    display: flex;
+                    flex-direction: column;
                 }
             `}</style>
         </div>

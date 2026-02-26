@@ -10,6 +10,7 @@ import {
     RiseOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
+import colors from '@/styles/colors';
 import type { AgentOrder } from '../../services/agentOrderService';
 
 const { Text } = Typography;
@@ -40,8 +41,8 @@ export const WeeklyTrendsChart: React.FC<ChartProps> = ({ orders }) => {
 
     return (
         <Card
-            title={<Space><ThunderboltOutlined style={{ color: '#1890ff' }} /> Weekly Trends</Space>}
-            style={{ borderRadius: '24px', boxShadow: '0 8px 24px rgba(0,0,0,0.04)', border: 'none', flex: 1, height: '100%', width: '100%' }}
+            title={<Space><ThunderboltOutlined style={{ color: colors.info }} /> Weekly Trends</Space>}
+            style={{ borderRadius: '24px', boxShadow: `0 8px 24px ${colors.cardShadow}`, border: 'none', flex: 1, height: '100%', width: '100%' }}
         >
             <div style={{ height: 220, display: 'flex', alignItems: 'flex-end', gap: '5%', padding: '10px 10px 20px' }}>
                 {weeklyCounts.map((count, i) => {
@@ -55,8 +56,8 @@ export const WeeklyTrendsChart: React.FC<ChartProps> = ({ orders }) => {
                                     flex: 1,
                                     height: `${heightPct}%`,
                                     background: isToday
-                                        ? 'linear-gradient(to top, #1890ff, #40a9ff)'
-                                        : 'linear-gradient(to top, #e6f7ff, #bae7ff)',
+                                        ? `linear-gradient(to top, ${colors.charts.volume[0]}, ${colors.charts.volume[1]})`
+                                        : `linear-gradient(to top, ${colors.charts.volumeBg}, #bae7ff)`,
                                     borderRadius: '8px',
                                     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                                     cursor: 'pointer',
@@ -67,12 +68,12 @@ export const WeeklyTrendsChart: React.FC<ChartProps> = ({ orders }) => {
                     );
                 })}
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 10px 0', borderTop: '1px solid #f0f0f0' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 10px 0', borderTop: `1px solid ${colors.borderLight}` }}>
                 {days.map((day, i) => (
                     <Text
                         key={day}
                         type="secondary"
-                        style={{ fontSize: 12, fontWeight: i === todayIndex ? 700 : 400, color: i === todayIndex ? '#1890ff' : undefined }}
+                        style={{ fontSize: 12, fontWeight: i === todayIndex ? 700 : 400, color: i === todayIndex ? colors.info : undefined }}
                     >
                         {day}
                     </Text>
@@ -82,7 +83,7 @@ export const WeeklyTrendsChart: React.FC<ChartProps> = ({ orders }) => {
                 .trend-bar:hover {
                     transform: scaleX(1.1) translateY(-5px);
                     filter: brightness(1.05);
-                    box-shadow: 0 4px 12px rgba(24, 144, 255, 0.2);
+                    box-shadow: 0 4px 12px ${colors.layout.adminGlow};
                 }
             `}</style>
         </Card>
@@ -113,8 +114,8 @@ export const ActivityDistributionChart: React.FC<ChartProps> = ({ orders }) => {
 
     return (
         <Card
-            title={<Space><EnvironmentOutlined style={{ color: '#ff4d4f' }} /> Activity Distribution</Space>}
-            style={{ borderRadius: '24px', boxShadow: '0 8px 24px rgba(0,0,0,0.04)', border: 'none', flex: 1, height: '100%', width: '100%' }}
+            title={<Space><EnvironmentOutlined style={{ color: colors.danger }} /> Activity Distribution</Space>}
+            style={{ borderRadius: '24px', boxShadow: `0 8px 24px ${colors.cardShadow}`, border: 'none', flex: 1, height: '100%', width: '100%' }}
         >
             <div style={{ padding: '0 5px' }}>
                 <div style={{ marginBottom: 24 }}>
@@ -122,21 +123,21 @@ export const ActivityDistributionChart: React.FC<ChartProps> = ({ orders }) => {
                         <Text type="secondary">Morning (6am – 12pm)</Text>
                         <Text strong>{morningPct}% <Text type="secondary" style={{ fontSize: 11 }}>({morningCount})</Text></Text>
                     </div>
-                    <Progress percent={morningPct} strokeColor="#faad14" showInfo={false} strokeWidth={10} />
+                    <Progress percent={morningPct} strokeColor={colors.status.pending} showInfo={false} strokeWidth={10} />
                 </div>
                 <div style={{ marginBottom: 24 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
                         <Text type="secondary">Afternoon (12pm – 6pm)</Text>
                         <Text strong>{afternoonPct}% <Text type="secondary" style={{ fontSize: 11 }}>({afternoonCount})</Text></Text>
                     </div>
-                    <Progress percent={afternoonPct} strokeColor="#1890ff" showInfo={false} strokeWidth={10} />
+                    <Progress percent={afternoonPct} strokeColor={colors.info} showInfo={false} strokeWidth={10} />
                 </div>
                 <div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
                         <Text type="secondary">Evening (6pm – 12am)</Text>
                         <Text strong>{eveningPct}% <Text type="secondary" style={{ fontSize: 11 }}>({eveningCount})</Text></Text>
                     </div>
-                    <Progress percent={eveningPct} strokeColor="#722ed1" showInfo={false} strokeWidth={10} />
+                    <Progress percent={eveningPct} strokeColor={colors.status.processing} showInfo={false} strokeWidth={10} />
                 </div>
 
                 {orders.length === 0 && (
@@ -170,18 +171,18 @@ export const PerformanceSummaryChart: React.FC<ChartProps> = ({ orders }) => {
     }, [orders]);
 
     const getPerformanceLabel = (rate: number) => {
-        if (rate >= 90) return { label: 'Excellent Work!', sub: "You're in the top tier of agents.", icon: <TrophyOutlined style={{ color: '#faad14' }} /> };
-        if (rate >= 70) return { label: 'Good Progress!', sub: 'Keep it up to reach the top.', icon: <RiseOutlined style={{ color: '#1890ff' }} /> };
-        if (rate >= 50) return { label: 'Room to Improve', sub: 'Complete more orders to boost your score.', icon: <ClockCircleOutlined style={{ color: '#faad14' }} /> };
-        return { label: 'Getting Started', sub: 'Accept and complete orders to build your record.', icon: <ClockCircleOutlined style={{ color: '#8c8c8c' }} /> };
+        if (rate >= 90) return { label: 'Excellent Work!', sub: "You're in the top tier of agents.", icon: <TrophyOutlined style={{ color: colors.status.pending }} /> };
+        if (rate >= 70) return { label: 'Good Progress!', sub: 'Keep it up to reach the top.', icon: <RiseOutlined style={{ color: colors.info }} /> };
+        if (rate >= 50) return { label: 'Room to Improve', sub: 'Complete more orders to boost your score.', icon: <ClockCircleOutlined style={{ color: colors.status.pending }} /> };
+        return { label: 'Getting Started', sub: 'Accept and complete orders to build your record.', icon: <ClockCircleOutlined style={{ color: colors.charts.text }} /> };
     };
 
     const perf = getPerformanceLabel(completionRate);
 
     return (
         <Card
-            title={<Space><StarOutlined style={{ color: '#faad14' }} /> Performance Summary</Space>}
-            style={{ borderRadius: '24px', boxShadow: '0 8px 24px rgba(0,0,0,0.04)', border: 'none', flex: 1, height: '100%', width: '100%' }}
+            title={<Space><StarOutlined style={{ color: colors.status.pending }} /> Performance Summary</Space>}
+            style={{ borderRadius: '24px', boxShadow: `0 8px 24px ${colors.cardShadow}`, border: 'none', flex: 1, height: '100%', width: '100%' }}
         >
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '10px 0' }}>
                 <Progress
@@ -192,8 +193,8 @@ export const PerformanceSummaryChart: React.FC<ChartProps> = ({ orders }) => {
                     size={160}
                     format={(pct) => (
                         <div style={{ textAlign: 'center' }}>
-                            <div style={{ fontSize: 28, fontWeight: 700, color: '#141414' }}>{pct}%</div>
-                            <div style={{ fontSize: 11, color: '#8c8c8c' }}>Completion</div>
+                            <div style={{ fontSize: 28, fontWeight: 700, color: colors.textDark }}>{pct}%</div>
+                            <div style={{ fontSize: 11, color: colors.charts.text }}>Completion</div>
                         </div>
                     )}
                 />
@@ -206,14 +207,14 @@ export const PerformanceSummaryChart: React.FC<ChartProps> = ({ orders }) => {
                 </div>
                 <Row gutter={16} style={{ width: '100%', marginTop: 20 }}>
                     <Col span={12}>
-                        <div style={{ textAlign: 'center', padding: '12px', background: '#f6ffed', borderRadius: '16px' }}>
-                            <Text strong style={{ color: '#52c41a', display: 'block', fontSize: '18px' }}>{slaRate}%</Text>
+                        <div style={{ textAlign: 'center', padding: '12px', background: colors.stats.tests, borderRadius: '16px' }}>
+                            <Text strong style={{ color: colors.success, display: 'block', fontSize: '18px' }}>{slaRate}%</Text>
                             <Text type="secondary" style={{ fontSize: '12px' }}>SLA Met</Text>
                         </div>
                     </Col>
                     <Col span={12}>
-                        <div style={{ textAlign: 'center', padding: '12px', background: '#e6f7ff', borderRadius: '16px' }}>
-                            <Text strong style={{ color: '#1890ff', display: 'block', fontSize: '18px' }}>{totalCompleted}<Text style={{ fontSize: 12, color: '#8c8c8c' }}>/{totalOrders}</Text></Text>
+                        <div style={{ textAlign: 'center', padding: '12px', background: colors.charts.volumeBg, borderRadius: '16px' }}>
+                            <Text strong style={{ color: colors.info, display: 'block', fontSize: '18px' }}>{totalCompleted}<Text style={{ fontSize: 12, color: colors.charts.text }}>/{totalOrders}</Text></Text>
                             <Text type="secondary" style={{ fontSize: '12px' }}>Completed</Text>
                         </div>
                     </Col>
@@ -241,49 +242,49 @@ export const PriorityBreakdownChart: React.FC<ChartProps> = ({ orders }) => {
 
     return (
         <Card
-            title={<Space><PieChartOutlined style={{ color: '#722ed1' }} /> Priority Breakdown</Space>}
-            style={{ borderRadius: '24px', boxShadow: '0 8px 24px rgba(0,0,0,0.04)', border: 'none', flex: 1, height: '100%', width: '100%' }}
+            title={<Space><PieChartOutlined style={{ color: colors.status.processing }} /> Priority Breakdown</Space>}
+            style={{ borderRadius: '24px', boxShadow: `0 8px 24px ${colors.cardShadow}`, border: 'none', flex: 1, height: '100%', width: '100%' }}
         >
             <div style={{ padding: '5px 0' }}>
                 <div style={{ marginBottom: 20 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
                         <Space>
-                            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#ff4d4f' }} />
+                            <div style={{ width: 8, height: 8, borderRadius: '50%', background: colors.danger }} />
                             <Text>Urgent (ASAP)</Text>
                         </Space>
                         <Text strong>{urgentCount} <Text type="secondary" style={{ fontSize: 11 }}>({urgentPct}%)</Text></Text>
                     </div>
-                    <Progress percent={urgentPct} strokeColor="#ff4d4f" showInfo={false} strokeWidth={8} />
+                    <Progress percent={urgentPct} strokeColor={colors.danger} showInfo={false} strokeWidth={8} />
                 </div>
                 <div style={{ marginBottom: 20 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
                         <Space>
-                            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#faad14' }} />
+                            <div style={{ width: 8, height: 8, borderRadius: '50%', background: colors.status.pending }} />
                             <Text>Stat (Fast Track)</Text>
                         </Space>
                         <Text strong>{statCount} <Text type="secondary" style={{ fontSize: 11 }}>({statPct}%)</Text></Text>
                     </div>
-                    <Progress percent={statPct} strokeColor="#faad14" showInfo={false} strokeWidth={8} />
+                    <Progress percent={statPct} strokeColor={colors.status.pending} showInfo={false} strokeWidth={8} />
                 </div>
                 <div style={{ marginBottom: 0 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
                         <Space>
-                            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#1890ff' }} />
+                            <div style={{ width: 8, height: 8, borderRadius: '50%', background: colors.info }} />
                             <Text>Normal (Scheduled)</Text>
                         </Space>
                         <Text strong>{normalCount} <Text type="secondary" style={{ fontSize: 11 }}>({normalPct}%)</Text></Text>
                     </div>
-                    <Progress percent={normalPct} strokeColor="#1890ff" showInfo={false} strokeWidth={8} />
+                    <Progress percent={normalPct} strokeColor={colors.info} showInfo={false} strokeWidth={8} />
                 </div>
 
-                <div style={{ marginTop: 28, padding: '14px 16px', background: hasUrgent ? '#fff2f0' : '#f9f0ff', borderRadius: '16px' }}>
+                <div style={{ marginTop: 28, padding: '14px 16px', background: hasUrgent ? colors.stats.reports : colors.stats.revenue, borderRadius: '16px' }}>
                     <Space align="start">
-                        <ClockCircleOutlined style={{ color: hasUrgent ? '#ff4d4f' : '#722ed1', marginTop: 4 }} />
+                        <ClockCircleOutlined style={{ color: hasUrgent ? colors.danger : colors.status.processing, marginTop: 4 }} />
                         <div>
-                            <Text strong style={{ color: hasUrgent ? '#ff4d4f' : '#722ed1', display: 'block' }}>
+                            <Text strong style={{ color: hasUrgent ? colors.danger : colors.status.processing, display: 'block' }}>
                                 {hasUrgent ? `${urgentCount} Urgent Order${urgentCount > 1 ? 's' : ''} Pending!` : 'Efficiency Tip'}
                             </Text>
-                            <Text style={{ fontSize: '12px', color: hasUrgent ? '#ff4d4f' : '#722ed1' }}>
+                            <Text style={{ fontSize: '12px', color: hasUrgent ? colors.danger : colors.status.processing }}>
                                 {hasUrgent
                                     ? 'Prioritize urgent pickups immediately to maintain your SLA rating.'
                                     : 'Complete urgent tasks first to maintain your SLA rating!'}

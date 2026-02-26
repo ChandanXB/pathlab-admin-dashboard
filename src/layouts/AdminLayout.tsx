@@ -55,7 +55,7 @@ const AdminLayout: React.FC = () => {
                     setOrderStats(response.data);
                 }
             } catch (error) {
-                console.error('Failed to fetch order stats', error);
+                console.error('Failed to fetch sidebar stats', error);
             }
         };
 
@@ -97,14 +97,14 @@ const AdminLayout: React.FC = () => {
                                 <div style={{
                                     fontSize: '11px',
                                     fontWeight: '700',
-                                    color: '#1890ff',
-                                    background: 'rgba(24, 144, 255, 0.15)',
+                                    color: colors.info,
+                                    background: `${colors.info}${colors.alpha.badgeBg}`,
                                     padding: '0 7px',
                                     height: '20px',
                                     borderRadius: '10px',
                                     display: 'flex',
                                     alignItems: 'center',
-                                    boxShadow: '0 0 10px rgba(24, 144, 255, 0.1)'
+                                    boxShadow: `0 0 10px ${colors.layout.adminGlow}`
                                 }}>
                                     {orderStats.totalOrders}
                                 </div>
@@ -122,13 +122,13 @@ const AdminLayout: React.FC = () => {
                                     fontSize: '11px',
                                     fontWeight: '700',
                                     color: status.color,
-                                    background: `${status.color}15`, // Translucent background
+                                    background: `${status.color}${colors.alpha.badgeBg}`, // Translucent background
                                     padding: '0 7px',
                                     height: '20px',
                                     borderRadius: '10px',
                                     display: 'flex',
                                     alignItems: 'center',
-                                    boxShadow: `0 0 10px ${status.color}20` // Subtle glow matching image 4
+                                    boxShadow: `0 0 10px ${status.color}${colors.alpha.badgeGlow}` // Subtle glow matching image 4
                                 }}>
                                     {orderStats.statusCounts[status.value]}
                                 </div>
@@ -183,7 +183,7 @@ const AdminLayout: React.FC = () => {
                     left: 0,
                     top: 0,
                     bottom: 0,
-                    boxShadow: '2px 0 8px 0 rgba(29,35,41,.05)',
+                    boxShadow: `2px 0 8px 0 ${colors.layout.agentSiderShadow}`,
                     zIndex: 100,
                     background: colors.sidebarBg
                 }}
@@ -196,7 +196,7 @@ const AdminLayout: React.FC = () => {
                         alignItems: 'center',
                         padding: '0 24px',
                         gap: '12px',
-                        background: `linear-gradient(90deg, ${colors.sidebarBg} 0%, #002140 100%)`,
+                        background: `linear-gradient(90deg, ${colors.sidebarBg} 0%, ${colors.layout.agentSidebarEnd} 100%)`,
                         borderBottom: `1px solid ${colors.sidebarBorder}`,
                         flexShrink: 0
                     }}>
@@ -249,7 +249,7 @@ const AdminLayout: React.FC = () => {
                         padding: '16px',
                         borderTop: `1px solid ${colors.sidebarBorder}`,
                         flexShrink: 0,
-                        background: 'rgba(0, 21, 41, 0.5)',
+                        background: `${colors.sidebarBg}80`, // 50% opacity version of sidebarBg
                         backdropFilter: 'blur(8px)'
                     }}>
 
@@ -265,7 +265,7 @@ const AdminLayout: React.FC = () => {
                                 alignItems: 'center',
                                 justifyContent: collapsed ? 'center' : 'flex-start',
                                 padding: collapsed ? '4px 0' : '4px 8px',
-                                background: 'rgba(255,255,255,0.05)',
+                                background: `${colors.white}${colors.alpha.sidebarShadow}`,
                                 borderRadius: '6px'
                             }}
                         >
@@ -329,31 +329,41 @@ const AdminLayout: React.FC = () => {
 
                 <Content style={{
                     flex: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
                     overflow: 'hidden',
                     padding: screenSize < 768 ? '16px 12px' : '24px',
                     background: colors.background,
-                    display: 'flex',
-                    flexDirection: 'column'
                 }}>
-                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                        <Outlet />
-                    </div>
+                    <Outlet />
                 </Content>
             </Layout>
 
             <style>{`
+                /* Global Scrollbar Styling */
+                ::-webkit-scrollbar {
+                    width: 6px;
+                    height: 6px;
+                }
+                ::-webkit-scrollbar-track {
+                    background: transparent;
+                }
+                ::-webkit-scrollbar-thumb {
+                    background: ${colors.layout.agentSiderShadow};
+                    border-radius: 10px;
+                }
+                ::-webkit-scrollbar-thumb:hover {
+                    background: ${colors.charts.text};
+                }
+
                 .sidebar-menu-container::-webkit-scrollbar {
                     width: 4px;
                 }
-                .sidebar-menu-container::-webkit-scrollbar-track {
-                    background: transparent;
-                }
                 .sidebar-menu-container::-webkit-scrollbar-thumb {
-                    background: rgba(255, 255, 255, 0.1);
-                    border-radius: 10px;
+                    background: ${colors.layout.scrollbarThumb};
                 }
                 .sidebar-menu-container:hover::-webkit-scrollbar-thumb {
-                    background: rgba(255, 255, 255, 0.2);
+                    background: ${colors.textMuted};
                 }
                 .ant-table-thead > tr > th {
                     background: transparent !important;

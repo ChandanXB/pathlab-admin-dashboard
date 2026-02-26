@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     Button,
     Card,
@@ -13,38 +13,33 @@ import {
     SearchOutlined,
     MedicineBoxOutlined
 } from '@ant-design/icons';
-import { doctorService } from '../services/doctorService';
+import colors from '@/styles/colors';
+import { useDoctors } from '../hooks/useDoctors';
 import { DoctorTable, DoctorFormModal } from '../components';
 import type { Doctor } from '../types/doctor.types';
 
 const { Title, Text } = Typography;
 
 const DoctorManager: React.FC = () => {
-    const [doctors, setDoctors] = useState<Doctor[]>([]);
-    const [loading, setLoading] = useState(false);
+    const {
+        doctors,
+        loadingDoctors,
+        loadingMoreDoctors,
+        doctorPagination,
+        setDoctorFilters,
+        createDoctor,
+        updateDoctor,
+        deleteDoctor,
+        loadMore,
+    } = useDoctors();
+
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingDoctor, setEditingDoctor] = useState<Doctor | null>(null);
     const [form] = Form.useForm();
-    const [searchText, setSearchText] = useState('');
 
-    const fetchDoctors = async () => {
-        try {
-            setLoading(true);
-            const response = await doctorService.getDoctors({
-                search: searchText
-            });
-            // Depending on API response structure
-            setDoctors(Array.isArray(response) ? response : response.data || []);
-        } catch (error) {
-            message.error('Failed to fetch doctors');
-        } finally {
-            setLoading(false);
-        }
+    const handleSearch = (value: string) => {
+        setDoctorFilters((prev) => ({ ...prev, search: value, page: 1 }));
     };
-
-    useEffect(() => {
-        fetchDoctors();
-    }, [searchText]);
 
     const handleAdd = () => {
         setEditingDoctor(null);
@@ -60,9 +55,8 @@ const DoctorManager: React.FC = () => {
 
     const handleDelete = async (id: number) => {
         try {
-            await doctorService.deleteDoctor(id);
+            await deleteDoctor(id);
             message.success('Doctor removed successfully');
-            fetchDoctors();
         } catch (error) {
             message.error('Failed to remove doctor');
         }
@@ -72,32 +66,48 @@ const DoctorManager: React.FC = () => {
         try {
             const values = await form.validateFields();
             if (editingDoctor) {
-                await doctorService.updateDoctor(editingDoctor.id, values);
+                await updateDoctor(editingDoctor.id, values);
                 message.success('Doctor updated successfully');
             } else {
-                await doctorService.createDoctor(values);
+                await createDoctor(values);
                 message.success('Doctor onboarded successfully');
             }
             setIsModalOpen(false);
-            fetchDoctors();
         } catch (error) {
             message.error('Failed to save doctor');
         }
     };
 
+    const [tableHeight, setTableHeight] = useState(400);
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const observer = new ResizeObserver((entries) => {
+            for (const entry of entries) {
+                if (entry.target === containerRef.current) {
+                    // Deduct header height from container
+                    setTableHeight(Math.max(200, entry.contentRect.height - 55));
+                }
+            }
+        });
+
+        if (containerRef.current) observer.observe(containerRef.current);
+        return () => observer.disconnect();
+    }, []);
+
     return (
-        <Space direction="vertical" size="large" style={{ width: '100%', padding: '24px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
                 <Space align="center" size="middle">
                     <div style={{
-                        background: '#1890ff',
+                        background: colors.info,
                         padding: '10px',
                         borderRadius: '12px',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center'
                     }}>
-                        <MedicineBoxOutlined style={{ fontSize: '24px', color: 'white' }} />
+                        <MedicineBoxOutlined style={{ fontSize: '24px', color: colors.white }} />
                     </div>
                     <div>
                         <Title level={3} style={{ margin: 0 }}>Doctor Management</Title>
@@ -114,23 +124,32 @@ const DoctorManager: React.FC = () => {
                 </Button>
             </div>
 
-            <Card>
-                <div style={{ marginBottom: 16 }}>
+            <Card
+                styles={{ body: { flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: '24px' } }}
+                style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
+            >
+                <div style={{ marginBottom: 16, flexShrink: 0 }}>
                     <Input
                         placeholder="Search by name, specialty, or email"
                         prefix={<SearchOutlined />}
                         style={{ width: 350 }}
                         allowClear
-                        onChange={(e) => setSearchText(e.target.value)}
+                        onChange={(e) => handleSearch(e.target.value)}
                     />
                 </div>
 
-                <DoctorTable
-                    doctors={doctors}
-                    loading={loading}
-                    onEdit={handleEdit}
-                    onDelete={handleDelete}
-                />
+                <div ref={containerRef} style={{ flex: 1, overflow: 'hidden' }}>
+                    <DoctorTable
+                        doctors={doctors}
+                        loading={loadingDoctors}
+                        loadingMore={loadingMoreDoctors}
+                        hasMore={doctorPagination.hasMore}
+                        onEdit={handleEdit}
+                        onDelete={handleDelete}
+                        onLoadMore={loadMore}
+                        scroll={{ y: tableHeight }}
+                    />
+                </div>
             </Card>
 
             <DoctorFormModal
@@ -140,7 +159,7 @@ const DoctorManager: React.FC = () => {
                 onOk={handleModalOk}
                 onCancel={() => setIsModalOpen(false)}
             />
-        </Space>
+        </div>
     );
 };
 

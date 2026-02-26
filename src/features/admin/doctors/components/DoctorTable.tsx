@@ -1,16 +1,30 @@
 import React from 'react';
-import { Table, Space, Button, Tag, Popconfirm, Tooltip } from 'antd';
+import { Space, Button, Tag, Popconfirm, Tooltip } from 'antd';
 import { EditOutlined, DeleteOutlined, UserOutlined } from '@ant-design/icons';
+import InfiniteScrollTable from '@/shared/components/InfiniteScrollTable';
 import type { Doctor } from '../types/doctor.types';
 
 interface DoctorTableProps {
     doctors: Doctor[];
     loading: boolean;
+    loadingMore: boolean;
+    hasMore: boolean;
     onEdit: (doctor: Doctor) => void;
     onDelete: (id: number) => void;
+    onLoadMore: () => void;
+    scroll?: { x?: number | string; y?: number | string };
 }
 
-const DoctorTable: React.FC<DoctorTableProps> = ({ doctors, loading, onEdit, onDelete }) => {
+const DoctorTable: React.FC<DoctorTableProps> = ({
+    doctors,
+    loading,
+    loadingMore,
+    hasMore,
+    onEdit,
+    onDelete,
+    onLoadMore,
+    scroll
+}) => {
     const columns = [
         {
             title: 'Name',
@@ -52,6 +66,7 @@ const DoctorTable: React.FC<DoctorTableProps> = ({ doctors, loading, onEdit, onD
         {
             title: 'Actions',
             key: 'actions',
+            width: 100,
             render: (_: any, record: Doctor) => (
                 <Space size="middle">
                     <Tooltip title="Edit">
@@ -81,12 +96,15 @@ const DoctorTable: React.FC<DoctorTableProps> = ({ doctors, loading, onEdit, onD
     ];
 
     return (
-        <Table
+        <InfiniteScrollTable
             columns={columns}
             dataSource={doctors}
             loading={loading}
+            loadingMore={loadingMore}
+            hasMore={hasMore}
+            next={onLoadMore}
             rowKey="id"
-            pagination={{ pageSize: 10 }}
+            scroll={scroll}
         />
     );
 };

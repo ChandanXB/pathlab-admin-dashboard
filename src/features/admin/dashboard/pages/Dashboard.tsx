@@ -1,43 +1,31 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
     Typography,
-    Card,
     Row,
     Col,
-    Button,
-    Space,
     Breadcrumb,
-    Divider,
-    theme
+    Spin
 } from 'antd';
 import {
+    CreditCardOutlined,
     UserOutlined,
     ExperimentOutlined,
-    FileTextOutlined,
-    CreditCardOutlined
+    FileTextOutlined
 } from '@ant-design/icons';
 
-// Externalized Resources
-import colors from '@/styles/colors';
-import { systemHealthMetrics, quickActions } from '@/shared/data/dashboardData';
 import StatCard from '@/shared/components/StatCard';
+import { useDashboardStats } from '../hooks/useDashboardStats';
+import {
+    OrderStatusDistribution,
+    WeeklyOrderTrend,
+    OperationsEfficiency,
+    RevenueTrends
+} from '../components/AdminCharts';
 
-const { Title, Text } = Typography;
+const { Title } = Typography;
 
 const Dashboard: React.FC = () => {
-    const [screenSize, setScreenSize] = useState(window.innerWidth);
-    const stats = {
-        totalPatients: 0,
-        activeTests: 0,
-        pendingReports: 0,
-        totalRevenue: 0
-    };
-
-    useEffect(() => {
-        const handleResize = () => setScreenSize(window.innerWidth);
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
-    }, []);
+    const { stats, loading, error } = useDashboardStats();
 
     const statsCards = [
         {
@@ -78,14 +66,22 @@ const Dashboard: React.FC = () => {
         }
     ];
 
+    if (loading) {
+        return (
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', minHeight: '400px' }}>
+                <Spin size="large" tip="Loading Intelligence Data..." />
+            </div>
+        );
+    }
+
     return (
-        <div style={{ animation: 'fadeIn 0.5s ease', height: '100%', overflow: 'auto' }}>
+        <div style={{ animation: 'fadeIn 0.5s ease', paddingBottom: 24 }}>
             <div style={{ marginBottom: 24 }}>
                 <Breadcrumb items={[
                     { title: 'Home' },
                     { title: 'Dashboard' }
                 ]} />
-                <Title level={2} style={{ marginTop: 8 }}>Dashboard Overview</Title>
+                <Title level={2} style={{ marginTop: 8 }}>Admin Intelligence Overview</Title>
             </div>
 
             {/* Stats Section */}
@@ -97,61 +93,30 @@ const Dashboard: React.FC = () => {
                 ))}
             </Row>
 
-            {/* Content Section */}
-            <Row gutter={[16, 16]} style={{ marginTop: 24, marginBottom: 24 }}>
-                <Col xs={24} lg={16}>
-                    <Card
-                        title={<Text strong style={{ fontSize: screenSize < 576 ? 16 : 18 }}>Recent Activity</Text>}
-                        bordered={false}
-                        style={{ borderRadius: 16, boxShadow: `0 4px 12px ${colors.cardShadow}` }}
-                    >
-                        <div style={{ padding: '40px 0', textAlign: 'center' }}>
-                            <ExperimentOutlined style={{ fontSize: 48, color: colors.primary, opacity: 0.2 }} />
-                            <div style={{ marginTop: 16, color: '#888' }}>Activity monitoring will appear here</div>
-                        </div>
-                    </Card>
-                </Col>
-
+            {/* Charts Section */}
+            <Row gutter={[24, 24]} style={{ marginTop: 24 }}>
                 <Col xs={24} lg={8}>
-                    <Card
-                        title={<Text strong style={{ fontSize: screenSize < 576 ? 16 : 18 }}>System Health</Text>}
-                        bordered={false}
-                        style={{
-                            borderRadius: 16,
-                            boxShadow: `0 4px 12px ${colors.cardShadow}`,
-                            height: '100%',
-                            marginTop: screenSize < 992 ? 16 : 0
-                        }}
-                    >
-                        <Space direction="vertical" style={{ width: '100%' }} size="large">
-                            {systemHealthMetrics.map((metric, idx) => (
-                                <div key={idx}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                                        <Text>{metric.label}</Text>
-                                        <Text strong>{metric.value}</Text>
-                                    </div>
-                                    <div style={{ height: 8, background: colors.background, borderRadius: 4, overflow: 'hidden' }}>
-                                        <div style={{ width: `${metric.percent}%`, height: '100%', background: metric.color }} />
-                                    </div>
-                                </div>
-                            ))}
+                    <OrderStatusDistribution statusCounts={stats.statusCounts} recentOrders={stats.recentOrders} />
+                </Col>
+                <Col xs={24} lg={8}>
+                    <WeeklyOrderTrend statusCounts={stats.statusCounts} recentOrders={stats.recentOrders} />
+                </Col>
+                <Col xs={24} lg={8}>
+                    <OperationsEfficiency
+                        statusCounts={stats.statusCounts}
+                        recentOrders={stats.recentOrders}
+                        isError={!!error}
+                    />
+                </Col>
+            </Row>
 
-                            <Divider style={{ margin: '12px 0' }} />
-
-                            <div style={{ padding: '4px 0' }}>
-                                <Text strong>Quick Actions</Text>
-                                <Row gutter={[8, 8]} style={{ marginTop: 12 }}>
-                                    {quickActions.map((action, idx) => (
-                                        <Col xs={12} sm={6} lg={12} key={idx}>
-                                            <Button block style={{ borderRadius: 8, fontSize: screenSize < 576 ? 12 : 14 }}>
-                                                {action.label}
-                                            </Button>
-                                        </Col>
-                                    ))}
-                                </Row>
-                            </div>
-                        </Space>
-                    </Card>
+            {/* Bottom Row - Revenue Analytics */}
+            <Row gutter={[24, 24]} style={{ marginTop: 24, marginBottom: 24 }}>
+                <Col span={24}>
+                    <RevenueTrends
+                        statusCounts={stats.statusCounts}
+                        recentOrders={stats.recentOrders}
+                    />
                 </Col>
             </Row>
 

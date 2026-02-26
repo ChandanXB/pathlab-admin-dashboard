@@ -51,12 +51,25 @@ const CategoryTable: React.FC<CategoryTableProps> = ({
         {
             title: 'Action',
             key: 'action',
-            width: 120,
+            width: 100,
             render: (_: any, record: any) => (
-                <Space>
-                    <Button icon={<EditOutlined />} size="small" onClick={() => onEdit(record)} />
-                    <Popconfirm title="Delete category?" onConfirm={() => onDelete(record.id)}>
-                        <Button icon={<DeleteOutlined />} size="small" danger />
+                <Space size="middle">
+                    <Button
+                        type="text"
+                        icon={<EditOutlined />}
+                        onClick={() => onEdit(record)}
+                    />
+                    <Popconfirm
+                        title="Delete category?"
+                        onConfirm={() => onDelete(record.id)}
+                        okText="Yes"
+                        cancelText="No"
+                    >
+                        <Button
+                            type="text"
+                            danger
+                            icon={<DeleteOutlined />}
+                        />
                     </Popconfirm>
                 </Space>
             )

@@ -1,45 +1,40 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     Button,
     Card,
     Input,
-    Form,
-    message
+    Form
 } from 'antd';
 import {
     PlusOutlined,
     SearchOutlined
 } from '@ant-design/icons';
-import { collectionAgentService, type CollectionAgent } from '../services/collectionAgentService';
+import { useAgents } from '../hooks/useAgents';
+import { type CollectionAgent } from '../services/collectionAgentService';
 import { useNavigate } from 'react-router-dom';
 import { AgentTable, AgentFormModal } from '../components';
 
 const CollectionAgentManager: React.FC = () => {
-    const [agents, setAgents] = useState<CollectionAgent[]>([]);
-    const [loading, setLoading] = useState(false);
+    const {
+        agents,
+        loadingAgents,
+        loadingMoreAgents,
+        agentPagination,
+        setAgentFilters,
+        createAgent,
+        updateAgent,
+        deleteAgent,
+        loadMore,
+    } = useAgents();
+
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingAgent, setEditingAgent] = useState<CollectionAgent | null>(null);
     const [form] = Form.useForm();
-    const [searchText, setSearchText] = useState('');
     const navigate = useNavigate();
 
-    const fetchAgents = async () => {
-        try {
-            setLoading(true);
-            const response = await collectionAgentService.getAgents({
-                search: searchText
-            });
-            setAgents(response.data);
-        } catch (error) {
-            message.error('Failed to fetch collection agents');
-        } finally {
-            setLoading(false);
-        }
+    const handleSearch = (value: string) => {
+        setAgentFilters((prev: any) => ({ ...prev, search: value, page: 1 }));
     };
-
-    useEffect(() => {
-        fetchAgents();
-    }, [searchText]);
 
     const handleAdd = () => {
         setEditingAgent(null);
@@ -54,13 +49,7 @@ const CollectionAgentManager: React.FC = () => {
     };
 
     const handleDelete = async (id: number) => {
-        try {
-            await collectionAgentService.deleteAgent(id);
-            message.success('Agent deleted successfully');
-            fetchAgents();
-        } catch (error) {
-            message.error('Failed to delete agent');
-        }
+        await deleteAgent(id);
     };
 
     const handleRowClick = (agent: CollectionAgent) => {
@@ -70,33 +59,47 @@ const CollectionAgentManager: React.FC = () => {
     const handleModalOk = async () => {
         try {
             const values = await form.validateFields();
+            let success = false;
             if (editingAgent) {
-                await collectionAgentService.updateAgent(editingAgent.id, values);
-                message.success('Agent updated successfully');
+                success = await updateAgent(editingAgent.id, values);
             } else {
-                await collectionAgentService.createAgent(values);
-                message.success('Agent created successfully');
+                success = await createAgent(values);
             }
-            setIsModalOpen(false);
-            fetchAgents();
+            if (success) setIsModalOpen(false);
         } catch (error) {
-            message.error('Failed to save agent');
+            // Error handled by form
         }
     };
+
+    const [tableHeight, setTableHeight] = useState(400);
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const observer = new ResizeObserver((entries) => {
+            for (const entry of entries) {
+                if (entry.target === containerRef.current) {
+                    setTableHeight(Math.max(200, entry.contentRect.height - 55));
+                }
+            }
+        });
+
+        if (containerRef.current) observer.observe(containerRef.current);
+        return () => observer.disconnect();
+    }, []);
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 24 }}>
             <Card
                 title="Collection Agents Management"
                 style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}
-                styles={{ body: { flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' } }}
+                styles={{ body: { flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden', padding: '24px' } }}
             >
                 <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', flexShrink: 0 }}>
                     <Input
                         placeholder="Search by name, phone or email"
                         prefix={<SearchOutlined />}
                         style={{ width: 300 }}
-                        onChange={(e) => setSearchText(e.target.value)}
+                        onChange={(e) => handleSearch(e.target.value)}
                     />
                     <Button
                         type="primary"
@@ -107,13 +110,19 @@ const CollectionAgentManager: React.FC = () => {
                     </Button>
                 </div>
 
-                <AgentTable
-                    agents={agents}
-                    loading={loading}
-                    onEdit={handleEdit}
-                    onDelete={handleDelete}
-                    onRowClick={handleRowClick}
-                />
+                <div ref={containerRef} style={{ flex: 1, overflow: 'hidden' }}>
+                    <AgentTable
+                        agents={agents}
+                        loading={loadingAgents}
+                        loadingMore={loadingMoreAgents}
+                        hasMore={agentPagination.hasMore}
+                        onEdit={handleEdit}
+                        onDelete={handleDelete}
+                        onRowClick={handleRowClick}
+                        onLoadMore={loadMore}
+                        scroll={{ y: tableHeight }}
+                    />
+                </div>
             </Card>
 
             <AgentFormModal
