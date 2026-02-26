@@ -92,6 +92,23 @@ const LabOrderManager: React.FC = () => {
         await updateOrderStatus(id, status);
     };
 
+    const [tableHeight, setTableHeight] = useState(400);
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const observer = new ResizeObserver((entries) => {
+            for (const entry of entries) {
+                if (entry.target === containerRef.current) {
+                    // Deduct ~55 for header height
+                    setTableHeight(Math.max(200, entry.contentRect.height - 55));
+                }
+            }
+        });
+
+        if (containerRef.current) observer.observe(containerRef.current);
+        return () => observer.disconnect();
+    }, []);
+
     const handleRowClick = (order: LabOrder) => {
         setSelectedOrderId(order.id);
         setIsDrawerVisible(true);
@@ -156,7 +173,7 @@ const LabOrderManager: React.FC = () => {
     );
 
     return (
-        <div style={{ padding: '24px 12px', height: '100%', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Space align="center" size="middle">
                     <div style={{
@@ -196,7 +213,7 @@ const LabOrderManager: React.FC = () => {
             />
 
             <Card
-                bodyStyle={{ padding: 0 }}
+                styles={{ body: { flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: 0 } }}
                 style={{
                     flex: 1,
                     display: 'flex',
@@ -206,23 +223,25 @@ const LabOrderManager: React.FC = () => {
                     boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
                 }}
             >
-                <LabOrderTable
-                    data={orders}
-                    loading={loading}
-                    loadingMore={loadingMore}
-                    hasMore={pagination.hasMore}
-                    onEdit={handleEdit}
-                    onDelete={handleDelete}
-                    onStatusUpdate={handleStatusUpdate}
-                    onAssign={(order) => {
-                        setSelectedOrderId(order.id);
-                        setIsAssignModalVisible(true);
-                    }}
-                    onLoadMore={loadMore}
-                    onRowClick={handleRowClick}
-                    visibleColumns={visibleColumns}
-                    scroll={{ y: 'calc(100vh - 350px)' }}
-                />
+                <div ref={containerRef} style={{ flex: 1, overflow: 'hidden' }}>
+                    <LabOrderTable
+                        data={orders}
+                        loading={loading}
+                        loadingMore={loadingMore}
+                        hasMore={pagination.hasMore}
+                        onEdit={handleEdit}
+                        onDelete={handleDelete}
+                        onStatusUpdate={handleStatusUpdate}
+                        onAssign={(order) => {
+                            setSelectedOrderId(order.id);
+                            setIsAssignModalVisible(true);
+                        }}
+                        onLoadMore={loadMore}
+                        onRowClick={handleRowClick}
+                        visibleColumns={visibleColumns}
+                        scroll={{ y: tableHeight }}
+                    />
+                </div>
             </Card>
 
             <LabOrderFormModal

@@ -107,10 +107,15 @@ const InfiniteScrollTable = <T extends object>({
                     overflow: hidden;
                 }
                 .infinite-scroll-table-wrapper .ant-table-body {
+                    flex: 1;
                     scrollbar-width: thin;
                     scrollbar-color: #e5e7eb transparent;
                     scroll-behavior: smooth; /* Smoother scrolling */
-                    padding-bottom: 20px; /* Air at the bottom */
+                }
+                .infinite-scroll-table-wrapper .ant-table-content {
+                    flex: 1;
+                    display: flex;
+                    flex-direction: column;
                 }
                 .infinite-scroll-table-wrapper .ant-table-body::-webkit-scrollbar {
                     width: 6px;

@@ -202,7 +202,7 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
             width: 100,
             render: (_: any, record: LabOrder) => (
                 <div onClick={(e) => e.stopPropagation()}>
-                    <Space size="small">
+                    <Space size="middle">
                         <Tooltip
                             title={
                                 record.status === 'assigned'
@@ -214,7 +214,6 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
                                 type="text"
                                 icon={record.collection_agent ? <UserSwitchOutlined style={{ color: record.status === 'assigned' ? '#52c41a' : '#bfbfbf' }} /> : <UserAddOutlined style={{ color: record.status === 'assigned' ? '#faad14' : '#bfbfbf' }} />}
                                 onClick={() => onAssign(record)}
-                                size="small"
                                 disabled={record.status !== 'assigned'}
                             />
                         </Tooltip>
@@ -223,7 +222,6 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
                                 type="text"
                                 icon={<EditOutlined />}
                                 onClick={() => onEdit(record)}
-                                size="small"
                             />
                         </Tooltip>
                         <Popconfirm
@@ -235,7 +233,7 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
                             okButtonProps={{ danger: true }}
                         >
                             <Tooltip title="Delete">
-                                <Button type="text" danger icon={<DeleteOutlined />} size="small" />
+                                <Button type="text" danger icon={<DeleteOutlined />} />
                             </Tooltip>
                         </Popconfirm>
                     </Space>

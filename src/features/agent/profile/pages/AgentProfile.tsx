@@ -13,6 +13,7 @@ import {
 } from '@ant-design/icons';
 import { useAuthStore } from '@/store/authStore';
 import { useAgentOrders } from '../../hooks/useAgentOrders';
+import colors from '@/styles/colors';
 
 const { Title, Text } = Typography;
 
@@ -36,13 +37,13 @@ const AgentProfile: React.FC = () => {
                     borderRadius: '16px',
                     overflow: 'hidden',
                     marginBottom: '20px',
-                    boxShadow: '0 4px 16px rgba(0,0,0,0.06)',
+                    boxShadow: `0 4px 16px ${colors.cardShadow}`,
                 }}
                 styles={{ body: { padding: 0 } }}
             >
                 {/* Banner */}
                 <div style={{
-                    background: 'linear-gradient(135deg, #1890ff 0%, #096dd9 60%, #0050b3 100%)',
+                    background: `linear-gradient(135deg, ${colors.info} 0%, ${colors.layout.agentSidebarEnd} 60%, ${colors.textDark} 100%)`,
                     padding: '32px 28px 48px',
                     position: 'relative',
                 }}>
@@ -51,20 +52,20 @@ const AgentProfile: React.FC = () => {
                             size={72}
                             icon={<UserOutlined />}
                             style={{
-                                background: 'rgba(255,255,255,0.2)',
-                                border: '3px solid rgba(255,255,255,0.4)',
+                                background: `${colors.white}${colors.alpha.badgeBg}`,
+                                border: `3px solid ${colors.white}${colors.alpha.badgeGlow}`,
                                 fontSize: '32px',
                             }}
                         />
                         <div>
-                            <Title level={3} style={{ color: '#fff', margin: 0 }}>
+                            <Title level={3} style={{ color: colors.white, margin: 0 }}>
                                 {user?.name || profile?.name || 'Agent'}
                             </Title>
                             <Space>
-                                <Tag color="rgba(255,255,255,0.25)" style={{ color: '#fff', borderRadius: '8px', border: 'none' }}>
+                                <Tag color={`${colors.white}${colors.alpha.badgeBg}`} style={{ color: colors.white, borderRadius: '8px', border: 'none' }}>
                                     <IdcardOutlined /> Collection Agent
                                 </Tag>
-                                <Tag color={profile?.status === 'active' ? '#52c41a' : '#faad14'} style={{ borderRadius: '8px' }}>
+                                <Tag color={profile?.status === 'active' ? colors.success : colors.status.pending} style={{ borderRadius: '8px' }}>
                                     {profile?.status?.toUpperCase() || 'ACTIVE'}
                                 </Tag>
                             </Space>
@@ -75,15 +76,15 @@ const AgentProfile: React.FC = () => {
                 {/* Stats Bar */}
                 <div style={{
                     padding: '20px 28px',
-                    background: '#fafafa',
-                    borderTop: '1px solid #f0f0f0',
+                    background: colors.background,
+                    borderTop: `1px solid ${colors.borderLight}`,
                 }}>
                     <Row gutter={[24, 16]}>
                         <Col xs={8}>
                             <Statistic
                                 title={<Text style={{ fontSize: '12px' }}>Total Assigned</Text>}
                                 value={stats.totalAssigned}
-                                prefix={<ExperimentOutlined style={{ color: '#722ed1' }} />}
+                                prefix={<ExperimentOutlined style={{ color: colors.status.processing }} />}
                                 valueStyle={{ fontSize: '22px', fontWeight: 700 }}
                             />
                         </Col>
@@ -91,7 +92,7 @@ const AgentProfile: React.FC = () => {
                             <Statistic
                                 title={<Text style={{ fontSize: '12px' }}>In Progress</Text>}
                                 value={stats.activePickups + stats.pendingPickups}
-                                prefix={<ClockCircleOutlined style={{ color: '#faad14' }} />}
+                                prefix={<ClockCircleOutlined style={{ color: colors.status.pending }} />}
                                 valueStyle={{ fontSize: '22px', fontWeight: 700 }}
                             />
                         </Col>
@@ -99,7 +100,7 @@ const AgentProfile: React.FC = () => {
                             <Statistic
                                 title={<Text style={{ fontSize: '12px' }}>Collected Today</Text>}
                                 value={stats.collectedToday}
-                                prefix={<CheckCircleOutlined style={{ color: '#52c41a' }} />}
+                                prefix={<CheckCircleOutlined style={{ color: colors.success }} />}
                                 valueStyle={{ fontSize: '22px', fontWeight: 700 }}
                             />
                         </Col>
@@ -110,11 +111,11 @@ const AgentProfile: React.FC = () => {
             {/* Contact Info */}
             <Card
                 title={
-                    <Space><UserOutlined style={{ color: '#1890ff' }} /><Text strong>Contact Information</Text></Space>
+                    <Space><UserOutlined style={{ color: colors.info }} /><Text strong>Contact Information</Text></Space>
                 }
-                style={{ borderRadius: '16px', marginBottom: '20px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
+                style={{ borderRadius: '16px', marginBottom: '20px', boxShadow: `0 2px 8px ${colors.cardShadow}` }}
             >
-                <Descriptions column={{ xs: 1, sm: 2 }} labelStyle={{ color: '#8c8c8c', fontWeight: 500 }}>
+                <Descriptions column={{ xs: 1, sm: 2 }} labelStyle={{ color: colors.charts.text, fontWeight: 500 }}>
                     <Descriptions.Item label={<><PhoneOutlined /> Phone</>}>
                         <Text strong>{profile?.phone || user?.email || 'N/A'}</Text>
                     </Descriptions.Item>
@@ -130,11 +131,11 @@ const AgentProfile: React.FC = () => {
             {/* Vehicle Info */}
             <Card
                 title={
-                    <Space><CarOutlined style={{ color: '#1890ff' }} /><Text strong>Vehicle Information</Text></Space>
+                    <Space><CarOutlined style={{ color: colors.info }} /><Text strong>Vehicle Information</Text></Space>
                 }
-                style={{ borderRadius: '16px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
+                style={{ borderRadius: '16px', boxShadow: `0 2px 8px ${colors.cardShadow}` }}
             >
-                <Descriptions column={{ xs: 1, sm: 2 }} labelStyle={{ color: '#8c8c8c', fontWeight: 500 }}>
+                <Descriptions column={{ xs: 1, sm: 2 }} labelStyle={{ color: colors.charts.text, fontWeight: 500 }}>
                     <Descriptions.Item label="Vehicle Type">
                         <Tag color="blue" style={{ borderRadius: '8px' }}>
                             {profile?.vehicle_type || 'Not set'}

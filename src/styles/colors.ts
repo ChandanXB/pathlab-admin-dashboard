@@ -41,6 +41,30 @@ export const colors = {
         processing: '#722ed1',// Purple
         completed: '#52c41a', // Green
         cancelled: '#f5222d', // Red
+    },
+
+    // Layout Suffixes & Transparency (Alpha values for HEX)
+    alpha: {
+        badgeBg: '15',    // 8.2% opacity
+        badgeGlow: '20',  // 12.5% opacity
+        sidebarShadow: '0d', // 5% opacity
+    },
+
+    // Specific Layout Colors
+    layout: {
+        adminGlow: 'rgba(24, 144, 255, 0.1)',
+        agentSidebarEnd: '#002140',
+        agentSiderShadow: 'rgba(29, 35, 41, 0.05)',
+        scrollbarThumb: 'rgba(255, 255, 255, 0.2)',
+    },
+
+    // Chart specific colors
+    charts: {
+        revenue: ['#52c41a', '#95de64'], // Green gradient
+        volume: ['#1890ff', '#40a9ff'],  // Blue gradient
+        volumeBg: '#e6f7ff',
+        text: '#8c8c8c',
+        border: '#f0f0f0',
     }
 };
 

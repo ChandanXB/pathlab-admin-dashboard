@@ -1,10 +1,12 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { Form, Input, Select, Row, Col, Spin, InputNumber, Divider, DatePicker } from 'antd';
+import { Form, Input, Select, Row, Col, Spin, InputNumber, Divider, DatePicker, Button, message } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
 import SharedModal from '@/shared/components/SharedModal';
 import { ORDER_STATUSES, PRIORITIES, PAYMENT_STATUSES } from '@/shared/constants/app.constants';
 import type { LabOrder } from '../types/labOrder.types';
 import { patientService } from '@/features/admin/patients/services/patientService';
 import { labTestService } from '@/features/admin/labTests/services/labTestService';
+import PatientFormModal from '@/features/admin/patients/components/PatientFormModal';
 import debounce from 'lodash/debounce';
 
 const { TextArea } = Input;
@@ -30,6 +32,9 @@ const LabOrderFormModal: React.FC<LabOrderFormModalProps> = ({
     const [patientOptions, setPatientOptions] = useState<{ label: string; value: number }[]>([]);
     const [testOptions, setTestOptions] = useState<{ label: string; value: number; price: number }[]>([]);
     const [fetchingTests, setFetchingTests] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [patientModalVisible, setPatientModalVisible] = useState(false);
+    const [patientForm] = Form.useForm();
 
     // Fetch tests on mount
     useEffect(() => {
@@ -49,6 +54,10 @@ const LabOrderFormModal: React.FC<LabOrderFormModalProps> = ({
     const fetchPatientRef = useRef(0);
     const debounceFetcher = useMemo(() => {
         const loadOptions = (value: string) => {
+            if (!value) {
+                setPatientOptions([]);
+                return;
+            }
             fetchPatientRef.current += 1;
             const fetchId = fetchPatientRef.current;
             setFetchingPatients(true);
@@ -65,6 +74,31 @@ const LabOrderFormModal: React.FC<LabOrderFormModalProps> = ({
         };
         return debounce(loadOptions, 800);
     }, []);
+
+    const onPatientSearch = (value: string) => {
+        setSearchQuery(value);
+        debounceFetcher(value);
+    };
+
+    const handleAddPatientSubmit = async (values: any) => {
+        try {
+            const res = await patientService.createPatient(values);
+            if (res.success) {
+                message.success('Patient added successfully');
+                const newPatient = res.data;
+                const newOption = {
+                    label: `${newPatient.full_name} (${newPatient.patient_code})`,
+                    value: newPatient.id,
+                };
+                setPatientOptions(prev => [newOption, ...prev]);
+                form.setFieldsValue({ patient_id: newPatient.id });
+                setPatientModalVisible(false);
+                patientForm.resetFields();
+            }
+        } catch (error) {
+            message.error('Failed to add patient');
+        }
+    };
 
     // Auto-calculate total amount when tests change
     const handleTestsChange = (testIds: number[]) => {
@@ -116,9 +150,30 @@ const LabOrderFormModal: React.FC<LabOrderFormModalProps> = ({
                             <Select
                                 showSearch
                                 placeholder="Search by name or code"
-                                notFoundContent={fetchingPatients ? <Spin size="small" /> : null}
+                                notFoundContent={
+                                    fetchingPatients ? (
+                                        <Spin size="small" />
+                                    ) : searchQuery ? (
+                                        <div style={{ padding: '12px', textAlign: 'center' }}>
+                                            <div style={{ marginBottom: '8px', color: '#888' }}>
+                                                No patient found for "{searchQuery}"
+                                            </div>
+                                            <Button
+                                                type="primary"
+                                                size="small"
+                                                icon={<PlusOutlined />}
+                                                onClick={() => {
+                                                    patientForm.setFieldsValue({ full_name: searchQuery });
+                                                    setPatientModalVisible(true);
+                                                }}
+                                            >
+                                                Add New Patient
+                                            </Button>
+                                        </div>
+                                    ) : null
+                                }
                                 filterOption={false}
-                                onSearch={debounceFetcher}
+                                onSearch={onPatientSearch}
                                 options={patientOptions}
                                 disabled={!!editingOrder}
                             />
@@ -257,6 +312,17 @@ const LabOrderFormModal: React.FC<LabOrderFormModalProps> = ({
                     <TextArea rows={3} placeholder="Add any specific instructions for the lab technician..." />
                 </Form.Item>
             </Form>
+
+            <PatientFormModal
+                visible={patientModalVisible}
+                editingPatient={null}
+                form={patientForm}
+                onSubmit={handleAddPatientSubmit}
+                onCancel={() => {
+                    setPatientModalVisible(false);
+                    patientForm.resetFields();
+                }}
+            />
         </SharedModal>
     );
 };

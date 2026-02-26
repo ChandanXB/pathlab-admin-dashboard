@@ -49,7 +49,7 @@ export const usePatients = (enabled: boolean = true) => {
                 });
             }
         } catch (error: any) {
-            message.error('Failed to fetch patients: ' + error.message);
+            // Error handled by interceptor
         } finally {
             setLoadingPatients(false);
             setLoadingMorePatients(false);
@@ -63,7 +63,7 @@ export const usePatients = (enabled: boolean = true) => {
             setPatientFilters((prev) => ({ ...prev, page: 1 }));
             return true;
         } catch (error: any) {
-            message.error('Operation failed: ' + error.message);
+            // Error handled by interceptor
             return false;
         }
     };
@@ -75,7 +75,7 @@ export const usePatients = (enabled: boolean = true) => {
             setPatientFilters((prev) => ({ ...prev, page: 1 }));
             return true;
         } catch (error: any) {
-            message.error('Operation failed: ' + error.message);
+            // Error handled by interceptor
             return false;
         }
     };
@@ -87,7 +87,7 @@ export const usePatients = (enabled: boolean = true) => {
             setPatientFilters((prev) => ({ ...prev, page: 1 }));
             return true;
         } catch (error: any) {
-            message.error('Delete failed: ' + error.message);
+            // Error handled by interceptor
             return false;
         }
     };

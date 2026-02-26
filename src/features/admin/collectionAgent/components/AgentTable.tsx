@@ -1,17 +1,32 @@
 import React from 'react';
-import { Table, Space, Button, Tag, Popconfirm } from 'antd';
+import { Space, Button, Tag, Popconfirm } from 'antd';
 import { EditOutlined, DeleteOutlined, UserOutlined } from '@ant-design/icons';
+import InfiniteScrollTable from '@/shared/components/InfiniteScrollTable';
 import type { CollectionAgent } from '../services/collectionAgentService';
 
 interface AgentTableProps {
     agents: CollectionAgent[];
     loading: boolean;
+    loadingMore: boolean;
+    hasMore: boolean;
     onEdit: (agent: CollectionAgent) => void;
     onDelete: (id: number) => void;
     onRowClick: (agent: CollectionAgent) => void;
+    onLoadMore: () => void;
+    scroll?: { x?: number | string; y?: number | string };
 }
 
-const AgentTable: React.FC<AgentTableProps> = ({ agents, loading, onEdit, onDelete, onRowClick }) => {
+const AgentTable: React.FC<AgentTableProps> = ({
+    agents,
+    loading,
+    loadingMore,
+    hasMore,
+    onEdit,
+    onDelete,
+    onRowClick,
+    onLoadMore,
+    scroll
+}) => {
     const columns = [
         {
             title: 'Name',
@@ -75,7 +90,7 @@ const AgentTable: React.FC<AgentTableProps> = ({ agents, loading, onEdit, onDele
         {
             title: 'Actions',
             key: 'actions',
-            width: '10%',
+            width: 100,
             render: (_: any, record: CollectionAgent) => (
                 <Space size="middle">
                     <Button
@@ -101,26 +116,25 @@ const AgentTable: React.FC<AgentTableProps> = ({ agents, loading, onEdit, onDele
     ];
 
     return (
-        <div style={{ width: '100%', overflow: 'hidden', flex: 1 }}>
-            <Table
-                columns={columns}
-                dataSource={agents}
-                loading={loading}
-                rowKey="id"
-                tableLayout="fixed"
-                style={{ width: '100%' }}
-                scroll={{ y: 'calc(100vh - 340px)' }}
-                onRow={(record) => ({
-                    onClick: (e: any) => {
-                        if (e.target.closest('button') || e.target.closest('.anticon')) {
-                            return;
-                        }
-                        onRowClick(record);
-                    },
-                    style: { cursor: 'pointer' }
-                })}
-            />
-        </div>
+        <InfiniteScrollTable
+            columns={columns}
+            dataSource={agents}
+            loading={loading}
+            loadingMore={loadingMore}
+            hasMore={hasMore}
+            next={onLoadMore}
+            rowKey="id"
+            scroll={scroll}
+            onRow={(record) => ({
+                onClick: (e: any) => {
+                    if (e.target.closest('button') || e.target.closest('.anticon')) {
+                        return;
+                    }
+                    onRowClick(record);
+                },
+                style: { cursor: 'pointer' }
+            })}
+        />
     );
 };
 

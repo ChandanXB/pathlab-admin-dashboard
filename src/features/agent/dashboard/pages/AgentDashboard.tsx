@@ -12,6 +12,7 @@ import {
     InboxOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
+import colors from '@/styles/colors';
 import { useAgentOrders } from '../../hooks/useAgentOrders';
 import { useAuthStore } from '@/store/authStore';
 import PickupDetailDrawer from '../../components/PickupDetailDrawer';
@@ -93,24 +94,24 @@ const AgentDashboard: React.FC = () => {
 
     const getAssignmentColor = (status: string | null) => {
         const map: Record<string, string> = {
-            pending: '#faad14',
-            accepted: '#1890ff',
-            picking_up: '#722ed1',
-            collected: '#52c41a',
+            pending: colors.status.pending,
+            accepted: colors.status.collected, // Reusing collected blue for accepted
+            picking_up: colors.status.processing,
+            collected: colors.status.completed,
         };
-        return map[status || ''] || '#d9d9d9';
+        return map[status || ''] || colors.charts.text;
     };
 
     return (
-        <div style={{ padding: '24px', minHeight: '100%', background: '#f8fbfc' }}>
+        <div style={{ padding: '24px', minHeight: '100%', background: colors.background }}>
             <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
                 {/* Welcome Header */}
                 <div style={{
                     marginBottom: 32,
-                    background: 'linear-gradient(135deg, #1890ff 0%, #003a8c 100%)',
+                    background: `linear-gradient(135deg, ${colors.info} 0%, ${colors.layout.agentSidebarEnd} 100%)`,
                     borderRadius: '24px',
                     padding: '40px',
-                    color: '#fff',
+                    color: colors.white,
                     display: 'flex',
                     flexDirection: screenSize < 576 ? 'column' : 'row',
                     justifyContent: 'space-between',
@@ -126,7 +127,7 @@ const AgentDashboard: React.FC = () => {
                         right: -60,
                         width: 240,
                         height: 240,
-                        background: 'rgba(255,255,255,0.12)',
+                        background: colors.sidebarBorder,
                         borderRadius: '50%',
                         filter: 'blur(50px)',
                         zIndex: 0
@@ -147,8 +148,8 @@ const AgentDashboard: React.FC = () => {
                         {profile?.vehicle_no && (
                             <div style={{ marginTop: '20px' }}>
                                 <Tag icon={<CarOutlined />} style={{
-                                    background: 'rgba(255,255,255,0.15)',
-                                    color: '#fff',
+                                    background: `${colors.white}${colors.alpha.badgeBg}`,
+                                    color: colors.white,
                                     fontWeight: 500,
                                     borderRadius: '100px',
                                     border: '1px solid rgba(255,255,255,0.2)',
@@ -166,12 +167,12 @@ const AgentDashboard: React.FC = () => {
                             width: 64,
                             height: 64,
                             borderRadius: '20px',
-                            background: 'rgba(255,255,255,0.2)',
+                            background: `${colors.white}${colors.alpha.badgeGlow}`,
                             backdropFilter: 'blur(10px)',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            border: '1px solid rgba(255,255,255,0.3)',
+                            border: `1px solid ${colors.sidebarBorder}`,
                             fontSize: '24px'
                         }}>
                             <UserOutlined />
@@ -184,12 +185,12 @@ const AgentDashboard: React.FC = () => {
                     <Col xs={12} sm={6}>
                         <Card bordered={false} hoverable style={{
                             borderRadius: 24,
-                            boxShadow: '0 8px 24px rgba(0,0,0,0.04)',
-                            background: '#fff',
+                            boxShadow: `0 8px 24px ${colors.cardShadow}`,
+                            background: colors.white,
                         }} styles={{ body: { padding: '24px' } }}>
                             <Space direction="vertical" size={0}>
-                                <div style={{ width: 48, height: 48, borderRadius: '14px', background: '#fff7e6', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
-                                    <ClockCircleOutlined style={{ color: '#faad14', fontSize: '24px' }} />
+                                <div style={{ width: 48, height: 48, borderRadius: '14px', background: colors.stats.revenue, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+                                    <ClockCircleOutlined style={{ color: colors.status.pending, fontSize: '24px' }} />
                                 </div>
                                 <Text type="secondary" style={{ fontSize: '14px', fontWeight: 500 }}>New Requests</Text>
                                 <Title level={2} style={{ margin: '4px 0 0', fontSize: '32px', fontWeight: 700 }}>{stats.pendingPickups}</Title>
@@ -199,12 +200,12 @@ const AgentDashboard: React.FC = () => {
                     <Col xs={12} sm={6}>
                         <Card bordered={false} hoverable style={{
                             borderRadius: 24,
-                            boxShadow: '0 8px 24px rgba(0,0,0,0.04)',
-                            background: '#fff',
+                            boxShadow: `0 8px 24px ${colors.cardShadow}`,
+                            background: colors.white,
                         }} styles={{ body: { padding: '24px' } }}>
                             <Space direction="vertical" size={0}>
-                                <div style={{ width: 48, height: 48, borderRadius: '14px', background: '#e6f7ff', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
-                                    <CarOutlined style={{ color: '#1890ff', fontSize: '24px' }} />
+                                <div style={{ width: 48, height: 48, borderRadius: '14px', background: colors.charts.volumeBg, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+                                    <CarOutlined style={{ color: colors.info, fontSize: '24px' }} />
                                 </div>
                                 <Text type="secondary" style={{ fontSize: '14px', fontWeight: 500 }}>In Progress</Text>
                                 <Title level={2} style={{ margin: '4px 0 0', fontSize: '32px', fontWeight: 700 }}>{stats.activePickups}</Title>
@@ -214,12 +215,12 @@ const AgentDashboard: React.FC = () => {
                     <Col xs={12} sm={6}>
                         <Card bordered={false} hoverable style={{
                             borderRadius: 24,
-                            boxShadow: '0 8px 24px rgba(0,0,0,0.04)',
-                            background: '#fff',
+                            boxShadow: `0 8px 24px ${colors.cardShadow}`,
+                            background: colors.white,
                         }} styles={{ body: { padding: '24px' } }}>
                             <Space direction="vertical" size={0}>
-                                <div style={{ width: 48, height: 48, borderRadius: '14px', background: '#f6ffed', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
-                                    <CheckCircleOutlined style={{ color: '#52c41a', fontSize: '24px' }} />
+                                <div style={{ width: 48, height: 48, borderRadius: '14px', background: colors.stats.tests, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+                                    <CheckCircleOutlined style={{ color: colors.success, fontSize: '24px' }} />
                                 </div>
                                 <Text type="secondary" style={{ fontSize: '14px', fontWeight: 500 }}>Collected Today</Text>
                                 <Title level={2} style={{ margin: '4px 0 0', fontSize: '32px', fontWeight: 700 }}>{stats.collectedToday}</Title>
@@ -229,12 +230,12 @@ const AgentDashboard: React.FC = () => {
                     <Col xs={12} sm={6}>
                         <Card bordered={false} hoverable style={{
                             borderRadius: 24,
-                            boxShadow: '0 8px 24px rgba(0,0,0,0.04)',
-                            background: '#fff',
+                            boxShadow: `0 8px 24px ${colors.cardShadow}`,
+                            background: colors.white,
                         }} styles={{ body: { padding: '24px' } }}>
                             <Space direction="vertical" size={0}>
-                                <div style={{ width: 48, height: 48, borderRadius: '14px', background: '#f9f0ff', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
-                                    <ExperimentOutlined style={{ color: '#722ed1', fontSize: '24px' }} />
+                                <div style={{ width: 48, height: 48, borderRadius: '14px', background: colors.stats.revenue, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+                                    <ExperimentOutlined style={{ color: colors.status.processing, fontSize: '24px' }} />
                                 </div>
                                 <Text type="secondary" style={{ fontSize: '14px', fontWeight: 500 }}>Total Assigned</Text>
                                 <Title level={2} style={{ margin: '4px 0 0', fontSize: '32px', fontWeight: 700 }}>{stats.totalAssigned}</Title>
@@ -267,8 +268,8 @@ const AgentDashboard: React.FC = () => {
                 <Card
                     title={
                         <Space size="middle">
-                            <div style={{ padding: '8px', background: '#e6f7ff', borderRadius: '12px' }}>
-                                <ExperimentOutlined style={{ color: '#1890ff', fontSize: '20px' }} />
+                            <div style={{ padding: '8px', background: colors.charts.volumeBg, borderRadius: '12px' }}>
+                                <ExperimentOutlined style={{ color: colors.info, fontSize: '20px' }} />
                             </div>
                             <Text strong style={{ fontSize: '20px' }}>Current Pickups</Text>
                         </Space>
@@ -282,10 +283,10 @@ const AgentDashboard: React.FC = () => {
                             ]}
                             value={activeTab}
                             onChange={(v) => setActiveTab(v as string)}
-                            style={{ background: '#f0f2f5', padding: '4px', borderRadius: '12px' }}
+                            style={{ background: colors.background, padding: '4px', borderRadius: '12px' }}
                         />
                     }
-                    style={{ borderRadius: 28, boxShadow: '0 8px 32px rgba(0,0,0,0.04)', border: 'none' }}
+                    style={{ borderRadius: 28, boxShadow: `0 8px 32px ${colors.cardShadow}`, border: 'none' }}
                     loading={loading}
                     styles={{ body: { padding: '0' } }}
                 >
@@ -295,7 +296,7 @@ const AgentDashboard: React.FC = () => {
                         locale={{
                             emptyText: (
                                 <Empty
-                                    image={<InboxOutlined style={{ fontSize: 48, color: '#d9d9d9' }} />}
+                                    image={<InboxOutlined style={{ fontSize: 48, color: colors.charts.text }} />}
                                     description={`No ${activeTab} pickups`}
                                     style={{ padding: '40px 0' }}
                                 />
@@ -326,7 +327,7 @@ const AgentDashboard: React.FC = () => {
                                             type="primary"
                                             size="small"
                                             onClick={(e) => { e.stopPropagation(); startPickup(item.id); }}
-                                            style={{ background: '#52c41a', borderColor: '#52c41a', borderRadius: '12px', fontWeight: 600 }}
+                                            style={{ background: colors.success, borderColor: colors.success, borderRadius: '12px', fontWeight: 600 }}
                                         >
                                             Start
                                         </Button>
@@ -336,22 +337,22 @@ const AgentDashboard: React.FC = () => {
                                             size="small"
                                             icon={<SendOutlined />}
                                             onClick={(e) => { e.stopPropagation(); markCollected(item.id); }}
-                                            style={{ background: '#722ed1', borderColor: '#722ed1', borderRadius: '12px', fontWeight: 600 }}
+                                            style={{ background: colors.status.processing, borderColor: colors.status.processing, borderRadius: '12px', fontWeight: 600 }}
                                         >
                                             Collected
                                         </Button>
                                     ) : (
-                                        <Tag color="success" style={{ borderRadius: '10px', padding: '2px 10px', border: 'none', background: '#f6ffed' }}>
-                                            <Space size={4}><CheckCircleOutlined /> <Text strong style={{ color: '#52c41a', fontSize: '12px' }}>Done</Text></Space>
+                                        <Tag color="success" style={{ borderRadius: '10px', padding: '2px 10px', border: 'none', background: colors.stats.tests }}>
+                                            <Space size={4}><CheckCircleOutlined /> <Text strong style={{ color: colors.success, fontSize: '12px' }}>Done</Text></Space>
                                         </Tag>
                                     ),
-                                    <RightOutlined style={{ color: '#bfbfbf', fontSize: '12px' }} />
+                                    <RightOutlined style={{ color: colors.charts.text, fontSize: '12px' }} />
                                 ]}
                             >
                                 <List.Item.Meta
                                     title={
                                         <Space size="small">
-                                            <Text strong style={{ fontSize: '15px', color: '#141414' }}>{item.order_code}</Text>
+                                            <Text strong style={{ fontSize: '15px', color: colors.textDark }}>{item.order_code}</Text>
                                             {item.priority === 'urgent' && (
                                                 <Tag color="error" style={{ borderRadius: '6px', border: 'none', fontWeight: 600 }}>
                                                     URGENT
@@ -362,27 +363,27 @@ const AgentDashboard: React.FC = () => {
                                     description={
                                         <div style={{ marginTop: '4px' }}>
                                             <Space size="small" style={{ marginBottom: '6px' }}>
-                                                <UserOutlined style={{ color: '#8c8c8c' }} />
-                                                <Text style={{ color: '#595959' }}>{item.patient?.full_name || 'N/A'}</Text>
+                                                <UserOutlined style={{ color: colors.charts.text }} />
+                                                <Text style={{ color: colors.textDark, opacity: 0.85 }}>{item.patient?.full_name || 'N/A'}</Text>
                                                 {item.patient?.phone && (
                                                     <Text type="secondary" style={{ fontSize: '12px' }}>• {item.patient.phone}</Text>
                                                 )}
                                             </Space>
                                             <div style={{ display: 'flex', alignItems: 'flex-start', gap: '4px' }}>
-                                                <EnvironmentOutlined style={{ color: '#ff4d4f', marginTop: '3px' }} />
+                                                <EnvironmentOutlined style={{ color: colors.danger, marginTop: '3px' }} />
                                                 <Text type="secondary" style={{ fontSize: '12px', lineHeight: '1.4' }}>
                                                     {item.address || item.patient?.address || 'No address'}
                                                 </Text>
                                             </div>
                                             <div style={{ marginTop: '8px', display: 'flex', gap: '16px' }}>
                                                 <Space size={4}>
-                                                    <ClockCircleOutlined style={{ color: '#bfbfbf', fontSize: '12px' }} />
+                                                    <ClockCircleOutlined style={{ color: colors.charts.text, fontSize: '12px' }} />
                                                     <Text type="secondary" style={{ fontSize: '11px' }}>
                                                         {dayjs(item.createdAt).format('DD MMM, hh:mm A')}
                                                     </Text>
                                                 </Space>
                                                 <Space size={4}>
-                                                    <ExperimentOutlined style={{ color: '#bfbfbf', fontSize: '12px' }} />
+                                                    <ExperimentOutlined style={{ color: colors.charts.text, fontSize: '12px' }} />
                                                     <Text type="secondary" style={{ fontSize: '11px' }}>
                                                         {item.test_results?.length || 0} Test(s)
                                                     </Text>
@@ -409,10 +410,10 @@ const AgentDashboard: React.FC = () => {
 
                 <style>{`
                 .agent-pickup-item:hover {
-                    background: #fcfcfc !important;
+                    background: ${colors.background} !important;
                 }
                 .agent-pickup-item {
-                    border-bottom: 1px solid #f0f0f0 !important;
+                    border-bottom: 1px solid ${colors.borderLight} !important;
                 }
             `}</style>
             </div>
