@@ -3,7 +3,7 @@ import { Card, Button, Form, Typography, Space, Badge, Checkbox, Divider } from 
 import { PlusOutlined, ExperimentOutlined } from '@ant-design/icons';
 import { useSearchParams } from 'react-router-dom';
 import { useLabOrders } from '../hooks/useLabOrders';
-import { LabOrderTable, LabOrderFilters, LabOrderFormModal, LabOrderDetailDrawer, AssignAgentModal } from '../components';
+import { LabOrderTable, LabOrderFilters, LabOrderFormModal, LabOrderDetailDrawer, AssignAgentModal, ReportUploadModal } from '../components';
 import type { LabOrder } from '../types/labOrder.types';
 
 import dayjs from 'dayjs';
@@ -27,6 +27,7 @@ const LabOrderManager: React.FC = () => {
         updateOrderStatus,
         assignAgent,
         broadcastOrder,
+        uploadReports,
         deleteOrder,
         loadMore
     } = useLabOrders({
@@ -42,8 +43,9 @@ const LabOrderManager: React.FC = () => {
     const [editingOrder, setEditingOrder] = useState<LabOrder | null>(null);
     const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
     const [isAssignModalVisible, setIsAssignModalVisible] = useState(false);
+    const [isUploadModalVisible, setIsUploadModalVisible] = useState(false);
     const [visibleColumns, setVisibleColumns] = useState<string[]>([
-        'order_info', 'patient', 'tests', 'agent', 'amount', 'proof', 'status', 'actions'
+        'order_info', 'patient', 'tests', 'agent', 'amount', 'status', 'actions'
     ]);
     const [form] = Form.useForm();
 
@@ -140,13 +142,21 @@ const LabOrderManager: React.FC = () => {
         }
     };
 
+    const handleUploadReport = (order: LabOrder) => {
+        setSelectedOrderId(order.id);
+        setIsUploadModalVisible(true);
+    };
+
+    const onReportUpload = async (orderId: number, files: any[], results: any) => {
+        return await uploadReports(orderId, files, results);
+    };
+
     const columnOptions = [
         { label: 'Order Info', value: 'order_info' },
         { label: 'Patient', value: 'patient' },
         { label: 'Tests', value: 'tests' },
         { label: 'Agent', value: 'agent' },
         { label: 'Amount', value: 'amount' },
-        { label: 'Proof', value: 'proof' },
         { label: 'Status', value: 'status' },
         { label: 'Actions', value: 'actions' },
     ];
@@ -238,6 +248,7 @@ const LabOrderManager: React.FC = () => {
                         }}
                         onLoadMore={loadMore}
                         onRowClick={handleRowClick}
+                        onUploadReport={handleUploadReport}
                         visibleColumns={visibleColumns}
                         scroll={{ y: tableHeight }}
                     />
@@ -265,6 +276,13 @@ const LabOrderManager: React.FC = () => {
                 onClose={() => setIsAssignModalVisible(false)}
                 onAssignAgent={assignAgent}
                 onBroadcast={broadcastOrder}
+            />
+
+            <ReportUploadModal
+                visible={isUploadModalVisible}
+                order={selectedOrder}
+                onClose={() => setIsUploadModalVisible(false)}
+                onUpload={onReportUpload}
             />
         </div>
     );

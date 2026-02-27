@@ -1,0 +1,55 @@
+.infinite-scroll-table-wrapper .ant-table-wrapper {
+    height: 100%;
+}
+
+.infinite-scroll-table-wrapper .ant-spin-nested-loading {
+    height: 100%;
+}
+
+.infinite-scroll-table-wrapper .ant-spin-container {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.infinite-scroll-table-wrapper .ant-table {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.infinite-scroll-table-wrapper .ant-table-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.infinite-scroll-table-wrapper .ant-table-body {
+    flex: 1;
+    scrollbar-width: thin;
+    scrollbar-color: #e5e7eb transparent;
+    scroll-behavior: smooth;
+    /* Smoother scrolling */
+}
+
+.infinite-scroll-table-wrapper .ant-table-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.infinite-scroll-table-wrapper .ant-table-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.infinite-scroll-table-wrapper .ant-table-body::-webkit-scrollbar-thumb {
+    background: #e5e7eb;
+    border-radius: 10px;
+}
+
+/* Ensure last row doesn't feel cramped */
+.infinite-scroll-table-wrapper .ant-table-row:last-child td {
+    border-bottom: none !important;
+}

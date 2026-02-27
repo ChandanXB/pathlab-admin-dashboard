@@ -77,5 +77,22 @@ export const labOrderService = {
     broadcastOrder: async (id: number): Promise<{ success: boolean; data: LabOrder }> => {
         const response = await apiClient.put(`/lab-orders/${id}/broadcast`);
         return response.data;
+    },
+
+    /**
+     * Upload lab reports and manual results
+     */
+    uploadReports: async (id: number, files: string[], results: any): Promise<{ success: boolean; data: LabOrder }> => {
+        const response = await apiClient.post(`/lab-orders/${id}/reports`, { files, results });
+        return response.data;
+    },
+
+    /**
+     * AI-driven data extraction from documents
+     */
+    extractResults: async (file: string, mimeType: string, testNames: string[]): Promise<{ success: boolean; data: any }> => {
+        // Increased timeout to 60 seconds as AI processing can take time
+        const response = await apiClient.post('/lab-orders/extract-results', { file, mimeType, testNames }, { timeout: 60000 });
+        return response.data;
     }
 };

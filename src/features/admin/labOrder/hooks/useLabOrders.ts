@@ -152,6 +152,23 @@ export const useLabOrders = (initialFilters: LabOrderQueryParams = { page: 1, li
         }
     };
 
+    const uploadReports = async (id: number, files: string[], results: any) => {
+        try {
+            setSubmitting(true);
+            const response = await labOrderService.uploadReports(id, files, results);
+            if (response.success) {
+                setOrders(prev => prev.map(o => o.id === id ? response.data : o));
+                return true;
+            }
+            return false;
+        } catch (error: any) {
+            message.error(error.response?.data?.error || 'Failed to upload reports');
+            return false;
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
     return {
         orders,
         loading,
@@ -165,6 +182,7 @@ export const useLabOrders = (initialFilters: LabOrderQueryParams = { page: 1, li
         updateOrderStatus,
         assignAgent,
         broadcastOrder,
+        uploadReports,
         deleteOrder,
         loadMore,
         refresh: fetchOrders

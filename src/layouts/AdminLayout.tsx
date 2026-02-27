@@ -12,6 +12,7 @@ import {
 
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import colors from '@/styles/colors';
+import '@/styles/layouts/AdminLayout.css';
 import { useAuthStore } from '@/store/authStore';
 import { ORDER_STATUSES } from '@/shared/constants/app.constants';
 import { labOrderService } from '@/features/admin/labOrder/services/labOrderService';
@@ -331,45 +332,14 @@ const AdminLayout: React.FC = () => {
                     flex: 1,
                     display: 'flex',
                     flexDirection: 'column',
-                    overflow: 'hidden',
+                    overflowY: location.pathname === '/' ? 'auto' : 'hidden',
+                    overflowX: 'hidden',
                     padding: screenSize < 768 ? '16px 12px' : '24px',
                     background: colors.background,
                 }}>
                     <Outlet />
                 </Content>
             </Layout>
-
-            <style>{`
-                /* Global Scrollbar Styling */
-                ::-webkit-scrollbar {
-                    width: 6px;
-                    height: 6px;
-                }
-                ::-webkit-scrollbar-track {
-                    background: transparent;
-                }
-                ::-webkit-scrollbar-thumb {
-                    background: ${colors.layout.agentSiderShadow};
-                    border-radius: 10px;
-                }
-                ::-webkit-scrollbar-thumb:hover {
-                    background: ${colors.charts.text};
-                }
-
-                .sidebar-menu-container::-webkit-scrollbar {
-                    width: 4px;
-                }
-                .sidebar-menu-container::-webkit-scrollbar-thumb {
-                    background: ${colors.layout.scrollbarThumb};
-                }
-                .sidebar-menu-container:hover::-webkit-scrollbar-thumb {
-                    background: ${colors.textMuted};
-                }
-                .ant-table-thead > tr > th {
-                    background: transparent !important;
-                    font-weight: 600 !important;
-                }
-            `}</style>
         </Layout>
     );
 };

@@ -13,8 +13,11 @@ import {
     UserAddOutlined,
     GlobalOutlined,
     ShopOutlined,
-    FileImageOutlined
+    FileImageOutlined,
+    FilePdfOutlined,
+    CloudUploadOutlined,
 } from '@ant-design/icons';
+import { Button } from 'antd';
 import type { LabOrder } from '../types/labOrder.types';
 import { ORDER_STATUSES, PRIORITIES } from '@/shared/constants/app.constants';
 import dayjs from 'dayjs';
@@ -243,29 +246,92 @@ const LabOrderDetailDrawer: React.FC<LabOrderDetailDrawerProps> = ({ visible, or
 
                 {/* Tests Information */}
                 <div>
-                    <Title level={5}><ExperimentOutlined /> Tests Ordered</Title>
+                    <Title level={5}><ExperimentOutlined /> Diagnostic Results & Tests</Title>
                     <List
                         size="small"
                         bordered
                         dataSource={order.test_results || []}
                         locale={{ emptyText: <Empty description="No tests found" /> }}
-                        style={{ borderRadius: '8px' }}
-                        renderItem={(item) => (
-                            <List.Item>
-                                <Space style={{ width: '100%', justifyContent: 'space-between' }}>
-                                    <Space>
-                                        <Badge status="processing" color="#1890ff" />
-                                        <span>{item.test?.test_name}</span>
-                                        {item.test?.category?.category_name && (
-                                            <Tag color="cyan">{item.test.category.category_name}</Tag>
+                        style={{ borderRadius: '8px', background: '#fff' }}
+                        renderItem={(item) => {
+                            const getClinicalTag = (status: string | null | undefined) => {
+                                switch (status) {
+                                    case 'danger': return <Tag color="error">DANGER</Tag>;
+                                    case 'warning': return <Tag color="warning">WARNING</Tag>;
+                                    case 'normal': return <Tag color="success">NORMAL</Tag>;
+                                    default: return null;
+                                }
+                            };
+
+                            return (
+                                <List.Item style={{ padding: '12px 16px' }}>
+                                    <div style={{ width: '100%' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
+                                            <Space>
+                                                <Badge status={item.result_value ? "success" : "processing"} />
+                                                <Text strong>{item.test?.test_name}</Text>
+                                                {item.test?.category?.category_name && (
+                                                    <Tag color="cyan" style={{ fontSize: '10px' }}>{item.test.category.category_name}</Tag>
+                                                )}
+                                            </Space>
+                                            <Text type="secondary" style={{ fontSize: '12px' }}>₹{item.test?.price}</Text>
+                                        </div>
+
+                                        {item.result_value && (
+                                            <div style={{
+                                                marginTop: 8,
+                                                padding: '8px 12px',
+                                                background: '#f9f9f9',
+                                                borderRadius: '6px',
+                                                border: '1px solid #f0f0f0',
+                                                display: 'flex',
+                                                justifyContent: 'space-between',
+                                                alignItems: 'center'
+                                            }}>
+                                                <Space direction="vertical" size={0}>
+                                                    <Text type="secondary" style={{ fontSize: '11px' }}>RESULT VALUE</Text>
+                                                    <Text strong style={{ fontSize: '14px' }}>{item.result_value}</Text>
+                                                </Space>
+                                                {getClinicalTag(item.clinical_status)}
+                                            </div>
                                         )}
-                                    </Space>
-                                    <Text type="secondary">₹{item.test?.price}</Text>
-                                </Space>
-                            </List.Item>
-                        )}
+                                    </div>
+                                </List.Item>
+                            );
+                        }}
                     />
                 </div>
+
+                {/* Uploaded Reports */}
+                {order.report_urls && order.report_urls.length > 0 && (
+                    <div>
+                        <Title level={5}><FilePdfOutlined /> Final Lab Reports</Title>
+                        <Card size="small" style={{ borderRadius: '8px', background: '#f0f5ff', border: '1px solid #adc6ff' }}>
+                            <List
+                                size="small"
+                                dataSource={order.report_urls}
+                                renderItem={(url, idx) => (
+                                    <List.Item style={{ padding: '8px 0' }}>
+                                        <Space style={{ width: '100%', justifyContent: 'space-between' }}>
+                                            <Space>
+                                                <FilePdfOutlined style={{ color: '#ff4d4f', fontSize: '18px' }} />
+                                                <Text style={{ fontSize: '13px' }}>Lab Report #{idx + 1}</Text>
+                                            </Space>
+                                            <Button
+                                                type="link"
+                                                size="small"
+                                                icon={<CloudUploadOutlined rotate={180} />}
+                                                onClick={() => window.open(url, '_blank')}
+                                            >
+                                                View Report
+                                            </Button>
+                                        </Space>
+                                    </List.Item>
+                                )}
+                            />
+                        </Card>
+                    </div>
+                )}
 
                 {/* Payment Information */}
                 <div>
