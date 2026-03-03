@@ -15,7 +15,7 @@ interface InfiniteScrollTableProps<T> extends Omit<TableProps<T>, 'pagination'> 
 
 /**
  * A reusable Ant Design Table component with Infinite Scroll capabilities.
- * It wraps the Ant Design Table and integrates it with react-infinite-scroll-component.
+ * It wraps the Ant Design Table and integrates it with react-infinite-scroll-components.
  */
 const InfiniteScrollTable = <T extends object>({
     hasMore,
