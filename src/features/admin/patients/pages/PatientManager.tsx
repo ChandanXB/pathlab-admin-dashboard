@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Card, Button, Form } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { usePatients } from '../hooks/usePatients';
-import { PatientTable, PatientFilters, PatientFormModal } from '../components';
+import { PatientTable, PatientFilters, PatientFormModal, PatientDetailDrawer } from '../components';
 import type { Patient } from '../types/patient.types';
 
 const PatientManager: React.FC = () => {
@@ -20,7 +20,9 @@ const PatientManager: React.FC = () => {
     } = usePatients();
 
     const [isModalVisible, setIsModalVisible] = useState(false);
+    const [isDrawerVisible, setIsDrawerVisible] = useState(false);
     const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
+    const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
     const [form] = Form.useForm();
 
     const handleSearch = (value: string) => {
@@ -41,9 +43,13 @@ const PatientManager: React.FC = () => {
         setEditingPatient(patient);
         form.setFieldsValue({
             ...patient,
-            // Handle any specific field formatting if needed
         });
         setIsModalVisible(true);
+    };
+
+    const handleView = (patient: Patient) => {
+        setSelectedPatient(patient);
+        setIsDrawerVisible(true);
     };
 
     const handleDelete = async (id: number) => {
@@ -57,7 +63,6 @@ const PatientManager: React.FC = () => {
         const observer = new ResizeObserver((entries) => {
             for (const entry of entries) {
                 if (entry.target === containerRef.current) {
-                    // Deduct ~55 for header height
                     setTableHeight(Math.max(200, entry.contentRect.height - 55));
                 }
             }
@@ -112,13 +117,12 @@ const PatientManager: React.FC = () => {
                         loadingMore={loadingMorePatients}
                         hasMore={patientPagination.hasMore}
                         onEdit={handleEdit}
+                        onView={handleView}
                         onDelete={handleDelete}
                         onLoadMore={loadMore}
-                        // Pass dynamic height calculated by ResizeObserver
                         scroll={{ y: tableHeight }}
                     />
                 </div>
-                {/* Load More Button for manual triggering if needed, distinct from infinite scroll */}
                 {patientPagination.hasMore && !loadingPatients && (
                     <div style={{ textAlign: 'center', padding: '16px' }}>
                         <Button onClick={loadMore} loading={loadingMorePatients}>
@@ -134,6 +138,12 @@ const PatientManager: React.FC = () => {
                 form={form}
                 onSubmit={handleSubmit}
                 onCancel={handleCancel}
+            />
+
+            <PatientDetailDrawer
+                visible={isDrawerVisible}
+                patient={selectedPatient}
+                onClose={() => setIsDrawerVisible(false)}
             />
         </div>
     );

@@ -1,0 +1,41 @@
+/* Global Scrollbar Styling */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+/* colors.layout.agentSiderShadow */
+::-webkit-scrollbar-thumb {
+    background: rgba(29, 35, 41, 0.05);
+    border-radius: 10px;
+}
+
+/* colors.charts.text */
+::-webkit-scrollbar-thumb:hover {
+    background: #8c8c8c;
+}
+
+/* Sidebar Menu Scrollbar */
+.sidebar-menu-container::-webkit-scrollbar {
+    width: 4px;
+}
+
+/* colors.layout.scrollbarThumb */
+.sidebar-menu-container::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* colors.textMuted */
+.sidebar-menu-container:hover::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.65);
+}
+
+/* Ant Design Table Header Overrides */
+.ant-table-thead>tr>th {
+    background: transparent !important;
+    font-weight: 600 !important;
+}

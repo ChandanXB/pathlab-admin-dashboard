@@ -82,6 +82,32 @@ const TestFormModal: React.FC<TestFormModalProps> = ({
                 </Form.Item>
 
                 <Form.Item
+                    name="unit"
+                    label="Unit"
+                >
+                    <Input placeholder="e.g., mg/dL, g/L" />
+                </Form.Item>
+
+                <Form.Item
+                    name="normal_range"
+                    label="Normal Range"
+                >
+                    <Input placeholder="e.g., 70-110" />
+                </Form.Item>
+
+                <Form.Item
+                    name="report_type"
+                    label="Report Type"
+                    rules={[{ required: true, message: 'Please select report type' }]}
+                    initialValue="numeric"
+                >
+                    <Select placeholder="Select report type">
+                        <Option value="numeric">Numeric</Option>
+                        <Option value="text">Textual</Option>
+                    </Select>
+                </Form.Item>
+
+                <Form.Item
                     name="price"
                     label="Price (₹)"
                     rules={[{ required: true, message: 'Please enter price' }]}

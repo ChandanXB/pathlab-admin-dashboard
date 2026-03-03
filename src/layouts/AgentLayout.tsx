@@ -11,6 +11,7 @@ import {
 } from '@ant-design/icons';
 import { useNavigate, useLocation, Outlet, Navigate } from 'react-router-dom';
 import colors from '@/styles/colors';
+import '@/styles/layouts/AgentLayout.css';
 import { useAuthStore } from '@/store/authStore';
 import { labOrderService } from '@/features/admin/labOrder/services/labOrderService';
 
@@ -288,16 +289,6 @@ const AgentLayout: React.FC = () => {
                     </div>
                 </Content>
             </Layout>
-
-            <style>{`
-                .ant-layout-sider-children::-webkit-scrollbar {
-                    width: 6px;
-                }
-                .ant-layout-sider-children::-webkit-scrollbar-thumb {
-                    background: ${colors.layout.scrollbarThumb};
-                    border-radius: 3px;
-                }
-            `}</style>
         </Layout>
     );
 };

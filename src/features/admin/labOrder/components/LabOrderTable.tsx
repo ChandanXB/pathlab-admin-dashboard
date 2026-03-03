@@ -11,7 +11,7 @@ import {
     ClockCircleOutlined,
     UserAddOutlined,
     UserSwitchOutlined,
-    FileImageOutlined
+    CloudUploadOutlined
 } from '@ant-design/icons';
 
 import InfiniteScrollTable from '@/shared/components/InfiniteScrollTable';
@@ -32,6 +32,7 @@ interface LabOrderTableProps {
     onAssign: (record: LabOrder) => void;
     onLoadMore: () => void;
     onRowClick: (record: LabOrder) => void;
+    onUploadReport: (record: LabOrder) => void;
     visibleColumns?: string[];
     scroll?: { x?: number | string; y?: number | string };
 }
@@ -47,7 +48,8 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
     onAssign,
     onLoadMore,
     onRowClick,
-    visibleColumns = ['order_info', 'patient', 'tests', 'agent', 'amount', 'proof', 'status', 'actions'],
+    onUploadReport,
+    visibleColumns = ['order_info', 'patient', 'tests', 'agent', 'amount', 'status', 'actions'],
     scroll,
 }) => {
 
@@ -61,14 +63,7 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
         return found ? found.label : status;
     };
 
-    const getPriorityTag = (priority: string) => {
-        const found = PRIORITIES.find(p => p.value === priority);
-        return (
-            <Tag color={found?.color || 'default'}>
-                {found?.label || priority}
-            </Tag>
-        );
-    };
+
 
     const getStatusMenu = (record: LabOrder): MenuProps => {
         return {
@@ -83,25 +78,33 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
 
     const columns = [
         {
-            title: 'Order Details',
+            title: <span style={{ whiteSpace: 'nowrap' }}>Order Details</span>,
             key: 'order_info',
-            width: 170,
-            render: (_: any, record: LabOrder) => (
-                <Space direction="vertical" size={0} style={{ width: '100%' }}>
-                    <Text strong style={{ whiteSpace: 'nowrap' }} ellipsis={{ tooltip: record.order_code }}>
-                        <BarcodeOutlined /> {record.order_code}
-                    </Text>
-                    <Text type="secondary" style={{ fontSize: '12px', whiteSpace: 'nowrap' }}>
-                        <ClockCircleOutlined /> {dayjs(record.createdAt).format('DD MMM, hh:mm A')}
-                    </Text>
-                    {getPriorityTag(record.priority)}
-                </Space>
-            )
+            minWidth: 140,
+            render: (_: any, record: LabOrder) => {
+                const foundPriority = PRIORITIES.find(p => p.value === record.priority);
+                const tooltipContent = (
+                    <div style={{ padding: '2px' }}>
+                        <div><ClockCircleOutlined /> {dayjs(record.createdAt).format('DD MMM, hh:mm A')}</div>
+                        <div style={{ marginTop: '4px' }}>
+                            Priority: <span style={{ color: foundPriority?.color }}>{foundPriority?.label || record.priority}</span>
+                        </div>
+                    </div>
+                );
+
+                return (
+                    <Tooltip title={tooltipContent} placement="top">
+                        <Text strong style={{ whiteSpace: 'nowrap', cursor: 'help' }} ellipsis={{ tooltip: record.order_code }}>
+                            <BarcodeOutlined /> {record.order_code}
+                        </Text>
+                    </Tooltip>
+                );
+            }
         },
         {
-            title: 'Patient',
+            title: <span style={{ whiteSpace: 'nowrap' }}>Patient</span>,
             key: 'patient',
-            width: 160,
+            minWidth: 120,
             render: (_: any, record: LabOrder) => (
                 <Space direction="vertical" size={0} style={{ width: '100%' }}>
                     <Text strong ellipsis={{ tooltip: record.patient?.full_name }}>
@@ -112,11 +115,11 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
             )
         },
         {
-            title: 'Tests',
+            title: <span style={{ whiteSpace: 'nowrap' }}>Tests</span>,
             key: 'tests',
-            width: 160,
+            minWidth: 130,
             render: (_: any, record: LabOrder) => (
-                <div style={{ maxWidth: '160px' }}>
+                <div style={{ maxWidth: '105px' }}>
                     {record.test_results?.map((tr, idx) => (
                         <Tag key={idx} icon={<ExperimentOutlined />} style={{ marginBottom: '4px' }}>
                             {tr.test?.test_name}
@@ -127,9 +130,9 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
             )
         },
         {
-            title: 'Agent',
+            title: <span style={{ whiteSpace: 'nowrap' }}>Agent</span>,
             key: 'agent',
-            width: 120,
+            width: '12%',
             render: (_: any, record: LabOrder) => (
                 record.collection_agent ? (
                     <Space direction="vertical" size={0} style={{ width: '100%' }}>
@@ -144,9 +147,9 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
             )
         },
         {
-            title: 'Amount',
+            title: <span style={{ whiteSpace: 'nowrap' }}>Amount</span>,
             key: 'amount',
-            width: 100,
+            width: '10%',
             render: (_: any, record: LabOrder) => (
                 <Space direction="vertical" size={0}>
                     <Text>₹{record.total_amount}</Text>
@@ -157,32 +160,10 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
             )
         },
         {
-            title: 'Proof',
-            key: 'proof',
-            width: 80,
-            render: (_: any, record: LabOrder) => (
-                <Space>
-                    {record.sample_photo_url && (
-                        <Tooltip title="Sample Photo Uploaded">
-                            <FileImageOutlined style={{ color: '#52c41a', fontSize: '18px' }} />
-                        </Tooltip>
-                    )}
-                    {record.payment_proof_url && (
-                        <Tooltip title="Payment Proof Uploaded">
-                            <ExperimentOutlined style={{ color: '#1890ff', fontSize: '18px' }} />
-                        </Tooltip>
-                    )}
-                    {!record.sample_photo_url && !record.payment_proof_url && (
-                        <Text type="secondary" style={{ fontSize: '12px' }}>-</Text>
-                    )}
-                </Space>
-            )
-        },
-        {
-            title: 'Status',
+            title: <span style={{ whiteSpace: 'nowrap' }}>Status</span>,
             dataIndex: 'status',
             key: 'status',
-            width: 100,
+            width: '12%',
             render: (status: string, record: LabOrder) => (
                 <div onClick={(e) => e.stopPropagation()}>
                     <Dropdown menu={getStatusMenu(record)} trigger={['click']}>
@@ -197,12 +178,12 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
             )
         },
         {
-            title: 'Actions',
+            title: <span style={{ whiteSpace: 'nowrap' }}>Actions</span>,
             key: 'actions',
-            width: 100,
+            width: '15%',
             render: (_: any, record: LabOrder) => (
                 <div onClick={(e) => e.stopPropagation()}>
-                    <Space size="middle">
+                    <Space size={0}>
                         <Tooltip
                             title={
                                 record.status === 'assigned'
@@ -224,6 +205,15 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
                                 onClick={() => onEdit(record)}
                             />
                         </Tooltip>
+                        {record.status === 'processing' && (
+                            <Tooltip title="Upload Report">
+                                <Button
+                                    type="text"
+                                    icon={<CloudUploadOutlined style={{ color: '#1890ff' }} />}
+                                    onClick={() => onUploadReport(record)}
+                                />
+                            </Tooltip>
+                        )}
                         <Popconfirm
                             title="Delete Order"
                             description="Are you sure you want to delete this order?"
@@ -247,26 +237,53 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
 
 
     return (
-        <InfiniteScrollTable
-            columns={filteredColumns}
-            dataSource={data}
-            loading={loading}
-            loadingMore={loadingMore}
-            hasMore={hasMore}
-            next={onLoadMore}
-            scroll={scroll}
-            rowKey="id"
-            onRow={(record) => ({
-                onClick: (e: any) => {
-                    // Prevent drawer opening if user clicks on dropdown, buttons or icons
-                    if (e.target.closest('.ant-dropdown-trigger') || e.target.closest('button') || e.target.closest('.anticon')) {
-                        return;
-                    }
-                    onRowClick(record);
-                },
-                style: { cursor: 'pointer' }
-            })}
-        />
+        <div className="infinite-scroll-table-wrapper" style={{ width: '100%' }}>
+            <style>{`
+                .infinite-scroll-table-wrapper {
+                    width: 100% !important;
+                }
+                .infinite-scroll-table-wrapper .ant-table-wrapper,
+                .infinite-scroll-table-wrapper .ant-table,
+                .infinite-scroll-table-wrapper .ant-table-container,
+                .infinite-scroll-table-wrapper .ant-table-content,
+                .infinite-scroll-table-wrapper .ant-table-header table,
+                .infinite-scroll-table-wrapper .ant-table-body table {
+                    width: 100% !important;
+                    min-width: 100% !important;
+                }
+                .infinite-scroll-table-wrapper .ant-table-thead > tr > th {
+                    padding: 12px 12px !important;
+                    white-space: nowrap !important;
+                    background: #fafafa !important;
+                }
+                .infinite-scroll-table-wrapper .ant-table-tbody > tr > td {
+                    padding: 12px 12px !important;
+                }
+                .infinite-scroll-table-wrapper .ant-table-placeholder {
+                    width: 100% !important;
+                }
+            `}</style>
+            <InfiniteScrollTable
+                columns={filteredColumns}
+                dataSource={data}
+                loading={loading}
+                loadingMore={loadingMore}
+                hasMore={hasMore}
+                next={onLoadMore}
+                scroll={scroll}
+                rowKey="id"
+                onRow={(record) => ({
+                    onClick: (e: any) => {
+                        // Prevent drawer opening if user clicks on dropdown, buttons or icons
+                        if (e.target.closest('.ant-dropdown-trigger') || e.target.closest('button') || e.target.closest('.anticon')) {
+                            return;
+                        }
+                        onRowClick(record);
+                    },
+                    style: { cursor: 'pointer' }
+                })}
+            />
+        </div>
     );
 };
 

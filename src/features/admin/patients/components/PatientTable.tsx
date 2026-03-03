@@ -1,6 +1,6 @@
 import React from 'react';
 import { Tag, Space, Button, Popconfirm } from 'antd';
-import { EditOutlined, DeleteOutlined, UserOutlined } from '@ant-design/icons';
+import { EditOutlined, DeleteOutlined, UserOutlined, EyeOutlined } from '@ant-design/icons';
 import InfiniteScrollTable from '@/shared/components/InfiniteScrollTable';
 import type { Patient } from '../types/patient.types';
 import dayjs from 'dayjs';
@@ -11,6 +11,7 @@ interface PatientTableProps {
     loadingMore: boolean;
     hasMore: boolean;
     onEdit: (record: Patient) => void;
+    onView: (record: Patient) => void;
     onDelete: (id: number) => void;
     onLoadMore: () => void;
     scroll?: { x?: number | string; y?: number | string };
@@ -22,6 +23,7 @@ const PatientTable: React.FC<PatientTableProps> = ({
     loadingMore,
     hasMore,
     onEdit,
+    onView,
     onDelete,
     onLoadMore,
     scroll,
@@ -84,13 +86,22 @@ const PatientTable: React.FC<PatientTableProps> = ({
         {
             title: 'Actions',
             key: 'actions',
-            width: 80,
+            width: 150,
             render: (_: any, record: Patient) => (
-                <Space size="middle">
+                <Space size="small">
                     <Button
                         type="text"
+                        size="small"
+                        icon={<EyeOutlined style={{ color: '#1890ff' }} />}
+                        onClick={() => onView(record)}
+                        title="View Profile"
+                    />
+                    <Button
+                        type="text"
+                        size="small"
                         icon={<EditOutlined />}
                         onClick={() => onEdit(record)}
+                        title="Edit Patient"
                     />
                     <Popconfirm
                         title="Delete Patient?"
@@ -101,8 +112,10 @@ const PatientTable: React.FC<PatientTableProps> = ({
                     >
                         <Button
                             type="text"
+                            size="small"
                             danger
                             icon={<DeleteOutlined />}
+                            title="Delete Patient"
                         />
                     </Popconfirm>
                 </Space>

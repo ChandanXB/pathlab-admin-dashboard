@@ -10,6 +10,7 @@ import {
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import colors from '@/styles/colors';
+import '@/styles/features/dashboard.css';
 
 const { Text } = Typography;
 
@@ -122,12 +123,6 @@ export const WeeklyOrderTrend: React.FC<AdminChartsProps> = ({ recentOrders }) =
                     <Text key={i} type="secondary" style={{ fontSize: 10, fontWeight: i === 6 ? 700 : 400 }}>{label}</Text>
                 ))}
             </div>
-            <style>{`
-                .trend-bar-admin:hover {
-                    background: ${colors.charts.volume[1]} !important;
-                    transform: translateY(-2px);
-                }
-            `}</style>
         </Card>
     );
 };
@@ -275,13 +270,6 @@ export const RevenueTrends: React.FC<AdminChartsProps> = ({ recentOrders }) => {
                     <Text key={i} type="secondary" style={{ fontSize: 10, flex: 1, textAlign: 'center' }}>{label}</Text>
                 ))}
             </div>
-            <style>{`
-                .revenue-bar:hover {
-                    opacity: 1 !important;
-                    filter: brightness(1.1);
-                    transform: scaleX(1.1);
-                }
-            `}</style>
         </Card>
     );
 };

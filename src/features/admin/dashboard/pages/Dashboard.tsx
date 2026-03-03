@@ -21,6 +21,7 @@ import {
     OperationsEfficiency,
     RevenueTrends
 } from '../components/AdminCharts';
+import '@/styles/features/dashboard.css';
 
 const { Title } = Typography;
 
@@ -119,14 +120,6 @@ const Dashboard: React.FC = () => {
                     />
                 </Col>
             </Row>
-
-            <style>{`
-                .stat-card:hover {
-                    transform: translateY(-5px);
-                    transition: all 0.3s ease;
-                    box-shadow: 0 8px 16px rgba(0,0,0,0.05) !important;
-                }
-            `}</style>
         </div>
     );
 };

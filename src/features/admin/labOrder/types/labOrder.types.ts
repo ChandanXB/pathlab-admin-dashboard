@@ -42,12 +42,14 @@ export interface LabOrder {
         test_id: number;
         status: string;
         result_value?: string;
+        clinical_status?: string;
         test: Partial<LabTest> & {
             category?: {
                 category_name: string;
             };
         };
     }[];
+    report_urls?: string[];
     appointment?: {
         appointment_date: string;
         appointment_time: string;

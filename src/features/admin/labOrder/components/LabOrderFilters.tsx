@@ -34,7 +34,7 @@ const LabOrderFilters: React.FC<LabOrderFiltersProps> = ({
                     />
                 </Col>
 
-                <Col xs={24} sm={12} md={8} lg={4}>
+                <Col xs={24} sm={12} md={8} lg={3}>
                     <Select
                         placeholder="Status"
                         allowClear
@@ -50,7 +50,7 @@ const LabOrderFilters: React.FC<LabOrderFiltersProps> = ({
                     </Select>
                 </Col>
 
-                <Col xs={24} sm={12} md={8} lg={6}>
+                <Col xs={24} sm={12} md={8} lg={7}>
                     <RangePicker
                         style={{ width: '100%' }}
                         onChange={(dates) => {
@@ -71,7 +71,7 @@ const LabOrderFilters: React.FC<LabOrderFiltersProps> = ({
                     />
                 </Col>
 
-                <Col xs={24} sm={12} md={12} lg={4}>
+                <Col xs={24} sm={12} md={12} lg={3}>
                     <Select
                         placeholder="Priority"
                         allowClear
