@@ -185,17 +185,15 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
                 <div onClick={(e) => e.stopPropagation()}>
                     <Space size={0}>
                         <Tooltip
-                            title={
-                                record.status === 'assigned'
-                                    ? (record.collection_agent ? "Reassign Agent" : "Assign Agent")
-                                    : `Cannot assign agent in ${record.status} status`
-                            }
+                            title={record.collection_agent ? "Reassign Agent" : "Assign Agent"}
                         >
                             <Button
                                 type="text"
-                                icon={record.collection_agent ? <UserSwitchOutlined style={{ color: record.status === 'assigned' ? '#52c41a' : '#bfbfbf' }} /> : <UserAddOutlined style={{ color: record.status === 'assigned' ? '#faad14' : '#bfbfbf' }} />}
+                                icon={record.collection_agent
+                                    ? <UserSwitchOutlined style={{ color: '#52c41a' }} />
+                                    : <UserAddOutlined style={{ color: '#faad14' }} />
+                                }
                                 onClick={() => onAssign(record)}
-                                disabled={record.status !== 'assigned'}
                             />
                         </Tooltip>
                         <Tooltip title="Edit Order">
