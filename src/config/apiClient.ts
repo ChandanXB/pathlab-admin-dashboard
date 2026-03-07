@@ -22,33 +22,66 @@ apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
     return config;
 });
 
-// Handle session expiration (401)
+
+let isHandlingAuthError = false;
+
+const handleAuthExpired = () => {
+    if (isHandlingAuthError) return; // Already handling — skip duplicates
+    isHandlingAuthError = true;
+
+    useAuthStore.getState().logout();
+    message.error('Your session has expired. Please login again.');
+
+    // Small delay so the message renders before navigation
+    setTimeout(() => {
+        window.location.href = '/login';
+        isHandlingAuthError = false;
+    }, 800);
+};
+
+// Centralised response error handler
 apiClient.interceptors.response.use(
     (response) => response,
     (error: AxiosError) => {
         if (error.response) {
             const status = error.response.status;
             const data: any = error.response.data;
-            const errorMsg = data.message || data.error;
+            const errorMsg: string = data?.message || data?.error || '';
+
+            // Keywords the backend sends when a JWT is expired / invalid
+            const isTokenExpired =
+                errorMsg.toLowerCase().includes('expired') ||
+                errorMsg.toLowerCase().includes('invalid') ||
+                errorMsg.toLowerCase().includes('token');
 
             switch (status) {
                 case 401:
-                    useAuthStore.getState().logout();
-                    window.location.href = '/login';
-                    message.error('Session expired. Please login again.');
+                    // Always means "not authenticated" — logout & redirect
+                    handleAuthExpired();
                     break;
+
                 case 403:
-                    message.error(errorMsg || 'Permission denied.');
+                    if (isTokenExpired) {
+                        // 403 + token-related message → treat as session expiry
+                        handleAuthExpired();
+                    } else {
+                        // Genuine permission error (role not allowed etc.)
+                        message.error(errorMsg || 'You do not have permission to do this.');
+                    }
                     break;
+
                 case 404:
                     if (errorMsg) message.error(errorMsg);
                     break;
+
                 case 422:
                     message.error(errorMsg || 'Validation error.');
                     break;
+
                 case 500:
                     message.error(errorMsg || 'Server error. Please try again later.');
                     break;
+
                 default:
                     if (errorMsg) message.error(errorMsg);
             }
