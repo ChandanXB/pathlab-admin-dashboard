@@ -2,7 +2,7 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Form, Input, Select, Row, Col, Spin, InputNumber, Divider, DatePicker, Button, message } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import SharedModal from '@/shared/components/SharedModal';
-import { ORDER_STATUSES, PRIORITIES, PAYMENT_STATUSES } from '@/shared/constants/app.constants';
+import { PRIORITIES, PAYMENT_STATUSES } from '@/shared/constants/app.constants';
 import type { LabOrder } from '../types/labOrder.types';
 import { patientService } from '@/features/admin/patients/services/patientService';
 import { labTestService } from '@/features/admin/labTests/services/labTestService';
@@ -135,7 +135,6 @@ const LabOrderFormModal: React.FC<LabOrderFormModalProps> = ({
         >
             <Form form={form} layout="vertical" onFinish={onSubmit} initialValues={{
                 priority: 'normal',
-                status: 'pending',
                 payment_status: 'unpaid',
                 order_source: 'walk_in',
                 order_type: 'lab_visit'
@@ -202,17 +201,12 @@ const LabOrderFormModal: React.FC<LabOrderFormModalProps> = ({
                 <Divider style={{ fontSize: '14px', color: '#888' }}>Order Details</Divider>
 
                 <Row gutter={16}>
-                    <Col span={8}>
+                    <Col span={12}>
                         <Form.Item name="priority" label="Priority">
                             <Select options={[...PRIORITIES]} />
                         </Form.Item>
                     </Col>
-                    <Col span={8}>
-                        <Form.Item name="status" label="Status">
-                            <Select options={[...ORDER_STATUSES]} />
-                        </Form.Item>
-                    </Col>
-                    <Col span={8}>
+                    <Col span={12}>
                         <Form.Item name="payment_status" label="Payment Status">
                             <Select options={[...PAYMENT_STATUSES]} />
                         </Form.Item>

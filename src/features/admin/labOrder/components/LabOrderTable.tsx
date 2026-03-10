@@ -1,11 +1,9 @@
 import React from 'react';
-import { Tag, Space, Button, Popconfirm, Tooltip, Dropdown, Typography } from 'antd';
-import type { MenuProps } from 'antd';
+import { Tag, Space, Button, Popconfirm, Tooltip, Typography } from 'antd';
 import {
     EditOutlined,
     DeleteOutlined,
     UserOutlined,
-    DownOutlined,
     BarcodeOutlined,
     ExperimentOutlined,
     ClockCircleOutlined,
@@ -28,7 +26,6 @@ interface LabOrderTableProps {
     hasMore: boolean;
     onEdit: (record: LabOrder) => void;
     onDelete: (id: number) => void;
-    onStatusUpdate: (id: number, status: string) => void;
     onAssign: (record: LabOrder) => void;
     onLoadMore: () => void;
     onRowClick: (record: LabOrder) => void;
@@ -44,7 +41,6 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
     hasMore,
     onEdit,
     onDelete,
-    onStatusUpdate,
     onAssign,
     onLoadMore,
     onRowClick,
@@ -65,16 +61,7 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
 
 
 
-    const getStatusMenu = (record: LabOrder): MenuProps => {
-        return {
-            items: ORDER_STATUSES.map(status => ({
-                key: status.value,
-                label: status.label,
-                disabled: record.status === status.value,
-                onClick: () => onStatusUpdate(record.id, status.value)
-            }))
-        };
-    };
+
 
     const columns = [
         {
@@ -164,16 +151,14 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
             dataIndex: 'status',
             key: 'status',
             width: '12%',
-            render: (status: string, record: LabOrder) => (
+            render: (status: string) => (
                 <div onClick={(e) => e.stopPropagation()}>
-                    <Dropdown menu={getStatusMenu(record)} trigger={['click']}>
-                        <Tag
-                            color={getStatusColor(status)}
-                            style={{ cursor: 'pointer', borderRadius: '12px', padding: '0 10px' }}
-                        >
-                            {getStatusLabel(status)} <DownOutlined style={{ fontSize: '10px' }} />
-                        </Tag>
-                    </Dropdown>
+                    <Tag
+                        color={getStatusColor(status)}
+                        style={{ borderRadius: '12px', padding: '0 10px' }}
+                    >
+                        {getStatusLabel(status)}
+                    </Tag>
                 </div>
             )
         },
@@ -203,7 +188,7 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
                                 onClick={() => onEdit(record)}
                             />
                         </Tooltip>
-                        {record.status === 'processing' && (
+                        {(record.status === 'processing' || record.status === 'collected') && (
                             <Tooltip title="Upload Report">
                                 <Button
                                     type="text"
