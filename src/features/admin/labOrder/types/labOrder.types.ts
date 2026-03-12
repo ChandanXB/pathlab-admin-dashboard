@@ -87,6 +87,9 @@ export interface LabOrderFormData {
     alternate_phone?: string;
     latitude?: number;
     longitude?: number;
+    payment_mode?: string;
+    payment_proof?: string;
+    sample_photo?: string;
 }
 
 export interface LabOrderResponse {

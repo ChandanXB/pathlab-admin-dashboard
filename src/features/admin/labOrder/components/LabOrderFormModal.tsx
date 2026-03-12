@@ -1,8 +1,9 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { Form, Input, Select, Row, Col, Spin, InputNumber, Divider, DatePicker, Button, message } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+import { Form, Input, Select, Row, Col, Spin, InputNumber, Divider, DatePicker, Button, message, Upload } from 'antd';
+import { PlusOutlined, CameraOutlined, UploadOutlined } from '@ant-design/icons';
+import Title from 'antd/lib/typography/Title';
 import SharedModal from '@/shared/components/SharedModal';
-import { ORDER_STATUSES, PRIORITIES, PAYMENT_STATUSES } from '@/shared/constants/app.constants';
+import { PRIORITIES, PAYMENT_STATUSES } from '@/shared/constants/app.constants';
 import type { LabOrder } from '../types/labOrder.types';
 import { patientService } from '@/features/admin/patients/services/patientService';
 import { labTestService } from '@/features/admin/labTests/services/labTestService';
@@ -35,6 +36,55 @@ const LabOrderFormModal: React.FC<LabOrderFormModalProps> = ({
     const [searchQuery, setSearchQuery] = useState('');
     const [patientModalVisible, setPatientModalVisible] = useState(false);
     const [patientForm] = Form.useForm();
+
+    const orderType = Form.useWatch('order_type', form);
+
+    const [sampleFileList, setSampleFileList] = useState<any[]>([]);
+    const [paymentFileList, setPaymentFileList] = useState<any[]>([]);
+
+    const fileToBase64 = (file: File): Promise<string> => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = (error) => reject(error);
+        });
+    };
+
+    const handleFileUpload = async (file: File, fieldName: string) => {
+        try {
+            const base64 = await fileToBase64(file);
+            form.setFieldsValue({ [fieldName]: base64 });
+
+            const fileItem = {
+                uid: '-1',
+                name: file.name,
+                status: 'done',
+                url: base64,
+                originFileObj: file
+            };
+
+            if (fieldName === 'sample_photo') {
+                setSampleFileList([fileItem]);
+            } else {
+                setPaymentFileList([fileItem]);
+            }
+
+            return false; // Prevent auto-upload
+        } catch (error) {
+            message.error(`Failed to process ${fieldName}`);
+            return Upload.LIST_IGNORE;
+        }
+    };
+
+    const handleRemove = (fieldName: string) => {
+        form.setFieldsValue({ [fieldName]: undefined });
+        if (fieldName === 'sample_photo') {
+            setSampleFileList([]);
+        } else {
+            setPaymentFileList([]);
+        }
+    };
 
     // Fetch tests on mount
     useEffect(() => {
@@ -110,6 +160,13 @@ const LabOrderFormModal: React.FC<LabOrderFormModalProps> = ({
     };
 
     useEffect(() => {
+        if (!visible) {
+            setSampleFileList([]);
+            setPaymentFileList([]);
+        }
+    }, [visible]);
+
+    useEffect(() => {
         if (editingOrder && editingOrder.patient) {
             setPatientOptions([{
                 label: `${editingOrder.patient.full_name} (${editingOrder.patient?.patient_code})`,
@@ -135,7 +192,6 @@ const LabOrderFormModal: React.FC<LabOrderFormModalProps> = ({
         >
             <Form form={form} layout="vertical" onFinish={onSubmit} initialValues={{
                 priority: 'normal',
-                status: 'pending',
                 payment_status: 'unpaid',
                 order_source: 'walk_in',
                 order_type: 'lab_visit'
@@ -202,17 +258,12 @@ const LabOrderFormModal: React.FC<LabOrderFormModalProps> = ({
                 <Divider style={{ fontSize: '14px', color: '#888' }}>Order Details</Divider>
 
                 <Row gutter={16}>
-                    <Col span={8}>
+                    <Col span={12}>
                         <Form.Item name="priority" label="Priority">
                             <Select options={[...PRIORITIES]} />
                         </Form.Item>
                     </Col>
-                    <Col span={8}>
-                        <Form.Item name="status" label="Status">
-                            <Select options={[...ORDER_STATUSES]} />
-                        </Form.Item>
-                    </Col>
-                    <Col span={8}>
+                    <Col span={12}>
                         <Form.Item name="payment_status" label="Payment Status">
                             <Select options={[...PAYMENT_STATUSES]} />
                         </Form.Item>
@@ -291,7 +342,77 @@ const LabOrderFormModal: React.FC<LabOrderFormModalProps> = ({
                     </Col>
                 </Row>
 
-                <Form.Item name="address" label="Pickup / Collection Address">
+                {orderType === 'lab_visit' && (
+                    <div style={{ background: '#f0f7ff', padding: '16px', borderRadius: '12px', marginBottom: '20px', border: '1px solid #bae7ff' }}>
+                        <Title level={5} style={{ fontSize: '14px', marginBottom: '16px', color: '#0050b3' }}>Direct Collection (Lab Visit Proofs)</Title>
+                        <Row gutter={16}>
+                            <Col span={12}>
+                                <Form.Item name="payment_mode" label="Payment Mode">
+                                    <Select placeholder="Select mode" options={[
+                                        { label: 'Cash', value: 'cash' },
+                                        { label: 'UPI / QR Code', value: 'upi' },
+                                        { label: 'Card', value: 'card' },
+                                        { label: 'Online / App', value: 'online' },
+                                    ]} />
+                                </Form.Item>
+                            </Col>
+                            <Col span={12}>
+                                <Form.Item
+                                    name="payment_proof"
+                                    label="Payment Proof (Screenshot/Receipt)"
+                                    getValueFromEvent={() => {
+                                        // Stay with the base64 string we manually set in handleFileUpload
+                                        return form.getFieldValue('payment_proof');
+                                    }}
+                                >
+                                    <Upload
+                                        maxCount={1}
+                                        fileList={paymentFileList}
+                                        onRemove={() => handleRemove('payment_proof')}
+                                        beforeUpload={(file) => handleFileUpload(file, 'payment_proof')}
+                                        listType="picture-card"
+                                    >
+                                        {paymentFileList.length === 0 && (
+                                            <div>
+                                                <UploadOutlined />
+                                                <div style={{ marginTop: 8 }}>Upload</div>
+                                            </div>
+                                        )}
+                                    </Upload>
+                                </Form.Item>
+                            </Col>
+                        </Row>
+                        <Row gutter={16}>
+                            <Col span={24}>
+                                <Form.Item
+                                    name="sample_photo"
+                                    label="Sample Photo / Order Proof (Optional)"
+                                    getValueFromEvent={() => {
+                                        // Stay with the base64 string we manually set in handleFileUpload
+                                        return form.getFieldValue('sample_photo');
+                                    }}
+                                >
+                                    <Upload
+                                        maxCount={1}
+                                        fileList={sampleFileList}
+                                        onRemove={() => handleRemove('sample_photo')}
+                                        beforeUpload={(file) => handleFileUpload(file, 'sample_photo')}
+                                        listType="picture-card"
+                                    >
+                                        {sampleFileList.length === 0 && (
+                                            <div>
+                                                <CameraOutlined />
+                                                <div style={{ marginTop: 8 }}>Take / Upload</div>
+                                            </div>
+                                        )}
+                                    </Upload>
+                                </Form.Item>
+                            </Col>
+                        </Row>
+                    </div>
+                )}
+
+                <Form.Item name="address" label="Pickup / Collection Address" hidden={orderType === 'lab_visit'}>
                     <Input placeholder="Enter address for home collection" />
                 </Form.Item>
 

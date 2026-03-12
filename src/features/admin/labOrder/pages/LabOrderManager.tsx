@@ -24,7 +24,6 @@ const LabOrderManager: React.FC = () => {
         setFilters,
         createOrder,
         updateOrder,
-        updateOrderStatus,
         assignAgent,
         broadcastOrder,
         uploadReports,
@@ -90,9 +89,7 @@ const LabOrderManager: React.FC = () => {
         await deleteOrder(id);
     };
 
-    const handleStatusUpdate = async (id: number, status: string) => {
-        await updateOrderStatus(id, status);
-    };
+
 
     const [tableHeight, setTableHeight] = useState(400);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -241,7 +238,6 @@ const LabOrderManager: React.FC = () => {
                         hasMore={pagination.hasMore}
                         onEdit={handleEdit}
                         onDelete={handleDelete}
-                        onStatusUpdate={handleStatusUpdate}
                         onAssign={(order) => {
                             setSelectedOrderId(order.id);
                             setIsAssignModalVisible(true);
