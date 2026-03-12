@@ -7,7 +7,9 @@ import SharedModal from '../../../../shared/components/SharedModal';
 import {
     FilePdfOutlined, CloudUploadOutlined,
     EditOutlined, RobotOutlined, PlusOutlined,
-    FileImageOutlined, InboxOutlined
+    FileImageOutlined, InboxOutlined,
+    CheckCircleFilled, ExclamationCircleFilled,
+    CloseCircleFilled, InfoCircleOutlined
 } from '@ant-design/icons';
 import type { LabOrder } from '../types/labOrder.types';
 import { labOrderService } from '../services/labOrderService';
@@ -53,9 +55,23 @@ const ReportUploadModal: React.FC<ReportUploadModalProps> = ({ visible, order, o
         if (visible && order) {
             const results: any = {};
             order.test_results?.forEach(tr => {
+                // Parse normal range if it's a string like "12.0 - 16.0"
+                let min = '';
+                let max = '';
+                if (tr.test?.normal_range) {
+                    const parts = tr.test.normal_range.split('-').map(p => p.trim());
+                    if (parts.length === 2) {
+                        min = parts[0];
+                        max = parts[1];
+                    }
+                }
+
                 results[tr.id] = {
                     value: tr.result_value || '',
-                    status: tr.clinical_status || 'normal'
+                    unit: tr.test?.unit || '',
+                    min: min,
+                    max: max,
+                    clinical_status: tr.clinical_status || 'normal'
                 };
             });
             form.setFieldsValue({ results });
@@ -148,16 +164,20 @@ const ReportUploadModal: React.FC<ReportUploadModalProps> = ({ visible, order, o
                     if (!testName) return;
                     const idKey = tr.id.toString();
                     let matchedAIKey = extractedKeys.find(k => k === testName) || extractedKeys.find(k => fuzzyMatch(testName, k));
+
                     if (matchedAIKey && extractedData[matchedAIKey]) {
                         const extracted = extractedData[matchedAIKey];
                         fieldUpdates.push({ name: ['results', idKey, 'value'], value: extracted.value ?? '' });
-                        fieldUpdates.push({ name: ['results', idKey, 'status'], value: extracted.status || 'normal' });
+                        fieldUpdates.push({ name: ['results', idKey, 'clinical_status'], value: extracted.status || 'normal' });
+                        if (extracted.unit) fieldUpdates.push({ name: ['results', idKey, 'unit'], value: extracted.unit });
+                        if (extracted.min) fieldUpdates.push({ name: ['results', idKey, 'min'], value: extracted.min });
+                        if (extracted.max) fieldUpdates.push({ name: ['results', idKey, 'max'], value: extracted.max });
                     }
                 });
 
                 if (fieldUpdates.length > 0) {
                     form.setFields(fieldUpdates);
-                    message.success(`Auto-filled ${fieldUpdates.length / 2} field(s) from AI!`);
+                    message.success(`Auto-filled fields from AI!`);
                 } else {
                     message.warning('AI ran but found no matching test fields in this document.');
                 }
@@ -167,6 +187,36 @@ const ReportUploadModal: React.FC<ReportUploadModalProps> = ({ visible, order, o
             message.error(`AI Extraction Failed: ${error.message}`);
         } finally {
             setExtracting(false);
+        }
+    };
+
+    const getIndicatorMessage = (valueStr: string, minStr: string, maxStr: string) => {
+        const val = parseFloat(valueStr);
+        const min = parseFloat(minStr);
+        const max = parseFloat(maxStr);
+
+        if (isNaN(val)) return { icon: <InfoCircleOutlined style={{ color: '#bfbfbf' }} />, text: 'Enter value', color: '#8c8c8c', status: 'normal' };
+        if (isNaN(min) || isNaN(max)) return { icon: <CheckCircleFilled style={{ color: '#52c41a' }} />, text: 'No range set', color: '#52c41a', status: 'normal' };
+
+        if (val < min) return { icon: <ExclamationCircleFilled style={{ color: '#faad14' }} />, text: 'Low', color: '#faad14', status: 'warning' };
+        if (val > max) return { icon: <CloseCircleFilled style={{ color: '#ff4d4f' }} />, text: 'High', color: '#ff4d4f', status: 'danger' };
+
+        return { icon: <CheckCircleFilled style={{ color: '#52c41a' }} />, text: 'Normal', color: '#52c41a', status: 'normal' };
+    };
+
+    const onValuesChange = (changedValues: any, allValues: any) => {
+        if (changedValues.results) {
+            const changedId = Object.keys(changedValues.results)[0];
+            const resultData = allValues.results[changedId];
+
+            if (resultData && (changedValues.results[changedId].value || changedValues.results[changedId].min || changedValues.results[changedId].max)) {
+                const { status } = getIndicatorMessage(resultData.value, resultData.min, resultData.max);
+
+                // Only auto-update status if it wasn't manually changed in this specific event
+                if (!changedValues.results[changedId].clinical_status) {
+                    form.setFields([{ name: ['results', changedId, 'clinical_status'], value: status }]);
+                }
+            }
         }
     };
 
@@ -388,33 +438,95 @@ const ReportUploadModal: React.FC<ReportUploadModalProps> = ({ visible, order, o
                             </Space>
                         </div>
                         <div style={{ flex: 1, overflowY: 'auto', padding: '10px 12px' }}>
-                            <Form form={form} layout="vertical" size="small">
+                            <Form form={form} layout="vertical" size="small" onValuesChange={onValuesChange}>
                                 {order?.test_results?.map((tr) => (
                                     <Card
                                         key={tr.id}
                                         size="small"
-                                        style={{ marginBottom: 10, border: '1px solid #f0f0f0', borderRadius: 8 }}
-                                        bodyStyle={{ padding: '10px 12px' }}
-                                        title={<Text strong style={{ fontSize: 12 }}>{tr.test?.test_name}</Text>}
+                                        style={{ marginBottom: 12, border: '1px solid #f0f0f0', borderRadius: 10, boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}
+                                        bodyStyle={{ padding: '12px' }}
+                                        title={
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                                                <Text strong style={{ fontSize: 13, color: '#262626' }}>{tr.test?.test_name}</Text>
+                                                <Form.Item
+                                                    noStyle
+                                                    shouldUpdate={(prev, curr) =>
+                                                        prev.results?.[tr.id]?.value !== curr.results?.[tr.id]?.value ||
+                                                        prev.results?.[tr.id]?.min !== curr.results?.[tr.id]?.min ||
+                                                        prev.results?.[tr.id]?.max !== curr.results?.[tr.id]?.max
+                                                    }
+                                                >
+                                                    {({ getFieldValue }) => {
+                                                        const result = getFieldValue(['results', tr.id.toString()]);
+                                                        const indicator = getIndicatorMessage(result?.value, result?.min, result?.max);
+                                                        return (
+                                                            <Space size={4}>
+                                                                {indicator.icon}
+                                                                <Text style={{ fontSize: 11, fontWeight: 600, color: indicator.color }}>{indicator.text}</Text>
+                                                            </Space>
+                                                        );
+                                                    }}
+                                                </Form.Item>
+                                            </div>
+                                        }
                                     >
+                                        <Row gutter={8}>
+                                            <Col span={14}>
+                                                <Form.Item
+                                                    name={['results', tr.id.toString(), 'value']}
+                                                    label={<span style={{ fontSize: 11, fontWeight: 500 }}>Value</span>}
+                                                    style={{ marginBottom: 10 }}
+                                                >
+                                                    <Input placeholder="Value" style={{ borderRadius: 6 }} />
+                                                </Form.Item>
+                                            </Col>
+                                            <Col span={10}>
+                                                <Form.Item
+                                                    name={['results', tr.id.toString(), 'unit']}
+                                                    label={<span style={{ fontSize: 11, fontWeight: 500 }}>Unit</span>}
+                                                    style={{ marginBottom: 10 }}
+                                                >
+                                                    <Input placeholder="e.g. g/dL" style={{ borderRadius: 6 }} />
+                                                </Form.Item>
+                                            </Col>
+                                        </Row>
+
+                                        <div style={{ background: '#fafafa', padding: '8px', borderRadius: 8, marginBottom: 10 }}>
+                                            <Text type="secondary" style={{ fontSize: 10, display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>Reference Range</Text>
+                                            <Row gutter={8}>
+                                                <Col span={12}>
+                                                    <Form.Item
+                                                        name={['results', tr.id.toString(), 'min']}
+                                                        label={<span style={{ fontSize: 10 }}>Min</span>}
+                                                        style={{ marginBottom: 0 }}
+                                                    >
+                                                        <Input placeholder="Min" style={{ borderRadius: 4 }} />
+                                                    </Form.Item>
+                                                </Col>
+                                                <Col span={12}>
+                                                    <Form.Item
+                                                        name={['results', tr.id.toString(), 'max']}
+                                                        label={<span style={{ fontSize: 10 }}>Max</span>}
+                                                        style={{ marginBottom: 0 }}
+                                                    >
+                                                        <Input placeholder="Max" style={{ borderRadius: 4 }} />
+                                                    </Form.Item>
+                                                </Col>
+                                            </Row>
+                                        </div>
+
                                         <Form.Item
-                                            name={['results', tr.id.toString(), 'value']}
-                                            label={<span style={{ fontSize: 11 }}>Value / Measurement</span>}
-                                            style={{ marginBottom: 8 }}
-                                        >
-                                            <Input placeholder="e.g. 12.5 g/dL" />
-                                        </Form.Item>
-                                        <Form.Item
-                                            name={['results', tr.id.toString(), 'status']}
-                                            label={<span style={{ fontSize: 11 }}>Severity</span>}
+                                            name={['results', tr.id.toString(), 'clinical_status']}
+                                            label={<span style={{ fontSize: 11, fontWeight: 500 }}>Severity / Clinical Status</span>}
                                             initialValue="normal"
                                             style={{ marginBottom: 0 }}
                                         >
                                             <Select
+                                                style={{ width: '100%' }}
                                                 options={[
-                                                    { label: 'Normal', value: 'normal' },
-                                                    { label: 'Warning', value: 'warning' },
-                                                    { label: 'Danger', value: 'danger' },
+                                                    { label: 'Normal (Safe)', value: 'normal' },
+                                                    { label: 'Warning (Abnormal)', value: 'warning' },
+                                                    { label: 'Danger (Critical)', value: 'danger' },
                                                 ]}
                                             />
                                         </Form.Item>
