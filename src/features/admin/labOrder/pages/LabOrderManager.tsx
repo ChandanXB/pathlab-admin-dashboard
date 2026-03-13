@@ -44,7 +44,7 @@ const LabOrderManager: React.FC = () => {
     const [isAssignModalVisible, setIsAssignModalVisible] = useState(false);
     const [isUploadModalVisible, setIsUploadModalVisible] = useState(false);
     const [visibleColumns, setVisibleColumns] = useState<string[]>([
-        'order_info', 'patient', 'tests', 'agent', 'amount', 'status', 'actions'
+        'order_info', 'patient', 'tests', 'agent', 'agent_assign', 'amount', 'status', 'actions'
     ]);
     const [form] = Form.useForm();
 
@@ -155,6 +155,7 @@ const LabOrderManager: React.FC = () => {
         { label: 'Agent', value: 'agent' },
         { label: 'Amount', value: 'amount' },
         { label: 'Status', value: 'status' },
+        { label: 'Assign', value: 'agent_assign' },
         { label: 'Actions', value: 'actions' },
     ];
 
@@ -264,6 +265,7 @@ const LabOrderManager: React.FC = () => {
                 visible={isDrawerVisible}
                 order={selectedOrder}
                 onClose={handleDrawerClose}
+                onUploadReport={handleUploadReport}
             />
 
             <AssignAgentModal

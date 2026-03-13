@@ -45,7 +45,7 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
     onLoadMore,
     onRowClick,
     onUploadReport,
-    visibleColumns = ['order_info', 'patient', 'tests', 'agent', 'amount', 'status', 'actions'],
+    visibleColumns = ['order_info', 'patient', 'tests', 'agent', 'agent_assign', 'amount', 'status', 'actions'],
     scroll,
 }) => {
 
@@ -120,18 +120,24 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
             title: <span style={{ whiteSpace: 'nowrap' }}>Agent</span>,
             key: 'agent',
             width: '12%',
-            render: (_: any, record: LabOrder) => (
-                record.collection_agent ? (
-                    <Space direction="vertical" size={0} style={{ width: '100%' }}>
-                        <Text strong style={{ fontSize: '12px' }} ellipsis={{ tooltip: record.collection_agent.name }}>
-                            {record.collection_agent.name}
-                        </Text>
-                        <Text type="secondary" style={{ fontSize: '11px' }}>{record.collection_agent.phone}</Text>
-                    </Space>
-                ) : (
-                    <Tag color="default">UNASSIGNED</Tag>
-                )
-            )
+            render: (_: any, record: LabOrder) => {
+                if (record.collection_agent) {
+                    return (
+                        <Space direction="vertical" size={0} style={{ width: '100%' }}>
+                            <Text strong style={{ fontSize: '12px' }} ellipsis={{ tooltip: record.collection_agent.name }}>
+                                {record.collection_agent.name}
+                            </Text>
+                            <Text type="secondary" style={{ fontSize: '11px' }}>{record.collection_agent.phone}</Text>
+                        </Space>
+                    );
+                }
+                
+                if (record.order_type === 'lab_visit') {
+                    return <Tag color="blue">LAB VISIT</Tag>;
+                }
+
+                return <Tag color="default">UNASSIGNED</Tag>;
+            }
         },
         {
             title: <span style={{ whiteSpace: 'nowrap' }}>Amount</span>,
@@ -163,24 +169,56 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
             )
         },
         {
+            title: <div style={{ textAlign: 'center', width: '100%' }}>Assign</div>,
+            key: 'agent_assign',
+            width: '12%',
+            render: (_: any, record: LabOrder) => {
+                const isLabVisit = record.order_type === 'lab_visit';
+                const button = (
+                    <Button
+                        type="primary"
+                        ghost
+                        size="small"
+                        disabled={isLabVisit}
+                        icon={record.collection_agent
+                            ? <UserSwitchOutlined />
+                            : <UserAddOutlined />
+                        }
+                        onClick={() => !isLabVisit && onAssign(record)}
+                        style={{
+                            borderRadius: '6px',
+                            borderColor: isLabVisit ? '#d9d9d9' : (record.collection_agent ? '#52c41a' : '#faad14'),
+                            color: isLabVisit ? 'rgba(0, 0, 0, 0.25)' : (record.collection_agent ? '#52c41a' : '#faad14'),
+                            fontWeight: 600,
+                            height: '32px',
+                            width: '100px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                        }}
+                    >
+                        {record.collection_agent ? "Reassign" : "Assign"}
+                    </Button>
+                );
+
+                return (
+                    <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', justifyContent: 'center' }}>
+                        {isLabVisit ? (
+                            <Tooltip title="Not required for Lab Visit">
+                                {button}
+                            </Tooltip>
+                        ) : button}
+                    </div>
+                );
+            },
+        },
+        {
             title: <span style={{ whiteSpace: 'nowrap' }}>Actions</span>,
             key: 'actions',
-            width: '15%',
+            width: '12%',
             render: (_: any, record: LabOrder) => (
                 <div onClick={(e) => e.stopPropagation()}>
                     <Space size={0}>
-                        <Tooltip
-                            title={record.collection_agent ? "Reassign Agent" : "Assign Agent"}
-                        >
-                            <Button
-                                type="text"
-                                icon={record.collection_agent
-                                    ? <UserSwitchOutlined style={{ color: '#52c41a' }} />
-                                    : <UserAddOutlined style={{ color: '#faad14' }} />
-                                }
-                                onClick={() => onAssign(record)}
-                            />
-                        </Tooltip>
                         <Tooltip title="Edit Order">
                             <Button
                                 type="text"
@@ -188,7 +226,7 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
                                 onClick={() => onEdit(record)}
                             />
                         </Tooltip>
-                        {(record.status === 'processing' || record.status === 'collected') && (
+                        {(record.status === 'processing' || record.status === 'collected' || (record.order_type === 'lab_visit' && record.status === 'pending')) && (
                             <Tooltip title="Upload Report">
                                 <Button
                                     type="text"
@@ -199,7 +237,7 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
                         )}
                         <Popconfirm
                             title="Delete Order"
-                            description="Are you sure you want to delete this order?"
+                            description="Are you sure?"
                             onConfirm={() => onDelete(record.id)}
                             okText="Yes"
                             cancelText="No"
