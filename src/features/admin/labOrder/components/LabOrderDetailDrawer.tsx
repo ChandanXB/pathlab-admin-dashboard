@@ -28,9 +28,10 @@ interface LabOrderDetailDrawerProps {
     visible: boolean;
     order: LabOrder | null;
     onClose: () => void;
+    onUploadReport: (order: LabOrder) => void;
 }
 
-const LabOrderDetailDrawer: React.FC<LabOrderDetailDrawerProps> = ({ visible, order, onClose }) => {
+const LabOrderDetailDrawer: React.FC<LabOrderDetailDrawerProps> = ({ visible, order, onClose, onUploadReport }) => {
 
     if (!order) return null;
 
@@ -156,6 +157,24 @@ const LabOrderDetailDrawer: React.FC<LabOrderDetailDrawerProps> = ({ visible, or
                         <div style={{ marginTop: 2 }}>
                             {getPriorityTag(order.priority)}
                         </div>
+
+                        {(order.status === 'processing' || order.status === 'collected' || (order.order_type === 'lab_visit' && order.status === 'pending')) && (
+                            <Button
+                                type="primary"
+                                icon={<CloudUploadOutlined />}
+                                onClick={() => onUploadReport(order)}
+                                style={{
+                                    marginTop: 12,
+                                    width: '100%',
+                                    borderRadius: '8px',
+                                    fontWeight: 600,
+                                    height: '40px',
+                                    boxShadow: '0 4px 10px rgba(24, 144, 255, 0.2)'
+                                }}
+                            >
+                                Upload Lab Report
+                            </Button>
+                        )}
                     </div>
                 </div>
 

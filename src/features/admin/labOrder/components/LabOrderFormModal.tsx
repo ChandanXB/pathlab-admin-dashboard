@@ -1,7 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Form, Input, Select, Row, Col, Spin, InputNumber, Divider, DatePicker, Button, message, Upload } from 'antd';
 import { PlusOutlined, CameraOutlined, UploadOutlined } from '@ant-design/icons';
-import Title from 'antd/lib/typography/Title';
 import SharedModal from '@/shared/components/SharedModal';
 import { PRIORITIES, PAYMENT_STATUSES } from '@/shared/constants/app.constants';
 import type { LabOrder } from '../types/labOrder.types';
@@ -343,8 +342,8 @@ const LabOrderFormModal: React.FC<LabOrderFormModalProps> = ({
                 </Row>
 
                 {orderType === 'lab_visit' && (
-                    <div style={{ background: '#f0f7ff', padding: '16px', borderRadius: '12px', marginBottom: '20px', border: '1px solid #bae7ff' }}>
-                        <Title level={5} style={{ fontSize: '14px', marginBottom: '16px', color: '#0050b3' }}>Direct Collection (Lab Visit Proofs)</Title>
+                    <>
+                        <Divider style={{ margin: '16px 0', fontSize: '14px', color: '#888' }}>Direct Collection (Lab Visit Proofs)</Divider>
                         <Row gutter={16}>
                             <Col span={12}>
                                 <Form.Item name="payment_mode" label="Payment Mode">
@@ -409,7 +408,7 @@ const LabOrderFormModal: React.FC<LabOrderFormModalProps> = ({
                                 </Form.Item>
                             </Col>
                         </Row>
-                    </div>
+                    </>
                 )}
 
                 <Form.Item name="address" label="Pickup / Collection Address" hidden={orderType === 'lab_visit'}>
