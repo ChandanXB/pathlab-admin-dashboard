@@ -12,6 +12,7 @@ import LabOrderManager from '@/features/admin/labOrder/pages/LabOrderManager';
 import CollectionAgentManager from '@/features/admin/collectionAgent/pages/CollectionAgentManager';
 import AgentProfilePage from '@/features/admin/collectionAgent/pages/AgentProfilePage';
 import DoctorManager from '@/features/admin/doctors/pages/DoctorManager';
+import CityManager from '@/features/admin/locations/pages/CityManager';
 import ProtectedRoute from '@/shared/components/ProtectedRoute';
 import AdminLayout from '@/layouts/AdminLayout';
 import AgentLayout from '@/layouts/AgentLayout';
@@ -44,6 +45,7 @@ function App() {
               <Route path="collection-agents" element={<CollectionAgentManager />} />
               <Route path="collection-agents/:id" element={<AgentProfilePage />} />
               <Route path="doctors" element={<DoctorManager />} />
+              <Route path="service-cities" element={<CityManager />} />
               {/* Fallback for development/typos */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>

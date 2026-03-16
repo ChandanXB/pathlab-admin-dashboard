@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, Row, Col, Input, Select } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
-import type { TestQueryParams } from '../../types/labTest.types';
+import type { TestQueryParams } from '../types/labTest.types';
 
 const { Option } = Select;
 

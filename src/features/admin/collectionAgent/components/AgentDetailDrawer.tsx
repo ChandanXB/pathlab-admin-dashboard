@@ -6,7 +6,6 @@ import {
     Space,
     Divider,
     Descriptions,
-    Badge,
     Card,
     Tabs,
     List,
@@ -24,7 +23,6 @@ import {
     EnvironmentOutlined,
     ClockCircleOutlined,
     CheckCircleOutlined,
-    ExperimentOutlined,
     BarcodeOutlined,
     InfoCircleOutlined
 } from '@ant-design/icons';
