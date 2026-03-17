@@ -34,7 +34,8 @@ import {
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import dayjs from 'dayjs';
 import { collectionAgentService, type CollectionAgent } from '../services/collectionAgentService';
-import LabOrderDetailDrawer from '../../labOrder/components/LabOrderDetailDrawer';
+import { LabOrderDetailDrawer, ReportUploadModal } from '../../labOrder/components';
+import { labOrderService } from '../../labOrder/services/labOrderService';
 import type { LabOrder } from '../../labOrder/types/labOrder.types';
 
 const { Title, Text } = Typography;
@@ -46,6 +47,7 @@ const AgentProfilePage: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [selectedOrder, setSelectedOrder] = useState<LabOrder | null>(null);
     const [isDrawerVisible, setIsDrawerVisible] = useState(false);
+    const [isUploadModalVisible, setIsUploadModalVisible] = useState(false);
 
     const fetchAgentDetails = async () => {
         if (!id) return;
@@ -117,6 +119,27 @@ const AgentProfilePage: React.FC = () => {
             'broadcasted': 'Broadcasted'
         };
         return <Tag color={colorMap[status] || 'default'} style={{ fontSize: '10px' }}>{labelMap[status]?.toUpperCase() || status.toUpperCase()}</Tag>;
+    };
+
+    const handleUploadReport = (order: LabOrder) => {
+        setSelectedOrder(order);
+        setIsUploadModalVisible(true);
+    };
+
+    const onReportUpload = async (orderId: number, files: string[], results: any) => {
+        try {
+            const response = await labOrderService.uploadReports(orderId, files, results);
+            if (response.success) {
+                message.success('Reports uploaded successfully');
+                setIsUploadModalVisible(false);
+                fetchAgentDetails(); // Refresh list to show updated status
+                return true;
+            }
+            return false;
+        } catch (error: any) {
+            message.error(error.response?.data?.error || 'Failed to upload reports');
+            return false;
+        }
     };
 
     return (
@@ -281,6 +304,14 @@ const AgentProfilePage: React.FC = () => {
                     setIsDrawerVisible(false);
                     setSelectedOrder(null);
                 }}
+                onUploadReport={handleUploadReport}
+            />
+
+            <ReportUploadModal
+                visible={isUploadModalVisible}
+                order={selectedOrder}
+                onClose={() => setIsUploadModalVisible(false)}
+                onUpload={onReportUpload}
             />
         </div>
     );

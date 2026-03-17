@@ -1,0 +1,15 @@
+{
+  "projects": {
+    "default": "patlab-dev"
+  },
+  "targets": {
+    "patlab-dev": {
+      "hosting": {
+        "admin": [
+          "patlab-admin"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}

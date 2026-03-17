@@ -8,6 +8,7 @@ import {
     LogoutOutlined,
     MenuUnfoldOutlined,
     MenuFoldOutlined,
+    GlobalOutlined
 } from '@ant-design/icons';
 
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
@@ -152,6 +153,7 @@ const AdminLayout: React.FC = () => {
             ]
         },
         { key: '/tests-packages', icon: <ExperimentOutlined />, label: 'Tests & Packages' },
+        { key: '/service-cities', icon: <GlobalOutlined />, label: 'Service Cities' },
     ];
 
     const userMenu = {
