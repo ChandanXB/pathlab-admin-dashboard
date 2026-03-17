@@ -126,7 +126,7 @@ export const useLabOrders = (initialFilters: LabOrderQueryParams = { page: 1, li
         try {
             const response = await labOrderService.assignAgent(id, agentId);
             if (response.success) {
-                message.success('Collection agent assigned');
+                message.success(agentId ? 'Agent is assigned for the lab order' : 'Collection agent unassigned');
                 setOrders(prev => prev.map(o => o.id === id ? response.data : o));
                 return true;
             }

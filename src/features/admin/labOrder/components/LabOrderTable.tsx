@@ -153,20 +153,36 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
             )
         },
         {
-            title: <span style={{ whiteSpace: 'nowrap' }}>Status</span>,
+            title: <span style={{ whiteSpace: 'nowrap' }}>Order Status</span>,
             dataIndex: 'status',
             key: 'status',
             width: '12%',
-            render: (status: string) => (
-                <div onClick={(e) => e.stopPropagation()}>
+            render: (status: string, record: LabOrder) => {
+                const isAssigning = status === 'assigned' && record.assignment_status !== 'accepted';
+                const displayLabel = isAssigning ? 'Assigning' : getStatusLabel(status);
+                const displayColor = isAssigning ? 'blue' : getStatusColor(status);
+
+                const tag = (
                     <Tag
-                        color={getStatusColor(status)}
+                        color={displayColor}
                         style={{ borderRadius: '12px', padding: '0 10px' }}
                     >
-                        {getStatusLabel(status)}
+                        {displayLabel}
                     </Tag>
-                </div>
-            )
+                );
+
+                return (
+                    <div onClick={(e) => e.stopPropagation()}>
+                        {isAssigning ? (
+                            <Tooltip title="Agent not accepted the order yet" placement="top">
+                                {tag}
+                            </Tooltip>
+                        ) : (
+                            tag
+                        )}
+                    </div>
+                );
+            }
         },
         {
             title: <div style={{ textAlign: 'center', width: '100%' }}>Assign</div>,

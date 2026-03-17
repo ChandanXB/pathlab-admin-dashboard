@@ -331,15 +331,7 @@ const AssignAgentModal: React.FC<AssignAgentModalProps> = ({ visible, order, onC
                                                 size="small"
                                                 block
                                                 style={{ background: '#52c41a', borderColor: '#52c41a' }}
-                                                onClick={() => {
-                                                    Modal.confirm({
-                                                        title: 'Confirm Assignment',
-                                                        content: `Assign this order to ${recommended.name}?`,
-                                                        okText: 'Confirm',
-                                                        cancelText: 'Cancel',
-                                                        onOk: () => handleAssign(recommended.id)
-                                                    });
-                                                }}
+                                                onClick={() => handleAssign(recommended.id)}
                                             >
                                                 Quick Assign
                                             </Button>
@@ -381,12 +373,7 @@ const AssignAgentModal: React.FC<AssignAgentModalProps> = ({ visible, order, onC
                                                 handleAssign(null);
                                                 return;
                                             }
-                                            const agent = agents.find(a => a.id === agentId);
-                                            Modal.confirm({
-                                                title: 'Confirm Assignment',
-                                                content: `Are you sure you want to assign this order to ${agent?.name}?`,
-                                                onOk: () => handleAssign(agentId)
-                                            });
+                                            handleAssign(agentId);
                                         }}
                                         allowClear
                                         showSearch
@@ -420,15 +407,7 @@ const AssignAgentModal: React.FC<AssignAgentModalProps> = ({ visible, order, onC
                                         block
                                         size="small"
                                         icon={<CheckCircleOutlined />}
-                                        onClick={() => {
-                                            Modal.confirm({
-                                                title: 'Confirm Unassign',
-                                                content: 'Are you sure you want to remove the current agent?',
-                                                okText: 'Unassign',
-                                                okButtonProps: { danger: true },
-                                                onOk: () => handleAssign(null)
-                                            });
-                                        }}
+                                        onClick={() => handleAssign(null)}
                                         loading={assigning}
                                         style={{ fontSize: '12px' }}
                                     >

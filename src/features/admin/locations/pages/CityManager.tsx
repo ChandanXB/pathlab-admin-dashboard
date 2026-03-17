@@ -251,23 +251,28 @@ const CityManager: React.FC = () => {
                 onOk={handleModalSubmit}
                 onCancel={() => setIsModalVisible(false)}
                 okText={editingCity ? 'Update' : 'Add'}
+                centered
             >
                 <Form form={form} layout="vertical" initialValues={{ status: true, villages: [] }}>
-                    <Form.Item
-                        name="name"
-                        label="City Name"
-                        rules={[{ required: true, message: 'Please enter city name' }]}
-                    >
-                        <Input placeholder="e.g. Lucknow" />
-                    </Form.Item>
+                    <div style={{ display: 'flex', gap: '16px' }}>
+                        <Form.Item
+                            name="name"
+                            label="City Name"
+                            rules={[{ required: true, message: 'Please enter city name' }]}
+                            style={{ flex: 1, marginBottom: '16px' }}
+                        >
+                            <Input placeholder="e.g. Lucknow" />
+                        </Form.Item>
 
-                    <Form.Item
-                        name="pincode"
-                        label="Pin Code"
-                        rules={[{ pattern: /^[0-9]{6}$/, message: 'Please enter a valid 6-digit pincode' }]}
-                    >
-                        <Input placeholder="e.g. 226001" maxLength={6} />
-                    </Form.Item>
+                        <Form.Item
+                            name="pincode"
+                            label="Pin Code"
+                            rules={[{ pattern: /^[0-9]{6}$/, message: 'Please enter a valid 6-digit pincode' }]}
+                            style={{ flex: 1, marginBottom: '16px' }}
+                        >
+                            <Input placeholder="e.g. 226001" maxLength={6} />
+                        </Form.Item>
+                    </div>
 
                     <Form.Item
                         name="address"
