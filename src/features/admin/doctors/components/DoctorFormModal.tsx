@@ -68,10 +68,45 @@ const DoctorFormModal: React.FC<DoctorFormModalProps> = ({
 
                 <div style={{ display: 'flex', gap: 16 }}>
                     <Form.Item
+                        name="address"
+                        label="Address"
+                        style={{ flex: 1 }}
+                        rules={[{ required: true, message: 'Please enter address' }]}
+                    >
+                        <Input placeholder="Clinic or Hospital Address" />
+                    </Form.Item>
+
+                    <Form.Item
+                        name="experience_years"
+                        label="Experience (Years)"
+                        style={{ flex: 1 }}
+                    >
+                        <Input type="number" placeholder="e.g. 10" />
+                    </Form.Item>
+                </div>
+
+                <div style={{ display: 'flex', gap: 16 }}>
+                    <Form.Item
+                        name="bio"
+                        label="About Doctor"
+                        style={{ flex: 1 }}
+                    >
+                        <Input.TextArea rows={3} placeholder="Brief description about the doctor..." />
+                    </Form.Item>
+                </div>
+
+                <div style={{ display: 'flex', gap: 16 }}>
+                    <Form.Item
                         name="phone"
                         label="Phone Number"
                         style={{ flex: 1 }}
                         rules={[{ required: true, message: 'Please enter phone number' }]}
+                        getValueFromEvent={(e) => {
+                            let val = e.target.value.replace(/[^\d+]/g, '');
+                            if (val.startsWith('+91')) return val.slice(0, 13);
+                            if (val.startsWith('91')) return val.slice(0, 12);
+                            return val.slice(0, 10);
+                        }}
                     >
                         <Input placeholder="9999999999" />
                     </Form.Item>

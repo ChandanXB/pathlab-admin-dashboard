@@ -21,6 +21,7 @@ import AgentDashboard from '@/features/agent/dashboard/pages/AgentDashboard';
 import AgentPickups from '@/features/agent/pickups/pages/AgentPickups';
 import AgentProfile from '@/features/agent/profile/pages/AgentProfile';
 import DoctorDashboard from '@/features/doctor/dashboard/pages/DoctorDashboard';
+import DoctorPatients from '@/features/doctor/patients/pages/DoctorPatients';
 
 function App() {
   return (
@@ -74,7 +75,7 @@ function App() {
               }
             >
               <Route index element={<DoctorDashboard />} />
-              <Route path="patients" element={<div>Doctor Patients Coming Soon</div>} />
+              <Route path="patients" element={<DoctorPatients />} />
             </Route>
           </Routes>
         </BrowserRouter>

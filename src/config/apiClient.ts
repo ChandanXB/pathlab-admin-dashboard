@@ -56,8 +56,13 @@ apiClient.interceptors.response.use(
 
             switch (status) {
                 case 401:
-                    // Always means "not authenticated" — logout & redirect
-                    handleAuthExpired();
+                    if (error.config?.url?.includes('/auth/login')) {
+                        // Skip the global reload on the login endpoint itself
+                        message.error(errorMsg || 'Invalid credentials.');
+                    } else {
+                        // Means "not authenticated" — logout & redirect
+                        handleAuthExpired();
+                    }
                     break;
 
                 case 403:

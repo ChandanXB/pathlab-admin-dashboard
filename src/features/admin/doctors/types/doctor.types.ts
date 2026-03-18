@@ -4,9 +4,16 @@ export interface Doctor {
     specialty: string;
     phone: string;
     email: string;
+    bio?: string;
+    address?: string;
+    experience_years?: number;
     status: 'active' | 'inactive';
-    createdAt: string;
-    updatedAt: string;
+    createdAt?: string;
+    updatedAt?: string;
+    user?: {
+        createdAt?: string;
+        id?: number;
+    };
 }
 
 export interface DoctorQueryParams {
