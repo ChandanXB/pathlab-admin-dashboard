@@ -31,10 +31,11 @@ const PatientFormModal: React.FC<PatientFormModalProps> = ({
             onCancel={onCancel}
             width={800}
             okText={editingPatient ? 'Update' : 'Create'}
+            centered
         >
             <Form form={form} layout="vertical" onFinish={onSubmit}>
                 <Row gutter={16}>
-                    <Col span={12}>
+                    <Col span={8}>
                         <Form.Item
                             name="full_name"
                             label="Full Name"
@@ -43,7 +44,7 @@ const PatientFormModal: React.FC<PatientFormModalProps> = ({
                             <Input placeholder="e.g., John Doe" />
                         </Form.Item>
                     </Col>
-                    <Col span={12}>
+                    <Col span={8}>
                         <Form.Item
                             name="gender"
                             label="Gender"
@@ -58,10 +59,7 @@ const PatientFormModal: React.FC<PatientFormModalProps> = ({
                             </Select>
                         </Form.Item>
                     </Col>
-                </Row>
-
-                <Row gutter={16}>
-                    <Col span={12}>
+                    <Col span={8}>
                         <Form.Item
                             name="dob"
                             label="Date of Birth"
@@ -79,7 +77,10 @@ const PatientFormModal: React.FC<PatientFormModalProps> = ({
                             />
                         </Form.Item>
                     </Col>
-                    <Col span={12}>
+                </Row>
+
+                <Row gutter={16}>
+                    <Col span={8}>
                         <Form.Item
                             name="phone"
                             label="Phone Number"
@@ -90,19 +91,13 @@ const PatientFormModal: React.FC<PatientFormModalProps> = ({
                             <Input placeholder="e.g., 9876543210" maxLength={10} />
                         </Form.Item>
                     </Col>
-                </Row>
 
-                <Form.Item name="address" label="Address">
-                    <TextArea rows={2} placeholder="Enter patient address..." />
-                </Form.Item>
-
-                <Row gutter={16}>
-                    <Col span={12}>
+                    <Col span={8}>
                         <Form.Item name="emergency_contact" label="Emergency Contact Name">
                             <Input placeholder="e.g., Jane Doe" />
                         </Form.Item>
                     </Col>
-                    <Col span={12}>
+                    <Col span={8}>
                         <Form.Item
                             name="emergency_phone"
                             label="Emergency Contact Phone"
@@ -117,6 +112,10 @@ const PatientFormModal: React.FC<PatientFormModalProps> = ({
                         </Form.Item>
                     </Col>
                 </Row>
+                
+                <Form.Item name="address" label="Address">
+                    <TextArea rows={2} placeholder="Enter patient address..." />
+                </Form.Item>
             </Form>
         </SharedModal>
     );

@@ -41,7 +41,7 @@ const Login: React.FC = () => {
                 navigate('/');
             }
         } catch (error: any) {
-            message.error(error.message);
+            console.error('Login failed:', error);
         } finally {
             setLoading(false);
         }

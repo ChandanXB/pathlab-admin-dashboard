@@ -10,6 +10,7 @@ interface User {
         name: string;
     };
     agentId?: number;
+    doctorId?: number;
 }
 
 interface AuthState {

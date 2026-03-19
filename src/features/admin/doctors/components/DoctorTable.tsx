@@ -11,6 +11,7 @@ interface DoctorTableProps {
     hasMore: boolean;
     onEdit: (doctor: Doctor) => void;
     onDelete: (id: number) => void;
+    onRowClick: (record: Doctor) => void;
     onLoadMore: () => void;
     scroll?: { x?: number | string; y?: number | string };
 }
@@ -22,6 +23,7 @@ const DoctorTable: React.FC<DoctorTableProps> = ({
     hasMore,
     onEdit,
     onDelete,
+    onRowClick,
     onLoadMore,
     scroll
 }) => {
@@ -52,6 +54,7 @@ const DoctorTable: React.FC<DoctorTableProps> = ({
             title: 'Email',
             dataIndex: 'email',
             key: 'email',
+            render: (email: string) => <span style={{ whiteSpace: 'nowrap' }}>{email}</span>
         },
         {
             title: 'Status',
@@ -73,12 +76,19 @@ const DoctorTable: React.FC<DoctorTableProps> = ({
                         <Button
                             type="text"
                             icon={<EditOutlined />}
-                            onClick={() => onEdit(record)}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onEdit(record);
+                            }}
                         />
                     </Tooltip>
                     <Popconfirm
                         title="Delete this doctor?"
-                        onConfirm={() => onDelete(record.id)}
+                        onConfirm={(e) => {
+                            e?.stopPropagation();
+                            onDelete(record.id);
+                        }}
+                        onCancel={(e) => e?.stopPropagation()}
                         okText="Yes"
                         cancelText="No"
                     >
@@ -87,6 +97,7 @@ const DoctorTable: React.FC<DoctorTableProps> = ({
                                 type="text"
                                 danger
                                 icon={<DeleteOutlined />}
+                                onClick={(e) => e.stopPropagation()}
                             />
                         </Tooltip>
                     </Popconfirm>
@@ -105,6 +116,10 @@ const DoctorTable: React.FC<DoctorTableProps> = ({
             next={onLoadMore}
             rowKey="id"
             scroll={scroll}
+            onRow={(record) => ({
+                onClick: () => onRowClick(record),
+                style: { cursor: 'pointer' }
+            })}
         />
     );
 };

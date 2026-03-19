@@ -15,7 +15,7 @@ import {
 } from '@ant-design/icons';
 import colors from '@/styles/colors';
 import { useDoctors } from '../hooks/useDoctors';
-import { DoctorTable, DoctorFormModal } from '../components';
+import { DoctorTable, DoctorFormModal, DoctorDetailDrawer } from '../components';
 import type { Doctor } from '../types/doctor.types';
 
 const { Title, Text } = Typography;
@@ -35,6 +35,8 @@ const DoctorManager: React.FC = () => {
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingDoctor, setEditingDoctor] = useState<Doctor | null>(null);
+    const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState(false);
+    const [viewingDoctor, setViewingDoctor] = useState<Doctor | null>(null);
     const [form] = Form.useForm();
 
     const handleSearch = (value: string) => {
@@ -54,26 +56,34 @@ const DoctorManager: React.FC = () => {
     };
 
     const handleDelete = async (id: number) => {
-        try {
-            await deleteDoctor(id);
-            message.success('Doctor removed successfully');
-        } catch (error) {
-            message.error('Failed to remove doctor');
-        }
+        await deleteDoctor(id);
+    };
+
+    const handleRowClick = (doctor: Doctor) => {
+        setViewingDoctor(doctor);
+        setIsDetailDrawerOpen(true);
     };
 
     const handleModalOk = async () => {
         try {
             const values = await form.validateFields();
-            if (editingDoctor) {
-                await updateDoctor(editingDoctor.id, values);
-                message.success('Doctor updated successfully');
+
+            // Ensure numeric values are properly cast
+            if (values.experience_years !== undefined && values.experience_years !== null && values.experience_years !== '') {
+                values.experience_years = parseInt(values.experience_years, 10);
             } else {
-                await createDoctor(values);
-                message.success('Doctor onboarded successfully');
+                delete values.experience_years;
             }
-            setIsModalOpen(false);
+
+            if (editingDoctor) {
+                const success = await updateDoctor(editingDoctor.id, values);
+                if (success) setIsModalOpen(false);
+            } else {
+                const success = await createDoctor(values);
+                if (success) setIsModalOpen(false);
+            }
         } catch (error) {
+            console.error('Save doctor error:', error);
             message.error('Failed to save doctor');
         }
     };
@@ -146,6 +156,7 @@ const DoctorManager: React.FC = () => {
                         hasMore={doctorPagination.hasMore}
                         onEdit={handleEdit}
                         onDelete={handleDelete}
+                        onRowClick={handleRowClick}
                         onLoadMore={loadMore}
                         scroll={{ y: tableHeight }}
                     />
@@ -158,6 +169,12 @@ const DoctorManager: React.FC = () => {
                 form={form}
                 onOk={handleModalOk}
                 onCancel={() => setIsModalOpen(false)}
+            />
+
+            <DoctorDetailDrawer
+                visible={isDetailDrawerOpen}
+                doctor={viewingDoctor}
+                onClose={() => setIsDetailDrawerOpen(false)}
             />
         </div>
     );

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Drawer, Descriptions, Tag, Divider, Typography, Space, List, Card, Empty, Button, Tabs, Spin } from 'antd';
+import { Drawer, Descriptions, Tag, Divider, Typography, Space, List, Card, Empty, Button, Tabs, Spin, Modal, Image, message } from 'antd';
 import {
     UserOutlined,
     PhoneOutlined,
@@ -9,8 +9,12 @@ import {
     HistoryOutlined,
     MedicineBoxOutlined,
     EyeOutlined,
+    FileImageOutlined,
+    DownloadOutlined,
+    SafetyCertificateOutlined
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
+import apiClient from '../../../../config/apiClient';
 import type { Patient } from '../types/patient.types';
 import { labOrderService } from '../../labOrder/services/labOrderService';
 import type { LabOrder } from '../../labOrder/types/labOrder.types';
@@ -26,14 +30,37 @@ interface PatientDetailDrawerProps {
 const PatientDetailDrawer: React.FC<PatientDetailDrawerProps> = ({ visible, patient, onClose }) => {
     const [orders, setOrders] = useState<LabOrder[]>([]);
     const [loading, setLoading] = useState(false);
+    const [prescriptions, setPrescriptions] = useState<any[]>([]);
+    const [loadingPrescriptions, setLoadingPrescriptions] = useState(false);
+    const [previewImage, setPreviewImage] = useState<string>('');
+    const [previewOpen, setPreviewOpen] = useState(false);
+    const [pdfModalOpen, setPdfModalOpen] = useState(false);
+    const [pdfUrl, setPdfUrl] = useState<string>('');
 
     useEffect(() => {
         if (visible && patient) {
             fetchPatientHistory();
+            fetchPrescriptions();
         } else {
             setOrders([]);
+            setPrescriptions([]);
         }
     }, [visible, patient]);
+
+    const fetchPrescriptions = async () => {
+        if (!patient) return;
+        setLoadingPrescriptions(true);
+        try {
+            const response = await apiClient.get(`/prescriptions/${patient.id}`);
+            if (response.data?.success) {
+                setPrescriptions(response.data.data);
+            }
+        } catch (error) {
+            console.error('Failed to fetch prescriptions:', error);
+        } finally {
+            setLoadingPrescriptions(false);
+        }
+    };
 
     const fetchPatientHistory = async () => {
         if (!patient) return;
@@ -55,6 +82,26 @@ const PatientDetailDrawer: React.FC<PatientDetailDrawerProps> = ({ visible, pati
 
     const calculateAge = (dob: string): number => {
         return dayjs().diff(dayjs(dob), 'year');
+    };
+
+    const handleDownload = async (url: string, fileName: string | null) => {
+        try {
+            const messageHide = message.loading('Downloading file...', 0);
+            const response = await fetch(url);
+            const blob = await response.blob();
+            const objectUrl = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = objectUrl;
+            link.download = fileName || 'prescription';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(objectUrl);
+            messageHide();
+        } catch (error) {
+            console.error('Download error:', error);
+            message.error('Failed to download file');
+        }
     };
 
     if (!patient) return null;
@@ -205,8 +252,137 @@ const PatientDetailDrawer: React.FC<PatientDetailDrawerProps> = ({ visible, pati
                             <Empty description="No lab order history found for this patient" />
                         )}
                     </Tabs.TabPane>
+
+                    <Tabs.TabPane
+                        tab={<Space><FileImageOutlined />Prescriptions</Space>}
+                        key="prescriptions"
+                    >
+                        {loadingPrescriptions ? (
+                            <div style={{ textAlign: 'center', padding: '40px' }}><Spin tip="Fetching prescriptions..." /></div>
+                        ) : prescriptions.length > 0 ? (
+                            <List
+                                dataSource={prescriptions}
+                                style={{ marginTop: 8 }}
+                                renderItem={(prescription: any) => (
+                                    <List.Item
+                                        style={{ background: '#fafafa', borderRadius: '8px', padding: '16px', marginBottom: '12px', border: '1px solid #f0f0f0' }}
+                                        actions={[
+                                            <Button
+                                                key="view"
+                                                type="primary"
+                                                ghost
+                                                size="small"
+                                                icon={<EyeOutlined />}
+                                                onClick={() => {
+                                                    if (prescription.file_type === 'application/pdf' || (prescription.file_url && prescription.file_url.endsWith('.pdf'))) {
+                                                        setPdfUrl(prescription.file_url);
+                                                        setPdfModalOpen(true);
+                                                    } else {
+                                                        setPreviewImage(prescription.file_url);
+                                                        setPreviewOpen(true);
+                                                    }
+                                                }}
+                                            >
+                                                View
+                                            </Button>,
+                                            <Button
+                                                key="download"
+                                                type="default"
+                                                size="small"
+                                                icon={<DownloadOutlined />}
+                                                onClick={() => handleDownload(prescription.file_url, prescription.file_name)}
+                                            >
+                                                Download
+                                            </Button>
+                                        ]}
+                                    >
+                                        <List.Item.Meta
+                                            avatar={<div style={{ background: '#e6f7ff', padding: '12px', borderRadius: '8px' }}><FileImageOutlined style={{ fontSize: '24px', color: '#1890ff' }} /></div>}
+                                            title={<Text strong>{prescription.file_name || 'Prescription Document'}</Text>}
+                                            description={`Uploaded: ${dayjs(prescription.uploaded_at).format('DD MMM YYYY, hh:mm A')}`}
+                                        />
+                                    </List.Item>
+                                )}
+                            />
+                        ) : (
+                            <Empty description="No prescriptions uploaded for this patient" />
+                        )}
+                    </Tabs.TabPane>
+
+                    <Tabs.TabPane
+                        tab={<Space><SafetyCertificateOutlined />Precautions</Space>}
+                        key="precautions"
+                    >
+                        {(patient as any).appointments && (patient as any).appointments.filter((a: any) => a.precaution).length > 0 ? (
+                            <List
+                                dataSource={(patient as any).appointments.filter((a: any) => a.precaution)}
+                                renderItem={(appointment: any) => (
+                                    <List.Item
+                                        style={{ background: '#f6ffed', borderRadius: '8px', padding: '16px', marginBottom: '12px', border: '1px solid #b7eb8f' }}
+                                    >
+                                        <List.Item.Meta
+                                            avatar={<div style={{ background: '#d9f7be', padding: '12px', borderRadius: '8px' }}><SafetyCertificateOutlined style={{ fontSize: '24px', color: '#389e0d' }} /></div>}
+                                            title={<Text strong style={{ color: '#389e0d' }}>Clinical Precaution ({appointment.doctor?.name || appointment.doctor_name || 'Doctor'})</Text>}
+                                            description={
+                                                <Space direction="vertical" size="small" style={{ width: '100%', marginTop: 8 }}>
+                                                    <Text>{appointment.precaution}</Text>
+                                                    {appointment.precaution_file_url && (
+                                                        <Button 
+                                                            type="dashed" 
+                                                            size="small" 
+                                                            icon={<EyeOutlined />}
+                                                            onClick={() => window.open(appointment.precaution_file_url, '_blank')}
+                                                            style={{ color: '#389e0d', borderColor: '#389e0d', marginTop: 4, width: 'fit-content' }}
+                                                        >
+                                                            View Attached Document
+                                                        </Button>
+                                                    )}
+                                                    <Space style={{ marginTop: 8 }} split={<Divider type="vertical" />}>
+                                                        <Text type="secondary" style={{ fontSize: 12 }}>Consult Submit: {dayjs(appointment.createdAt).format('DD MMM YYYY')}</Text>
+                                                        <Text type="secondary" style={{ fontSize: 12 }}>Precaution Uploaded: {dayjs(appointment.updatedAt).format('DD MMM YYYY')}</Text>
+                                                    </Space>
+                                                </Space>
+                                            }
+                                        />
+                                    </List.Item>
+                                )}
+                            />
+                        ) : (
+                            <Empty description="No doctor precautions recorded yet." />
+                        )}
+                    </Tabs.TabPane>
                 </Tabs>
             </Space>
+
+            {/* Hidden Image for Preview */}
+            <div style={{ display: 'none' }}>
+                <Image
+                    src={previewImage}
+                    preview={{
+                        visible: previewOpen,
+                        src: previewImage,
+                        onVisibleChange: (value) => {
+                            setPreviewOpen(value);
+                            if (!value) setPreviewImage('');
+                        },
+                    }}
+                />
+            </div>
+
+            {/* Modal for PDF */}
+            <Modal
+                title="View Prescription Document"
+                open={pdfModalOpen}
+                onCancel={() => { setPdfModalOpen(false); setPdfUrl(''); }}
+                footer={null}
+                width={800}
+                centered
+                styles={{ body: { padding: '24px 0 0 0', height: '70vh' } }}
+            >
+                {pdfUrl && (
+                    <iframe src={pdfUrl} width="100%" height="100%" style={{ border: 'none' }} title="Prescription PDF" />
+                )}
+            </Modal>
         </Drawer>
     );
 };

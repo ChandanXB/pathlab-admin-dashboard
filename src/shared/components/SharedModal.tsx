@@ -16,6 +16,7 @@ interface SharedModalProps {
     maskClosable?: boolean;
     style?: React.CSSProperties;
     confirmLoading?: boolean;
+    centered?: boolean;
 }
 
 const SharedModal: React.FC<SharedModalProps> = ({
@@ -29,8 +30,9 @@ const SharedModal: React.FC<SharedModalProps> = ({
     cancelText = 'Cancel',
     footer,
     maskClosable = true,
-    style = { top: 20 },
+    style,
     confirmLoading = false,
+    centered = false,
 }) => {
     return (
         <Modal
@@ -44,6 +46,7 @@ const SharedModal: React.FC<SharedModalProps> = ({
             footer={footer}
             maskClosable={maskClosable}
             style={style}
+            centered={centered}
             closeIcon={<X size={20} />}
             confirmLoading={confirmLoading}
             styles={{
