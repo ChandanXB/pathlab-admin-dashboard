@@ -179,7 +179,8 @@ const DoctorLayout: React.FC = () => {
 
                 <Content style={{
                     flex: 1,
-                    overflow: 'hidden',
+                    overflowY: 'auto',
+                    overflowX: 'hidden',
                     padding: screenSize < 768 ? '16px 12px' : '24px',
                     background: colors.background,
                     display: 'flex',

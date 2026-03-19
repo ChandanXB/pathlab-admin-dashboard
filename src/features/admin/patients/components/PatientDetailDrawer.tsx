@@ -11,6 +11,7 @@ import {
     EyeOutlined,
     FileImageOutlined,
     DownloadOutlined,
+    SafetyCertificateOutlined
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import apiClient from '../../../../config/apiClient';
@@ -305,6 +306,49 @@ const PatientDetailDrawer: React.FC<PatientDetailDrawerProps> = ({ visible, pati
                             />
                         ) : (
                             <Empty description="No prescriptions uploaded for this patient" />
+                        )}
+                    </Tabs.TabPane>
+
+                    <Tabs.TabPane
+                        tab={<Space><SafetyCertificateOutlined />Precautions</Space>}
+                        key="precautions"
+                    >
+                        {(patient as any).appointments && (patient as any).appointments.filter((a: any) => a.precaution).length > 0 ? (
+                            <List
+                                dataSource={(patient as any).appointments.filter((a: any) => a.precaution)}
+                                renderItem={(appointment: any) => (
+                                    <List.Item
+                                        style={{ background: '#f6ffed', borderRadius: '8px', padding: '16px', marginBottom: '12px', border: '1px solid #b7eb8f' }}
+                                    >
+                                        <List.Item.Meta
+                                            avatar={<div style={{ background: '#d9f7be', padding: '12px', borderRadius: '8px' }}><SafetyCertificateOutlined style={{ fontSize: '24px', color: '#389e0d' }} /></div>}
+                                            title={<Text strong style={{ color: '#389e0d' }}>Clinical Precaution ({appointment.doctor?.name || appointment.doctor_name || 'Doctor'})</Text>}
+                                            description={
+                                                <Space direction="vertical" size="small" style={{ width: '100%', marginTop: 8 }}>
+                                                    <Text>{appointment.precaution}</Text>
+                                                    {appointment.precaution_file_url && (
+                                                        <Button 
+                                                            type="dashed" 
+                                                            size="small" 
+                                                            icon={<EyeOutlined />}
+                                                            onClick={() => window.open(appointment.precaution_file_url, '_blank')}
+                                                            style={{ color: '#389e0d', borderColor: '#389e0d', marginTop: 4, width: 'fit-content' }}
+                                                        >
+                                                            View Attached Document
+                                                        </Button>
+                                                    )}
+                                                    <Space style={{ marginTop: 8 }} split={<Divider type="vertical" />}>
+                                                        <Text type="secondary" style={{ fontSize: 12 }}>Consult Submit: {dayjs(appointment.createdAt).format('DD MMM YYYY')}</Text>
+                                                        <Text type="secondary" style={{ fontSize: 12 }}>Precaution Uploaded: {dayjs(appointment.updatedAt).format('DD MMM YYYY')}</Text>
+                                                    </Space>
+                                                </Space>
+                                            }
+                                        />
+                                    </List.Item>
+                                )}
+                            />
+                        ) : (
+                            <Empty description="No doctor precautions recorded yet." />
                         )}
                     </Tabs.TabPane>
                 </Tabs>

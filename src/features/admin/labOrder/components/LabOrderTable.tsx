@@ -9,7 +9,8 @@ import {
     ClockCircleOutlined,
     UserAddOutlined,
     UserSwitchOutlined,
-    CloudUploadOutlined
+    CloudUploadOutlined,
+    CameraOutlined
 } from '@ant-design/icons';
 
 import InfiniteScrollTable from '@/shared/components/InfiniteScrollTable';
@@ -30,6 +31,7 @@ interface LabOrderTableProps {
     onLoadMore: () => void;
     onRowClick: (record: LabOrder) => void;
     onUploadReport: (record: LabOrder) => void;
+    onUploadProof?: (record: LabOrder) => void;
     visibleColumns?: string[];
     scroll?: { x?: number | string; y?: number | string };
 }
@@ -45,6 +47,7 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
     onLoadMore,
     onRowClick,
     onUploadReport,
+    onUploadProof,
     visibleColumns = ['order_info', 'patient', 'tests', 'agent', 'agent_assign', 'amount', 'status', 'actions'],
     scroll,
 }) => {
@@ -242,7 +245,16 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
                                 onClick={() => onEdit(record)}
                             />
                         </Tooltip>
-                        {(record.status === 'processing' || record.status === 'collected' || (record.order_type === 'lab_visit' && record.status === 'pending')) && (
+                        {record.order_type === 'lab_visit' && record.status === 'pending' && onUploadProof && (
+                            <Tooltip title="Upload Payment/Collection Proof">
+                                <Button
+                                    type="text"
+                                    icon={<CameraOutlined style={{ color: '#52c41a' }} />}
+                                    onClick={() => onUploadProof(record)}
+                                />
+                            </Tooltip>
+                        )}
+                        {(record.status === 'processing' || record.status === 'collected') && (
                             <Tooltip title="Upload Report">
                                 <Button
                                     type="text"

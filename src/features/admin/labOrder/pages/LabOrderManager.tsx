@@ -4,6 +4,7 @@ import { PlusOutlined, ExperimentOutlined } from '@ant-design/icons';
 import { useSearchParams } from 'react-router-dom';
 import { useLabOrders } from '../hooks/useLabOrders';
 import { LabOrderTable, LabOrderFilters, LabOrderFormModal, LabOrderDetailDrawer, AssignAgentModal, ReportUploadModal } from '../components';
+import LabOrderProofModal from '../components/LabOrderProofModal';
 import type { LabOrder } from '../types/labOrder.types';
 
 import dayjs from 'dayjs';
@@ -43,6 +44,7 @@ const LabOrderManager: React.FC = () => {
     const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
     const [isAssignModalVisible, setIsAssignModalVisible] = useState(false);
     const [isUploadModalVisible, setIsUploadModalVisible] = useState(false);
+    const [isProofModalVisible, setIsProofModalVisible] = useState(false);
     const [visibleColumns, setVisibleColumns] = useState<string[]>([
         'order_info', 'patient', 'tests', 'agent', 'agent_assign', 'amount', 'status', 'actions'
     ]);
@@ -142,6 +144,11 @@ const LabOrderManager: React.FC = () => {
     const handleUploadReport = (order: LabOrder) => {
         setSelectedOrderId(order.id);
         setIsUploadModalVisible(true);
+    };
+
+    const handleUploadProof = (order: LabOrder) => {
+        setSelectedOrderId(order.id);
+        setIsProofModalVisible(true);
     };
 
     const onReportUpload = async (orderId: number, files: any[], results: any) => {
@@ -246,6 +253,7 @@ const LabOrderManager: React.FC = () => {
                         onLoadMore={loadMore}
                         onRowClick={handleRowClick}
                         onUploadReport={handleUploadReport}
+                        onUploadProof={handleUploadProof}
                         visibleColumns={visibleColumns}
                         scroll={{ y: tableHeight }}
                     />
@@ -281,6 +289,15 @@ const LabOrderManager: React.FC = () => {
                 order={selectedOrder}
                 onClose={() => setIsUploadModalVisible(false)}
                 onUpload={onReportUpload}
+            />
+
+            <LabOrderProofModal
+                visible={isProofModalVisible}
+                order={selectedOrder}
+                onClose={() => setIsProofModalVisible(false)}
+                onSuccess={() => {
+                    setFilters(prev => ({ ...prev }));
+                }}
             />
         </div>
     );

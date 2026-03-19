@@ -8,7 +8,8 @@ import {
     LogoutOutlined,
     MenuUnfoldOutlined,
     MenuFoldOutlined,
-    GlobalOutlined
+    GlobalOutlined,
+    MedicineBoxOutlined
 } from '@ant-design/icons';
 
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
@@ -46,6 +47,8 @@ const AdminLayout: React.FC = () => {
             setOpenKeys(['/lab-orders-parent']);
         } else if (location.pathname.startsWith('/collection-agents')) {
             setOpenKeys(['/collection-agents-parent']);
+        } else if (['/patients', '/doctors', '/consultations'].includes(location.pathname)) {
+            setOpenKeys(['/medical-network']);
         }
     }, [location.pathname]);
 
@@ -83,8 +86,16 @@ const AdminLayout: React.FC = () => {
 
     const menuItems = [
         { key: '/', icon: <DashboardOutlined />, label: 'Dashboard' },
-        { key: '/patients', icon: <UserOutlined />, label: 'Patients' },
-        { key: '/doctors', icon: <UserOutlined />, label: 'Doctors' },
+        {
+            key: '/medical-network',
+            icon: <MedicineBoxOutlined />,
+            label: 'Medical Network',
+            children: [
+                { key: '/patients', label: 'Patients Directory' },
+                { key: '/doctors', label: 'Doctors Directory' },
+                { key: '/consultations', label: 'Consultations' },
+            ]
+        },
         {
             key: '/lab-orders-parent',
             icon: <ExperimentOutlined />,

@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Card, Typography, Table, Tag, Space, Button, Input, message } from 'antd';
-import { CalendarOutlined, SearchOutlined, PhoneOutlined } from '@ant-design/icons';
-import apiClient from '@/config/apiClient';
+import { CalendarOutlined, SearchOutlined, PhoneOutlined, FileTextOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
 import colors from '@/styles/colors';
+import { appointmentService } from '../../appointments/services/appointmentService';
+import PrecautionModal from '../../appointments/components/PrecautionModal';
 
 const { Title, Text } = Typography;
 
@@ -10,13 +11,18 @@ const DoctorPatients: React.FC = () => {
     const [appointments, setAppointments] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchText, setSearchText] = useState('');
+    const [precautionModal, setPrecautionModal] = useState<{ visible: boolean; appointment: any }>({ visible: false, appointment: null });
+
+    const handlePrecautionSuccess = (appointmentId: number, precaution: string) => {
+        setAppointments(prev => prev.map(a => a.id === appointmentId ? { ...a, precaution } : a));
+    };
 
     useEffect(() => {
         const fetchAppointments = async () => {
             try {
-                const res = await apiClient.get('/appointments/doctor');
-                if (res.data?.success) {
-                    setAppointments(res.data.data);
+                const data = await appointmentService.getDoctorAppointments();
+                if (data?.success) {
+                    setAppointments(data.data);
                 }
             } catch (err) {
                 console.error('Failed to fetch appointments:', err);
@@ -39,6 +45,7 @@ const DoctorPatients: React.FC = () => {
         {
             title: 'Patient Details',
             key: 'patient',
+            width: 160,
             render: (_: any, record: any) => (
                 <Space direction="vertical" size={0}>
                     <Text strong>{record.patient?.full_name}</Text>
@@ -49,46 +56,89 @@ const DoctorPatients: React.FC = () => {
         {
             title: 'Contact',
             key: 'contact',
+            width: 140,
             render: (_: any, record: any) => (
                 <Space>
                     <PhoneOutlined />
-                    <Text>{record.patient?.phone}</Text>
+                    <Text style={{ whiteSpace: 'nowrap' }}>{record.patient?.phone || 'N/A'}</Text>
                 </Space>
             ),
         },
         {
             title: 'Appointment Time',
             key: 'datetime',
+            width: 160,
             render: (_: any, record: any) => (
                 <Space direction="vertical" size={0}>
                     <Space>
                         <CalendarOutlined style={{ color: colors.primary }} />
-                        <Text strong>{new Date(record.appointment_date).toLocaleDateString()}</Text>
+                        <Text strong style={{ whiteSpace: 'nowrap' }}>{new Date(record.appointment_date).toLocaleDateString()}</Text>
                     </Space>
-                    <Text type="secondary">{record.appointment_time}</Text>
+                    <Text type="secondary" style={{ whiteSpace: 'nowrap' }}>{record.appointment_time}</Text>
                 </Space>
             ),
         },
         {
             title: 'Concern / Notes',
-            dataIndex: 'notes',
             key: 'notes',
-            width: '30%',
+            width: '35%',
+            render: (_: any, record: any) => {
+                const text = record.notes || '';
+                const parts = text.split('Attached Report:');
+                const mainNote = parts[0]?.trim() || 'No notes provided';
+                const fileUrl = parts[1]?.trim();
+
+                return (
+                    <Space direction="vertical" size="small" style={{ width: '100%' }}>
+                        <Text>{mainNote}</Text>
+                        {fileUrl && (
+                            <Button 
+                                type="dashed" 
+                                size="small" 
+                                icon={<FileTextOutlined />}
+                                onClick={() => window.open(fileUrl, '_blank')}
+                                style={{ color: colors.primary, borderColor: colors.primary }}
+                            >
+                                View Attached Report
+                            </Button>
+                        )}
+                        {record.precaution && (
+                            <div style={{ marginTop: 8, padding: '8px 12px', backgroundColor: '#f6ffed', border: '1px solid #b7eb8f', borderRadius: 6 }}>
+                                <Text strong style={{ color: '#389e0d', display: 'block', marginBottom: 2 }}><SafetyCertificateOutlined /> Doctor Precaution:</Text>
+                                <Text type="secondary">{record.precaution}</Text>
+                            </div>
+                        )}
+                    </Space>
+                );
+            }
         },
         {
             title: 'Status',
             dataIndex: 'status',
             key: 'status',
+            width: 120,
             render: (status: string) => {
                 const color = status === 'scheduled' ? 'blue' : status === 'completed' ? 'green' : 'red';
-                return <Tag color={color}>{status.toUpperCase()}</Tag>;
+                return <Tag color={color} style={{ whiteSpace: 'nowrap', margin: 0 }}>{status.toUpperCase()}</Tag>;
             },
         },
         {
             title: 'Actions',
             key: 'actions',
-            render: () => (
-                <Button type="primary" size="small">Update Status</Button>
+            width: 160,
+            render: (_: any, record: any) => (
+                <Space direction="vertical">
+                    <Button type="default" size="small" block>Update Status</Button>
+                    <Button 
+                        type="primary" 
+                        size="small" 
+                        block
+                        icon={<SafetyCertificateOutlined />}
+                        onClick={() => setPrecautionModal({ visible: true, appointment: record })}
+                    >
+                        {record.precaution ? 'Edit Precaution' : 'Add Precaution'}
+                    </Button>
+                </Space>
             ),
         },
     ];
@@ -122,6 +172,13 @@ const DoctorPatients: React.FC = () => {
                     />
                 </div>
             </Card>
+
+            <PrecautionModal
+                open={precautionModal.visible}
+                appointment={precautionModal.appointment}
+                onClose={() => setPrecautionModal({ visible: false, appointment: null })}
+                onSuccess={handlePrecautionSuccess}
+            />
         </div>
     );
 };

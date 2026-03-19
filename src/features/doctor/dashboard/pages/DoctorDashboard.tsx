@@ -1,10 +1,12 @@
-import React, { useEffect, useState } from 'react';
-import { Row, Col, Card, Typography, Statistic, Button, Space, Table, Tag, message } from 'antd';
+import React, { useEffect, useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Row, Col, Card, Typography, Statistic, Button, Space, Table, Tag, message, Tooltip } from 'antd';
 import {
     UserOutlined,
     CheckCircleOutlined,
     MedicineBoxOutlined,
-    CalendarOutlined
+    CalendarOutlined,
+    BarChartOutlined
 } from '@ant-design/icons';
 import { useAuthStore } from '@/store/authStore';
 import colors from '@/styles/colors';
@@ -14,6 +16,7 @@ const { Title, Text } = Typography;
 
 const DoctorDashboard: React.FC = () => {
     const { user } = useAuthStore();
+    const navigate = useNavigate();
     const [appointments, setAppointments] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -71,7 +74,7 @@ const DoctorDashboard: React.FC = () => {
             title: 'Actions',
             key: 'actions',
             render: () => (
-                <Button type="link" size="small">View Details</Button>
+                <Button type="link" size="small" onClick={() => navigate('/doctor/patients')}>View Details</Button>
             ),
         },
     ];
@@ -105,25 +108,25 @@ const DoctorDashboard: React.FC = () => {
                 <Col xs={24} sm={12} lg={6}>
                     <Card bordered={false} className="shadow-sm" style={{ borderRadius: 12 }}>
                         <Statistic
-                            title="Completed Today"
-                            value={appointments.filter(a => a.status === 'completed' && new Date(a.appointment_date).toDateString() === new Date().toDateString()).length}
-                            prefix={<CheckCircleOutlined style={{ color: colors.warning }} />}
+                            title="Pending Consultations"
+                            value={appointments.filter(a => !a.precaution).length}
+                            prefix={<MedicineBoxOutlined style={{ color: colors.warning }} />}
                         />
                     </Card>
                 </Col>
                 <Col xs={24} sm={12} lg={6}>
                     <Card bordered={false} className="shadow-sm" style={{ borderRadius: 12 }}>
                         <Statistic
-                            title="Upcoming Today"
-                            value={appointments.filter(a => a.status === 'scheduled' && new Date(a.appointment_date).toDateString() === new Date().toDateString()).length}
-                            prefix={<MedicineBoxOutlined style={{ color: colors.danger }} />}
+                            title="Precautions Given"
+                            value={appointments.filter(a => !!a.precaution).length}
+                            prefix={<CheckCircleOutlined style={{ color: colors.success }} />}
                         />
                     </Card>
                 </Col>
 
                 <Col xs={24} lg={16}>
                     <Card
-                        title="Upcoming Consultations"
+                        title="Recent Consultations"
                         bordered={false}
                         className="shadow-sm"
                         style={{ borderRadius: 12 }}
@@ -139,17 +142,73 @@ const DoctorDashboard: React.FC = () => {
                 </Col>
 
                 <Col xs={24} lg={8}>
-                    <Card title="Quick Actions" bordered={false} className="shadow-sm" style={{ borderRadius: 12 }}>
-                        <Space direction="vertical" style={{ width: '100%' }}>
-                            <Button block size="large">Write Prescription</Button>
-                            <Button block size="large">View Lab Reports</Button>
-                            <Button block size="large">Update Availability</Button>
-                            <Button block size="large">Messaging Hub</Button>
-                        </Space>
-                    </Card>
+                    <WeeklyConsultationTrend appointments={appointments} />
                 </Col>
             </Row>
         </div>
+    );
+};
+
+const WeeklyConsultationTrend: React.FC<{ appointments: any[] }> = ({ appointments }) => {
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+    const weeklyData = useMemo(() => {
+        const counts = [0, 0, 0, 0, 0, 0, 0];
+        const last7Days = Array.from({ length: 7 }, (_, i) => {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            return d;
+        });
+
+        appointments.forEach(order => {
+            const orderDate = new Date(order.createdAt);
+            const index = last7Days.findIndex(d => 
+                d.getDate() === orderDate.getDate() && 
+                d.getMonth() === orderDate.getMonth() && 
+                d.getFullYear() === orderDate.getFullYear()
+            );
+            if (index !== -1) {
+                counts[6 - index]++;
+            }
+        });
+
+        const sortedDays = last7Days.reverse().map(d => days[d.getDay()]);
+        return { counts, labels: sortedDays };
+    }, [appointments]);
+
+    const maxCount = Math.max(...weeklyData.counts, 1);
+
+    return (
+        <Card
+            title={<Space><BarChartOutlined style={{ color: colors.info }} /> Consultation Activity</Space>}
+            bordered={false}
+            className="shadow-sm"
+            style={{ borderRadius: 12, height: '100%' }}
+        >
+            <div style={{ height: 260, display: 'flex', alignItems: 'flex-end', gap: '8%', padding: '10px 0 20px' }}>
+                {weeklyData.counts.map((count, i) => {
+                    const heightPct = Math.max((count / maxCount) * 100, 5);
+                    return (
+                        <Tooltip key={i} title={`${weeklyData.labels[i]}: ${count} Consultations`}>
+                            <div style={{
+                                flex: 1,
+                                height: `${heightPct}%`,
+                                background: i === 6 ? `linear-gradient(to top, ${colors.primary}, ${colors.info})` : `${colors.primary}20`,
+                                borderRadius: '4px 4px 0 0',
+                                transition: 'all 0.3s ease',
+                                cursor: 'pointer',
+                                position: 'relative'
+                            }} />
+                        </Tooltip>
+                    );
+                })}
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: `1px solid #f0f0f0`, paddingTop: 12 }}>
+                {weeklyData.labels.map((label, i) => (
+                    <Text key={i} type="secondary" style={{ fontSize: 10, fontWeight: i === 6 ? 700 : 400 }}>{label}</Text>
+                ))}
+            </div>
+        </Card>
     );
 };
 

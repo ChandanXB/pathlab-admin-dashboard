@@ -80,6 +80,25 @@ export const labOrderService = {
     },
 
     /**
+     * Upload sample collection and payment proof
+     */
+    uploadCollectionProof: async (
+        id: number, 
+        samplePhoto: string, 
+        paymentMode: string, 
+        paymentProof?: string, 
+        amountPaid?: number
+    ): Promise<{ success: boolean; data: LabOrder }> => {
+        const response = await apiClient.post(`/lab-orders/${id}/collection-proof`, {
+            samplePhoto,
+            paymentMode,
+            paymentProof,
+            amountPaid
+        });
+        return response.data;
+    },
+
+    /**
      * Upload lab reports and manual results
      */
     uploadReports: async (id: number, files: string[], results: any): Promise<{ success: boolean; data: LabOrder }> => {
