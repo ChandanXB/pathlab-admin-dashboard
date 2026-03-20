@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Typography, Table, Tag, Space, Button, Input, message } from 'antd';
-import { CalendarOutlined, SearchOutlined, PhoneOutlined, FileTextOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
+import type { MenuProps } from 'antd';
+import { Card, Typography, Table, Tag, Space, Button, Input, message, Dropdown } from 'antd';
+import { CalendarOutlined, SearchOutlined, PhoneOutlined, FileTextOutlined, SafetyCertificateOutlined, VideoCameraOutlined, DownOutlined, EditOutlined } from '@ant-design/icons';
 import colors from '@/styles/colors';
 import { appointmentService } from '../../appointments/services/appointmentService';
 import PrecautionModal from '../../appointments/components/PrecautionModal';
+import MeetLinkModal from '../../appointments/components/MeetLinkModal';
+import UpdateStatusModal from '../../appointments/components/UpdateStatusModal';
 
 const { Title, Text } = Typography;
 
@@ -12,9 +15,29 @@ const DoctorPatients: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [searchText, setSearchText] = useState('');
     const [precautionModal, setPrecautionModal] = useState<{ visible: boolean; appointment: any }>({ visible: false, appointment: null });
+    const [meetLinkModal, setMeetLinkModal] = useState<{ visible: boolean; appointment: any }>({ visible: false, appointment: null });
+    const [statusModal, setStatusModal] = useState<{ visible: boolean; appointment: any }>({ visible: false, appointment: null });
 
     const handlePrecautionSuccess = (appointmentId: number, precaution: string) => {
         setAppointments(prev => prev.map(a => a.id === appointmentId ? { ...a, precaution } : a));
+    };
+
+    const handleMeetLinkSuccess = (meetLink: string, newDate?: string, newTime?: string) => {
+        // Update the meet_link for ALL appointments (since the doctor has one standard link) 
+        // to avoid needing a page reload to use the new link on the next patient.
+        setAppointments(prev => prev.map(a => {
+            const isTarget = a.id === meetLinkModal.appointment?.id;
+            return {
+                ...a,
+                doctor: { ...a.doctor, meet_link: meetLink },
+                appointment_date: isTarget && newDate ? newDate : a.appointment_date,
+                appointment_time: isTarget && newTime ? newTime : a.appointment_time
+            };
+        }));
+    };
+
+    const handleStatusSuccess = (appointmentId: number, newStatus: string) => {
+        setAppointments(prev => prev.map(a => a.id === appointmentId ? { ...a, status: newStatus } : a));
     };
 
     useEffect(() => {
@@ -125,21 +148,40 @@ const DoctorPatients: React.FC = () => {
         {
             title: 'Actions',
             key: 'actions',
-            width: 160,
-            render: (_: any, record: any) => (
-                <Space direction="vertical">
-                    <Button type="default" size="small" block>Update Status</Button>
-                    <Button 
-                        type="primary" 
-                        size="small" 
-                        block
-                        icon={<SafetyCertificateOutlined />}
-                        onClick={() => setPrecautionModal({ visible: true, appointment: record })}
-                    >
-                        {record.precaution ? 'Edit Precaution' : 'Add Precaution'}
-                    </Button>
-                </Space>
-            ),
+            width: 140,
+            render: (_: any, record: any) => {
+                const items: MenuProps['items'] = [
+                    {
+                        key: 'status',
+                        label: 'Update Status',
+                        icon: <EditOutlined />,
+                        onClick: () => setStatusModal({ visible: true, appointment: record })
+                    },
+                    {
+                        key: 'precaution',
+                        label: record.precaution ? 'Edit Precaution' : 'Add Precaution',
+                        icon: <SafetyCertificateOutlined />,
+                        onClick: () => setPrecautionModal({ visible: true, appointment: record })
+                    },
+                    {
+                        type: 'divider',
+                    },
+                    {
+                        key: 'meet_link',
+                        label: 'Send Meet Link',
+                        icon: <VideoCameraOutlined style={{ color: colors.primary }} />,
+                        onClick: () => setMeetLinkModal({ visible: true, appointment: record })
+                    }
+                ];
+
+                return (
+                    <Dropdown menu={{ items }} trigger={['click']} placement="bottomRight">
+                        <Button type="primary" ghost size="small">
+                            Actions <DownOutlined />
+                        </Button>
+                    </Dropdown>
+                );
+            },
         },
     ];
 
@@ -178,6 +220,20 @@ const DoctorPatients: React.FC = () => {
                 appointment={precautionModal.appointment}
                 onClose={() => setPrecautionModal({ visible: false, appointment: null })}
                 onSuccess={handlePrecautionSuccess}
+            />
+
+            <MeetLinkModal
+                open={meetLinkModal.visible}
+                appointment={meetLinkModal.appointment}
+                onClose={() => setMeetLinkModal({ visible: false, appointment: null })}
+                onSuccess={handleMeetLinkSuccess}
+            />
+
+            <UpdateStatusModal
+                open={statusModal.visible}
+                appointment={statusModal.appointment}
+                onClose={() => setStatusModal({ visible: false, appointment: null })}
+                onSuccess={handleStatusSuccess}
             />
         </div>
     );

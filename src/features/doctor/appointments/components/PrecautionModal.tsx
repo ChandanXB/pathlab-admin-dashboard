@@ -13,18 +13,21 @@ interface PrecautionModalProps {
 }
 
 const PrecautionModal: React.FC<PrecautionModalProps> = ({ open, appointment, onClose, onSuccess }) => {
-    const [text, setText] = useState('');
+    const [existingText, setExistingText] = useState('');
+    const [newText, setNewText] = useState('');
     const [loading, setLoading] = useState(false);
     const [fileBase64, setFileBase64] = useState<string | null>(null);
     const [fileList, setFileList] = useState<any[]>([]);
 
     useEffect(() => {
         if (open && appointment) {
-            setText(appointment.precaution || '');
+            setExistingText(appointment.precaution || '');
+            setNewText('');
             setFileBase64(null);
             setFileList([]);
         } else {
-            setText('');
+            setExistingText('');
+            setNewText('');
             setFileBase64(null);
             setFileList([]);
         }
@@ -50,10 +53,24 @@ const PrecautionModal: React.FC<PrecautionModalProps> = ({ open, appointment, on
         if (!appointment) return;
         setLoading(true);
         try {
-            const data = await appointmentService.savePrecaution(appointment.id, text, fileBase64 || undefined);
+            let finalPrecaution = existingText;
+            if (newText.trim()) {
+                const timestamp = new Date().toLocaleString();
+                const newEntry = `[${timestamp}]\n${newText.trim()}`;
+                finalPrecaution = existingText ? `${existingText}\n\n${newEntry}` : newEntry;
+            }
+
+            // If nothing changed, just close
+            if (!newText.trim() && !fileBase64) {
+                onClose();
+                setLoading(false);
+                return;
+            }
+
+            const data = await appointmentService.savePrecaution(appointment.id, finalPrecaution, fileBase64 || undefined);
             if (data?.success) {
-                message.success('Precaution saved successfully');
-                onSuccess(appointment.id, text);
+                message.success('Precaution updated successfully');
+                onSuccess(appointment.id, finalPrecaution);
                 onClose();
             }
         } catch (error) {
@@ -72,16 +89,40 @@ const PrecautionModal: React.FC<PrecautionModalProps> = ({ open, appointment, on
             okText="Save Precaution"
             confirmLoading={loading}
             destroyOnClose
+            centered
         >
             <div style={{ paddingTop: 8 }}>
                 <Text type="secondary" style={{ display: 'block', marginBottom: 16 }}>
                     Review the patient's reports and provide any necessary precautions, advice, or medication instructions.
                 </Text>
+
+                {existingText && (
+                    <div style={{ marginBottom: 16 }}>
+                        <Text strong style={{ display: 'block', marginBottom: 8 }}>Previous Precautions & Notes</Text>
+                        <div style={{ 
+                            padding: '12px', 
+                            backgroundColor: '#f8fafc', 
+                            borderRadius: '8px',
+                            whiteSpace: 'pre-wrap',
+                            maxHeight: '180px',
+                            overflowY: 'auto',
+                            border: '1px solid #e2e8f0',
+                            fontSize: '14px',
+                            lineHeight: 1.6
+                        }}>
+                            {existingText}
+                        </div>
+                    </div>
+                )}
+
+                <Text strong style={{ display: 'block', marginBottom: 8 }}>
+                    {existingText ? 'Add New Precaution / Note' : 'Write Precaution / Note'}
+                </Text>
                 <Input.TextArea
-                    rows={6}
-                    placeholder="Write your clinical precautions here..."
-                    value={text}
-                    onChange={(e) => setText(e.target.value)}
+                    rows={4}
+                    placeholder="Write your new clinical precautions here..."
+                    value={newText}
+                    onChange={(e) => setNewText(e.target.value)}
                     style={{ resize: 'none' }}
                 />
 
