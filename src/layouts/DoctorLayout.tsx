@@ -11,6 +11,7 @@ import {
 import { useNavigate, useLocation, Outlet, Navigate } from 'react-router-dom';
 import colors from '@/styles/colors';
 import { useAuthStore } from '@/store/authStore';
+import MeetingBanner from '@/shared/components/MeetingBanner';
 
 const { Header, Content, Sider } = Layout;
 const { Text } = Typography;
@@ -20,6 +21,8 @@ const DoctorLayout: React.FC = () => {
     const [screenSize, setScreenSize] = useState(window.innerWidth);
     const navigate = useNavigate();
     const location = useLocation();
+
+    // Fetch auth from store
     const { user, logout, isAuthenticated } = useAuthStore();
 
     useEffect(() => {
@@ -176,6 +179,8 @@ const DoctorLayout: React.FC = () => {
                         </Dropdown>
                     </Space>
                 </Header>
+
+                <MeetingBanner />
 
                 <Content style={{
                     flex: 1,

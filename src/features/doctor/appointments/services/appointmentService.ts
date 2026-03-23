@@ -38,5 +38,25 @@ export const appointmentService = {
     updateStatus: async (id: number, status: string) => {
         const response = await apiClient.patch(`/appointments/${id}/status`, { status });
         return response.data;
+    },
+
+    /**
+     * Reschedule an appointment and notify the patient
+     * @param id The ID of the appointment
+     * @param payload new date, time, and optional reason
+     */
+    rescheduleAppointment: async (id: number, payload: { date: string; time: string; reason?: string }) => {
+        const response = await apiClient.patch(`/appointments/${id}/reschedule`, payload);
+        return response.data;
+    },
+
+    /**
+     * Cancel an appointment and notify the patient
+     * @param id The ID of the appointment
+     * @param payload optional cancellation reason
+     */
+    cancelAppointment: async (id: number, payload: { reason?: string }) => {
+        const response = await apiClient.patch(`/appointments/${id}/cancel`, payload);
+        return response.data;
     }
 };

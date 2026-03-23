@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import type { MenuProps } from 'antd';
 import { Card, Typography, Table, Tag, Space, Button, Input, message, Dropdown } from 'antd';
-import { CalendarOutlined, SearchOutlined, PhoneOutlined, FileTextOutlined, SafetyCertificateOutlined, VideoCameraOutlined, DownOutlined, EditOutlined } from '@ant-design/icons';
+import { CalendarOutlined, SearchOutlined, PhoneOutlined, FileTextOutlined, SafetyCertificateOutlined, VideoCameraOutlined, DownOutlined, EditOutlined, CloseCircleOutlined } from '@ant-design/icons';
 import colors from '@/styles/colors';
 import { appointmentService } from '../../appointments/services/appointmentService';
 import PrecautionModal from '../../appointments/components/PrecautionModal';
 import MeetLinkModal from '../../appointments/components/MeetLinkModal';
 import UpdateStatusModal from '../../appointments/components/UpdateStatusModal';
+import RescheduleModal from '../../appointments/components/RescheduleModal';
+import CancelModal from '../../appointments/components/CancelModal';
 
 const { Title, Text } = Typography;
 
@@ -17,14 +19,14 @@ const DoctorPatients: React.FC = () => {
     const [precautionModal, setPrecautionModal] = useState<{ visible: boolean; appointment: any }>({ visible: false, appointment: null });
     const [meetLinkModal, setMeetLinkModal] = useState<{ visible: boolean; appointment: any }>({ visible: false, appointment: null });
     const [statusModal, setStatusModal] = useState<{ visible: boolean; appointment: any }>({ visible: false, appointment: null });
+    const [rescheduleModal, setRescheduleModal] = useState<{ visible: boolean; appointment: any }>({ visible: false, appointment: null });
+    const [cancelModal, setCancelModal] = useState<{ visible: boolean; appointment: any }>({ visible: false, appointment: null });
 
     const handlePrecautionSuccess = (appointmentId: number, precaution: string) => {
         setAppointments(prev => prev.map(a => a.id === appointmentId ? { ...a, precaution } : a));
     };
 
     const handleMeetLinkSuccess = (meetLink: string, newDate?: string, newTime?: string) => {
-        // Update the meet_link for ALL appointments (since the doctor has one standard link) 
-        // to avoid needing a page reload to use the new link on the next patient.
         setAppointments(prev => prev.map(a => {
             const isTarget = a.id === meetLinkModal.appointment?.id;
             return {
@@ -38,6 +40,14 @@ const DoctorPatients: React.FC = () => {
 
     const handleStatusSuccess = (appointmentId: number, newStatus: string) => {
         setAppointments(prev => prev.map(a => a.id === appointmentId ? { ...a, status: newStatus } : a));
+    };
+
+    const handleRescheduleSuccess = (appointmentId: number, newDate: string, newTime: string) => {
+        setAppointments(prev => prev.map(a => a.id === appointmentId ? { ...a, appointment_date: newDate, appointment_time: newTime, status: 'scheduled' } : a));
+    };
+
+    const handleCancelSuccess = (appointmentId: number) => {
+        setAppointments(prev => prev.map(a => a.id === appointmentId ? { ...a, status: 'cancelled' } : a));
     };
 
     useEffect(() => {
@@ -164,15 +174,29 @@ const DoctorPatients: React.FC = () => {
                         onClick: () => setPrecautionModal({ visible: true, appointment: record })
                     },
                     {
-                        type: 'divider',
-                    },
-                    {
                         key: 'meet_link',
                         label: 'Send Meet Link',
                         icon: <VideoCameraOutlined style={{ color: colors.primary }} />,
                         onClick: () => setMeetLinkModal({ visible: true, appointment: record })
                     }
                 ];
+
+                if (record.status === 'scheduled') {
+                    items.push({ type: 'divider' });
+                    items.push({
+                        key: 'reschedule',
+                        label: 'Reschedule',
+                        icon: <CalendarOutlined style={{ color: '#f59e0b' }} />,
+                        onClick: () => setRescheduleModal({ visible: true, appointment: record })
+                    });
+                    items.push({
+                        key: 'cancel',
+                        label: 'Cancel',
+                        icon: <CloseCircleOutlined style={{ color: '#ef4444' }} />,
+                        danger: true,
+                        onClick: () => setCancelModal({ visible: true, appointment: record })
+                    });
+                }
 
                 return (
                     <Dropdown menu={{ items }} trigger={['click']} placement="bottomRight">
@@ -234,6 +258,20 @@ const DoctorPatients: React.FC = () => {
                 appointment={statusModal.appointment}
                 onClose={() => setStatusModal({ visible: false, appointment: null })}
                 onSuccess={handleStatusSuccess}
+            />
+
+            <RescheduleModal
+                open={rescheduleModal.visible}
+                appointment={rescheduleModal.appointment}
+                onClose={() => setRescheduleModal({ visible: false, appointment: null })}
+                onSuccess={handleRescheduleSuccess}
+            />
+
+            <CancelModal
+                open={cancelModal.visible}
+                appointment={cancelModal.appointment}
+                onClose={() => setCancelModal({ visible: false, appointment: null })}
+                onSuccess={handleCancelSuccess}
             />
         </div>
     );

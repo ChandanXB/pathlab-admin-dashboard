@@ -20,7 +20,7 @@ interface ReportUploadModalProps {
     visible: boolean;
     order: LabOrder | null;
     onClose: () => void;
-    onUpload: (orderId: number, files: string[], results: any) => Promise<any>;
+    onUpload: (orderId: number, files: string[], results: any, report_notes?: string) => Promise<any>;
 }
 
 const ReportUploadModal: React.FC<ReportUploadModalProps> = ({ visible, order, onClose, onUpload }) => {
@@ -74,7 +74,10 @@ const ReportUploadModal: React.FC<ReportUploadModalProps> = ({ visible, order, o
                     clinical_status: tr.clinical_status || 'normal'
                 };
             });
-            form.setFieldsValue({ results });
+            form.setFieldsValue({ 
+                results, 
+                report_notes: order.report_notes || '' 
+            });
             setFileList([]);
             setPreviewType('none');
             setPreviewContent('');
@@ -226,7 +229,7 @@ const ReportUploadModal: React.FC<ReportUploadModalProps> = ({ visible, order, o
             const values = await form.validateFields();
             setUploading(true);
             const base64Files = await Promise.all(fileList.map(f => fileToBase64(f.originFileObj || f)));
-            await onUpload(order.id, base64Files, values.results);
+            await onUpload(order.id, base64Files, values.results, values.report_notes);
             message.success('Report and results submitted successfully!');
             onClose();
         } catch (error) {
@@ -532,6 +535,24 @@ const ReportUploadModal: React.FC<ReportUploadModalProps> = ({ visible, order, o
                                         </Form.Item>
                                     </Card>
                                 ))}
+
+                                <Card
+                                    size="small"
+                                    style={{ marginTop: 12, border: '1px solid #f0f0f0', borderRadius: 10, boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}
+                                    bodyStyle={{ padding: '12px' }}
+                                    title={<Text strong style={{ fontSize: 13, color: '#262626' }}>Report Notes (Optional)</Text>}
+                                >
+                                    <Form.Item
+                                        name="report_notes"
+                                        style={{ marginBottom: 0 }}
+                                    >
+                                        <Input.TextArea
+                                            placeholder="Enter any additional notes about this lab report for the patient..."
+                                            autoSize={{ minRows: 3, maxRows: 6 }}
+                                            style={{ borderRadius: 6 }}
+                                        />
+                                    </Form.Item>
+                                </Card>
                             </Form>
                         </div>
                     </div>
