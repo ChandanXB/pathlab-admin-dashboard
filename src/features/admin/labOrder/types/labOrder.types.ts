@@ -30,6 +30,7 @@ export interface LabOrder {
     signature_url?: string; // Legacy
     payment_mode?: string;
     payment_proof_url?: string;
+    report_notes?: string;
     collected_at?: string;
     createdAt: string;
     updatedAt: string;

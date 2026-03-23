@@ -151,8 +151,8 @@ const LabOrderManager: React.FC = () => {
         setIsProofModalVisible(true);
     };
 
-    const onReportUpload = async (orderId: number, files: any[], results: any) => {
-        return await uploadReports(orderId, files, results);
+    const onReportUpload = async (orderId: number, files: any[], results: any, report_notes?: string) => {
+        return await uploadReports(orderId, files, results, report_notes);
     };
 
     const columnOptions = [

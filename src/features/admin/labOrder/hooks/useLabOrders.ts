@@ -152,10 +152,10 @@ export const useLabOrders = (initialFilters: LabOrderQueryParams = { page: 1, li
         }
     };
 
-    const uploadReports = async (id: number, files: string[], results: any) => {
+    const uploadReports = async (id: number, files: string[], results: any, report_notes?: string) => {
         try {
             setSubmitting(true);
-            const response = await labOrderService.uploadReports(id, files, results);
+            const response = await labOrderService.uploadReports(id, files, results, report_notes);
             if (response.success) {
                 setOrders(prev => prev.map(o => o.id === id ? response.data : o));
                 return true;

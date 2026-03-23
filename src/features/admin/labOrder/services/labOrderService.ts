@@ -101,8 +101,8 @@ export const labOrderService = {
     /**
      * Upload lab reports and manual results
      */
-    uploadReports: async (id: number, files: string[], results: any): Promise<{ success: boolean; data: LabOrder }> => {
-        const response = await apiClient.post(`/lab-orders/${id}/reports`, { files, results });
+    uploadReports: async (id: number, files: string[], results: any, report_notes?: string): Promise<{ success: boolean; data: LabOrder }> => {
+        const response = await apiClient.post(`/lab-orders/${id}/reports`, { files, results, report_notes });
         return response.data;
     },
 
