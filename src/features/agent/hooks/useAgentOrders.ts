@@ -43,7 +43,7 @@ export const useAgentOrders = () => {
     // --- Derived Stats ---
     const activeOrders = orders.filter(o => o.status !== 'completed' && o.status !== 'cancelled');
     const pendingOrders = orders.filter(o => o.assignment_status === 'pending');
-    const acceptedOrders = orders.filter(o => o.assignment_status === 'accepted' || o.assignment_status === 'picking_up');
+    const acceptedOrders = orders.filter(o => o.assignment_status === 'accepted' || o.assignment_status === 'picking_up' || o.assignment_status === 'reached');
     const collectedOrders = orders.filter(o => o.assignment_status === 'collected' || o.status === 'collected');
     const completedOrders = orders.filter(o => o.status === 'completed');
 

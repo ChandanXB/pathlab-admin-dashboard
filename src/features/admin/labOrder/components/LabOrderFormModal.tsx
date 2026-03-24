@@ -142,6 +142,8 @@ const LabOrderFormModal: React.FC<LabOrderFormModalProps> = ({
             width={800}
             okText={editingOrder ? 'Update Order' : 'Create Order'}
             confirmLoading={submitting}
+            style={{ top: 20 }}
+            centered={false}
         >
             <Form form={form} layout="vertical" onFinish={onSubmit} initialValues={{
                 priority: 'normal',
