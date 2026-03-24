@@ -28,26 +28,26 @@ const DoctorFormModal: React.FC<DoctorFormModalProps> = ({
             onOk={onOk}
             onCancel={onCancel}
             okText={editingDoctor ? "Update" : "Onboard"}
-            width={600}
+            width={850}
+            centered={true}
         >
             <Form
                 form={form}
                 layout="vertical"
                 initialValues={{ status: 'active' }}
             >
-                <Form.Item
-                    name="name"
-                    label="Full Name"
-                    rules={[{ required: true, message: 'Please enter doctor name' }]}
-                >
-                    <Input placeholder="Dr. John Doe" />
-                </Form.Item>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0 16px' }}>
+                    <Form.Item
+                        name="name"
+                        label="Full Name"
+                        rules={[{ required: true, message: 'Please enter doctor name' }]}
+                    >
+                        <Input placeholder="Dr. John Doe" />
+                    </Form.Item>
 
-                <div style={{ display: 'flex', gap: 16 }}>
                     <Form.Item
                         name="specialty"
                         label="Specialty"
-                        style={{ flex: 1 }}
                         rules={[{ required: true, message: 'Please enter specialty' }]}
                     >
                         <Input placeholder="e.g. Cardiologist" />
@@ -56,7 +56,6 @@ const DoctorFormModal: React.FC<DoctorFormModalProps> = ({
                     <Form.Item
                         name="status"
                         label="Status"
-                        style={{ flex: 1 }}
                     >
                         <Select>
                             {ACCOUNT_STATUSES.map(as => (
@@ -64,42 +63,10 @@ const DoctorFormModal: React.FC<DoctorFormModalProps> = ({
                             ))}
                         </Select>
                     </Form.Item>
-                </div>
 
-                <div style={{ display: 'flex', gap: 16 }}>
-                    <Form.Item
-                        name="address"
-                        label="Address"
-                        style={{ flex: 1 }}
-                        rules={[{ required: true, message: 'Please enter address' }]}
-                    >
-                        <Input placeholder="Clinic or Hospital Address" />
-                    </Form.Item>
-
-                    <Form.Item
-                        name="experience_years"
-                        label="Experience (Years)"
-                        style={{ flex: 1 }}
-                    >
-                        <Input type="number" placeholder="e.g. 10" />
-                    </Form.Item>
-                </div>
-
-                <div style={{ display: 'flex', gap: 16 }}>
-                    <Form.Item
-                        name="bio"
-                        label="About Doctor"
-                        style={{ flex: 1 }}
-                    >
-                        <Input.TextArea rows={3} placeholder="Brief description about the doctor..." />
-                    </Form.Item>
-                </div>
-
-                <div style={{ display: 'flex', gap: 16 }}>
                     <Form.Item
                         name="phone"
                         label="Phone Number"
-                        style={{ flex: 1 }}
                         rules={[{ required: true, message: 'Please enter phone number' }]}
                         getValueFromEvent={(e) => {
                             let val = e.target.value.replace(/[^\d+]/g, '');
@@ -114,7 +81,6 @@ const DoctorFormModal: React.FC<DoctorFormModalProps> = ({
                     <Form.Item
                         name="email"
                         label="Email Address (Login ID)"
-                        style={{ flex: 1 }}
                         rules={[
                             { required: true, message: 'Please enter email' },
                             { type: 'email', message: 'Invalid email' }
@@ -122,17 +88,41 @@ const DoctorFormModal: React.FC<DoctorFormModalProps> = ({
                     >
                         <Input type="email" placeholder="doctor@example.com" />
                     </Form.Item>
+
+                    <Form.Item
+                        name="experience_years"
+                        label="Experience (Years)"
+                    >
+                        <Input type="number" placeholder="e.g. 10" />
+                    </Form.Item>
                 </div>
 
-                {!editingDoctor && (
+                <div style={{ display: 'grid', gridTemplateColumns: editingDoctor ? '1fr' : '2fr 1fr', gap: '0 16px' }}>
                     <Form.Item
-                        name="password"
-                        label="Login Password"
-                        rules={[{ required: true, message: 'Please set a login password' }]}
+                        name="address"
+                        label="Clinic Address"
+                        rules={[{ required: true, message: 'Please enter address' }]}
                     >
-                        <Input.Password placeholder="Default password for first login" />
+                        <Input placeholder="Clinic or Hospital Address" />
                     </Form.Item>
-                )}
+
+                    {!editingDoctor && (
+                        <Form.Item
+                            name="password"
+                            label="Login Password"
+                            rules={[{ required: true, message: 'Please set a login password' }]}
+                        >
+                            <Input.Password placeholder="Default password for first login" />
+                        </Form.Item>
+                    )}
+                </div>
+
+                <Form.Item
+                    name="bio"
+                    label="About Doctor"
+                >
+                    <Input.TextArea rows={3} placeholder="Brief description about the doctor..." />
+                </Form.Item>
             </Form>
         </SharedModal>
     );

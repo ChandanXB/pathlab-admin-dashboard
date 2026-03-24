@@ -18,9 +18,17 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles 
     }
 
     // Check if user has permission
-    if (allowedRoles && user && !allowedRoles.includes(user.role.name)) {
-        // Redirect to home page if they don't have the right role
-        return <Navigate to="/" replace />;
+    if (allowedRoles && user && !allowedRoles.includes(user?.role?.name)) {
+        // Prevent infinite loops by redirecting to appropriate role-based dashboard
+        if (user?.role?.name === 'COLLECTION_AGENT') {
+            return <Navigate to="/agent" replace />;
+        }
+        if (user?.role?.name === 'DOCTOR') {
+            return <Navigate to="/doctor" replace />;
+        }
+        
+        // If role doesn't match any known portal, return to login safely
+        return <Navigate to="/login" replace />;
     }
 
     // User is authenticated and authorized

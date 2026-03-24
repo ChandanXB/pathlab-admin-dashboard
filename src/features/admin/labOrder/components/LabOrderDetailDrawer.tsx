@@ -11,7 +11,6 @@ import {
     BarcodeOutlined,
     PhoneOutlined,
     UserAddOutlined,
-    GlobalOutlined,
     ShopOutlined,
     FileImageOutlined,
     FilePdfOutlined,
@@ -139,9 +138,7 @@ const LabOrderDetailDrawer: React.FC<LabOrderDetailDrawerProps> = ({ visible, or
                         </Tag>
 
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', justifyContent: 'flex-end' }}>
-                            <Tag color="cyan" icon={<GlobalOutlined />} style={{ borderRadius: '6px', margin: 0 }}>
-                                {order.order_source?.replace('_', ' ').toUpperCase() || 'WALK-IN'}
-                            </Tag>
+
                             <Tag color="blue" icon={<ShopOutlined />} style={{ borderRadius: '6px', margin: 0 }}>
                                 {order.order_type?.replace('_', ' ').toUpperCase() || 'LAB VISIT'}
                             </Tag>

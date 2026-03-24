@@ -15,12 +15,16 @@ const Login: React.FC = () => {
 
     useEffect(() => {
         if (isAuthenticated && user) {
-            if (user.role.name === 'COLLECTION_AGENT') {
+            const roleName = user?.role?.name;
+            if (roleName === 'COLLECTION_AGENT') {
                 navigate('/agent', { replace: true });
-            } else if (user.role.name === 'DOCTOR') {
+            } else if (roleName === 'DOCTOR') {
                 navigate('/doctor', { replace: true });
-            } else {
+            } else if (roleName && ['admin', 'superadmin', 'ADMIN'].includes(roleName)) {
                 navigate('/', { replace: true });
+            } else {
+                useAuthStore.getState().logout();
+                message.error('Unauthorized Access: Role is not permitted in Admin Portal.');
             }
         }
     }, [isAuthenticated, user, navigate]);
@@ -32,13 +36,16 @@ const Login: React.FC = () => {
             message.success('Login successful');
 
             // Result is stored in Zustand, navigate based on role
-            const role = result.data.user.role.name;
-            if (role === 'COLLECTION_AGENT') {
+            const roleName = result.data.user.role?.name;
+            if (roleName === 'COLLECTION_AGENT') {
                 navigate('/agent');
-            } else if (role === 'DOCTOR') {
+            } else if (roleName === 'DOCTOR') {
                 navigate('/doctor');
-            } else {
+            } else if (roleName && ['admin', 'superadmin', 'ADMIN'].includes(roleName)) {
                 navigate('/');
+            } else {
+                useAuthStore.getState().logout();
+                message.error('Unauthorized Access: Role is not permitted in Admin Portal.');
             }
         } catch (error: any) {
             console.error('Login failed:', error);

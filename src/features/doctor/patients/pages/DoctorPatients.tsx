@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import type { MenuProps } from 'antd';
-import { Card, Typography, Table, Tag, Space, Button, Input, message, Dropdown } from 'antd';
+import { Card, Typography, Tag, Space, Button, Input, message, Dropdown } from 'antd';
 import { CalendarOutlined, SearchOutlined, PhoneOutlined, FileTextOutlined, SafetyCertificateOutlined, VideoCameraOutlined, DownOutlined, EditOutlined, CloseCircleOutlined } from '@ant-design/icons';
 import colors from '@/styles/colors';
 import { appointmentService } from '../../appointments/services/appointmentService';
@@ -9,6 +9,7 @@ import MeetLinkModal from '../../appointments/components/MeetLinkModal';
 import UpdateStatusModal from '../../appointments/components/UpdateStatusModal';
 import RescheduleModal from '../../appointments/components/RescheduleModal';
 import CancelModal from '../../appointments/components/CancelModal';
+import InfiniteScrollTable from '@/shared/components/InfiniteScrollTable';
 
 const { Title, Text } = Typography;
 
@@ -21,6 +22,13 @@ const DoctorPatients: React.FC = () => {
     const [statusModal, setStatusModal] = useState<{ visible: boolean; appointment: any }>({ visible: false, appointment: null });
     const [rescheduleModal, setRescheduleModal] = useState<{ visible: boolean; appointment: any }>({ visible: false, appointment: null });
     const [cancelModal, setCancelModal] = useState<{ visible: boolean; appointment: any }>({ visible: false, appointment: null });
+
+    const [page, setPage] = useState(1);
+    const PAGE_SIZE = 10;
+
+    useEffect(() => {
+        setPage(1);
+    }, [searchText]);
 
     const handlePrecautionSuccess = (appointmentId: number, precaution: string) => {
         setAppointments(prev => prev.map(a => a.id === appointmentId ? { ...a, precaution } : a));
@@ -68,11 +76,19 @@ const DoctorPatients: React.FC = () => {
         fetchAppointments();
     }, []);
 
-    const filteredAppointments = appointments.filter(apt => 
-        apt.patient?.full_name?.toLowerCase().includes(searchText.toLowerCase()) || 
-        apt.patient?.patient_code?.toLowerCase().includes(searchText.toLowerCase()) ||
-        apt.notes?.toLowerCase().includes(searchText.toLowerCase())
-    );
+    const filteredAppointments = [...appointments]
+        .filter(apt => 
+            apt.patient?.full_name?.toLowerCase().includes(searchText.toLowerCase()) || 
+            apt.patient?.patient_code?.toLowerCase().includes(searchText.toLowerCase()) ||
+            apt.notes?.toLowerCase().includes(searchText.toLowerCase())
+        )
+        .sort((a, b) => {
+            const timeA = new Date(`${new Date(a.appointment_date).toDateString()} ${a.appointment_time}`).getTime();
+            const timeB = new Date(`${new Date(b.appointment_date).toDateString()} ${b.appointment_time}`).getTime();
+            return timeB - timeA; // Descending order (newest first)
+        });
+
+    const displayedAppointments = filteredAppointments.slice(0, page * PAGE_SIZE);
 
     const columns = [
         {
@@ -210,14 +226,14 @@ const DoctorPatients: React.FC = () => {
     ];
 
     return (
-        <div style={{ padding: '0 0 24px 0', height: '100%', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ marginBottom: 24 }}>
+        <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <div style={{ marginBottom: 24, flexShrink: 0 }}>
                 <Title level={2} style={{ margin: 0 }}>My Patients & Appointments</Title>
                 <Text type="secondary">Manage your consultation requests and upcoming patient visits.</Text>
             </div>
 
-            <Card styles={{ body: { padding: '24px', flex: 1, display: 'flex', flexDirection: 'column' } }} style={{ flex: 1, display: 'flex', flexDirection: 'column', borderRadius: 12 }} className="shadow-sm">
-                <div style={{ marginBottom: 16 }}>
+            <Card styles={{ body: { padding: '24px', flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' } }} style={{ flex: 1, display: 'flex', flexDirection: 'column', borderRadius: 12, overflow: 'hidden', minHeight: 0 }} className="shadow-sm">
+                <div style={{ marginBottom: 16, flexShrink: 0 }}>
                     <Input
                         placeholder="Search by patient name, ID or concern..."
                         prefix={<SearchOutlined />}
@@ -228,13 +244,15 @@ const DoctorPatients: React.FC = () => {
                     />
                 </div>
 
-                <div style={{ flex: 1, overflow: 'auto' }}>
-                    <Table
+                <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+                    <InfiniteScrollTable
                         columns={columns}
-                        dataSource={filteredAppointments}
+                        dataSource={displayedAppointments}
                         rowKey="id"
                         loading={loading}
-                        pagination={{ pageSize: 10 }}
+                        hasMore={displayedAppointments.length < filteredAppointments.length}
+                        next={() => setPage(p => p + 1)}
+                        scroll={{ y: 'calc(100vh - 380px)' }}
                     />
                 </div>
             </Card>

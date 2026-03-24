@@ -335,11 +335,21 @@ const AgentDashboard: React.FC = () => {
                                         <Button
                                             type="primary"
                                             size="small"
+                                            icon={<EnvironmentOutlined />}
+                                            onClick={(e) => { e.stopPropagation(); markReached(item.id); }}
+                                            style={{ background: '#faad14', borderColor: '#faad14', borderRadius: '12px', fontWeight: 600 }}
+                                        >
+                                            Reached
+                                        </Button>
+                                    ) : item.assignment_status === 'reached' ? (
+                                        <Button
+                                            type="primary"
+                                            size="small"
                                             icon={<SendOutlined />}
-                                            onClick={(e) => { e.stopPropagation(); markCollected(item.id); }}
+                                            onClick={(e) => { e.stopPropagation(); openDrawer(item); }}
                                             style={{ background: colors.status.processing, borderColor: colors.status.processing, borderRadius: '12px', fontWeight: 600 }}
                                         >
-                                            Collected
+                                            Collect
                                         </Button>
                                     ) : (
                                         <Tag color="success" style={{ borderRadius: '10px', padding: '2px 10px', border: 'none', background: colors.stats.tests }}>
