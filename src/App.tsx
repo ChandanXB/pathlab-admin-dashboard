@@ -13,7 +13,6 @@ import CollectionAgentManager from '@/features/admin/collectionAgent/pages/Colle
 import AgentProfilePage from '@/features/admin/collectionAgent/pages/AgentProfilePage';
 import DoctorManager from '@/features/admin/doctors/pages/DoctorManager';
 import CityManager from '@/features/admin/locations/pages/CityManager';
-import ConsultationManager from '@/features/admin/consultations/pages/ConsultationManager';
 import ProtectedRoute from '@/shared/components/ProtectedRoute';
 import AdminLayout from '@/layouts/AdminLayout';
 import AgentLayout from '@/layouts/AgentLayout';
@@ -23,6 +22,7 @@ import AgentPickups from '@/features/agent/pickups/pages/AgentPickups';
 import AgentProfile from '@/features/agent/profile/pages/AgentProfile';
 import DoctorDashboard from '@/features/doctor/dashboard/pages/DoctorDashboard';
 import DoctorPatients from '@/features/doctor/patients/pages/DoctorPatients';
+import DoctorProfile from '@/features/doctor/profile/pages/DoctorProfile';
 
 function App() {
   return (
@@ -47,7 +47,6 @@ function App() {
               <Route path="collection-agents" element={<CollectionAgentManager />} />
               <Route path="collection-agents/:id" element={<AgentProfilePage />} />
               <Route path="doctors" element={<DoctorManager />} />
-              <Route path="consultations" element={<ConsultationManager />} />
               <Route path="service-cities" element={<CityManager />} />
               {/* Fallback for development/typos */}
               <Route path="*" element={<Navigate to="/" replace />} />
@@ -78,6 +77,7 @@ function App() {
             >
               <Route index element={<DoctorDashboard />} />
               <Route path="patients" element={<DoctorPatients />} />
+              <Route path="profile" element={<DoctorProfile />} />
             </Route>
           </Routes>
         </BrowserRouter>

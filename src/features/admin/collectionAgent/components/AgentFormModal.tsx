@@ -1,5 +1,5 @@
 import React from 'react';
-import { Form, Input, Select, Divider, Typography, Space, Tabs } from 'antd';
+import { Form, Input, Select, Divider, Typography, Space, Tabs, Upload, message } from 'antd';
 import {
     EnvironmentTwoTone,
     PhoneOutlined,
@@ -8,7 +8,8 @@ import {
     CarOutlined,
     UserAddOutlined,
     CompassOutlined,
-    FormOutlined
+    FormOutlined,
+    UploadOutlined
 } from '@ant-design/icons';
 import type { CollectionAgent } from '../services/collectionAgentService';
 import SharedModal from '@/shared/components/SharedModal';
@@ -42,6 +43,26 @@ const AgentFormModal: React.FC<AgentFormModalProps> = ({
         });
     };
 
+    const fileToBase64 = (file: File): Promise<string> => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = (error) => reject(error);
+        });
+    };
+
+    const handleFileUpload = async (file: File) => {
+        try {
+            const base64 = await fileToBase64(file);
+            form.setFieldsValue({ profile_image: base64 });
+            return false;
+        } catch (error) {
+            message.error('Failed to process image');
+            return Upload.LIST_IGNORE;
+        }
+    };
+
     return (
         <SharedModal
             title={editingAgent ? "Edit Collection Agent" : "Add New Collection Agent"}
@@ -56,13 +77,37 @@ const AgentFormModal: React.FC<AgentFormModalProps> = ({
                 layout="vertical"
                 initialValues={{ status: 'active' }}
             >
-                <div style={{ display: 'flex', gap: 16 }}>
-                    <Form.Item
-                        name="name"
-                        label="Full Name"
-                        style={{ flex: 1 }}
-                        rules={[{ required: true, message: 'Please enter agent name' }]}
+                <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+                    <Form.Item 
+                        name="profile_image" 
+                        label="Profile Photo"
+                        getValueFromEvent={() => {
+                            // AntD Upload throws an event, we ignore it and return the string we set manually
+                            return form.getFieldValue('profile_image');
+                        }}
                     >
+                        <Upload
+                            maxCount={1}
+                            beforeUpload={handleFileUpload}
+                            accept="image/*"
+                            showUploadList={false}
+                            listType="picture-card"
+                            style={{ width: '100px', height: '100px' }}
+                        >
+                            {form.getFieldValue('profile_image') ? (
+                                <img src={form.getFieldValue('profile_image')} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }} />
+                            ) : (
+                                <div><UploadOutlined /><div style={{ marginTop: 8 }}>Upload</div></div>
+                            )}
+                        </Upload>
+                    </Form.Item>
+                    
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                        <Form.Item
+                            name="name"
+                            label="Full Name"
+                            rules={[{ required: true, message: 'Please enter agent name' }]}
+                        >
                         <Input prefix={<UserAddOutlined style={{ color: '#bfbfbf' }} />} placeholder="Agent's full name" />
                     </Form.Item>
                     <Form.Item
@@ -73,17 +118,17 @@ const AgentFormModal: React.FC<AgentFormModalProps> = ({
                     >
                         <Input prefix={<PhoneOutlined style={{ color: '#bfbfbf' }} />} placeholder="e.g. +91 9876543210" />
                     </Form.Item>
-                    <Form.Item
-                        name="email"
-                        label="Email Address"
-                        style={{ flex: 1 }}
-                        rules={[
-                            { required: true, message: 'Please enter email' },
-                            { type: 'email', message: 'Invalid email' }
-                        ]}
-                    >
-                        <Input prefix={<MailOutlined style={{ color: '#bfbfbf' }} />} type="email" placeholder="example@pathlab.com" />
-                    </Form.Item>
+                        <Form.Item
+                            name="email"
+                            label="Email Address"
+                            rules={[
+                                { required: true, message: 'Please enter email' },
+                                { type: 'email', message: 'Invalid email' }
+                            ]}
+                        >
+                            <Input prefix={<MailOutlined style={{ color: '#bfbfbf' }} />} type="email" placeholder="example@pathlab.com" />
+                        </Form.Item>
+                    </div>
                 </div>
 
                 {!editingAgent && (

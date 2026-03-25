@@ -1,9 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Card, Button, Form } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+import { PlusOutlined, UnorderedListOutlined, MedicineBoxOutlined } from '@ant-design/icons';
 import { usePatients } from '../hooks/usePatients';
 import { PatientTable, PatientFilters, PatientFormModal, PatientDetailDrawer } from '../components';
 import type { Patient } from '../types/patient.types';
+import ConsultationManager from '../../consultations/pages/ConsultationManager';
+import { Tabs } from 'antd';
 
 const PatientManager: React.FC = () => {
     const {
@@ -24,6 +26,54 @@ const PatientManager: React.FC = () => {
     const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
     const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
     const [form] = Form.useForm();
+
+    const groupedPatients = useMemo(() => {
+        const userToPatientMap = new Map<number, Patient>();
+        const allNodes = patients.map(p => ({ ...p, children: [] as Patient[] }));
+
+        // Map primary patients (who have user_id)
+        allNodes.forEach(p => {
+            if (p.user_id) {
+                userToPatientMap.set(p.user_id, p);
+            }
+        });
+
+        const roots: Patient[] = [];
+
+        allNodes.forEach(p => {
+            // A family member has added_by_id pointing to a primary patient's user_id
+            if (p.added_by_id && userToPatientMap.has(p.added_by_id)) {
+                // Important: Only add as child if it's NOT the primary patient themselves
+                // (e.g., prevent circular dependencies if for some reason p.user_id === p.added_by_id)
+                if (p.user_id !== p.added_by_id) {
+                    const parent = userToPatientMap.get(p.added_by_id)!;
+                    parent.children!.push(p);
+                } else {
+                    roots.push(p);
+                }
+            } else {
+                // Primary patient, or its primary patient isn't in this current paginated view
+                roots.push(p);
+            }
+        });
+
+        // Clean up empty children arrays so AntD doesn't show expand icon unnecessarily
+        const cleanEmptyChildren = (nodes: Patient[]) => {
+            nodes.forEach(n => {
+                if (n.children && n.children.length === 0) {
+                    delete n.children;
+                } else if (n.children) {
+                    // Sorting children by creation date to show newest family member first
+                    n.children.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+                    cleanEmptyChildren(n.children);
+                }
+            });
+        };
+        
+        cleanEmptyChildren(roots);
+
+        return roots;
+    }, [patients]);
 
     const handleSearch = (value: string) => {
         setPatientFilters((prev) => ({ ...prev, search: value, page: 1 }));
@@ -92,7 +142,15 @@ const PatientManager: React.FC = () => {
     };
 
     return (
-        <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <Tabs
+            defaultActiveKey="patients"
+            style={{ height: '100%', display: 'flex', flexDirection: 'column' }}
+            items={[
+                {
+                    key: 'patients',
+                    label: <span><UnorderedListOutlined /> All Patients</span>,
+                    children: (
+                        <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
                 <h1 style={{ fontSize: '24px', margin: 0 }}>Patient Management</h1>
                 <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
@@ -112,7 +170,7 @@ const PatientManager: React.FC = () => {
             >
                 <div ref={containerRef} style={{ flex: 1, overflow: 'hidden' }}>
                     <PatientTable
-                        data={patients}
+                        data={groupedPatients}
                         loading={loadingPatients}
                         loadingMore={loadingMorePatients}
                         hasMore={patientPagination.hasMore}
@@ -146,6 +204,19 @@ const PatientManager: React.FC = () => {
                 onClose={() => setIsDrawerVisible(false)}
             />
         </div>
+                    )
+                },
+                {
+                    key: 'consultations',
+                    label: <span><MedicineBoxOutlined /> Consultations</span>,
+                    children: (
+                        <div style={{ height: '100%' }}>
+                            <ConsultationManager hideHeader />
+                        </div>
+                    )
+                }
+            ]}
+        />
     );
 };
 

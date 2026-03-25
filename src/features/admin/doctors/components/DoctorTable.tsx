@@ -1,5 +1,5 @@
 import React from 'react';
-import { Space, Button, Tag, Popconfirm, Tooltip } from 'antd';
+import { Space, Button, Tag, Popconfirm, Tooltip, Avatar } from 'antd';
 import { EditOutlined, DeleteOutlined, UserOutlined } from '@ant-design/icons';
 import InfiniteScrollTable from '@/shared/components/InfiniteScrollTable';
 import type { Doctor } from '../types/doctor.types';
@@ -32,9 +32,13 @@ const DoctorTable: React.FC<DoctorTableProps> = ({
             title: 'Name',
             dataIndex: 'name',
             key: 'name',
-            render: (text: string) => (
+            render: (text: string, record: Doctor) => (
                 <Space>
-                    <UserOutlined />
+                    {record.profile_image ? (
+                        <Avatar src={record.profile_image} size="small" />
+                    ) : (
+                        <Avatar icon={<UserOutlined />} size="small" />
+                    )}
                     <span style={{ fontWeight: 600 }}>{text}</span>
                 </Space>
             ),

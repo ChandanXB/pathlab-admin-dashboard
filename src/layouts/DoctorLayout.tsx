@@ -12,6 +12,8 @@ import { useNavigate, useLocation, Outlet, Navigate } from 'react-router-dom';
 import colors from '@/styles/colors';
 import { useAuthStore } from '@/store/authStore';
 import MeetingBanner from '@/shared/components/MeetingBanner';
+import { appointmentService } from '@/features/doctor/appointments/services/appointmentService';
+import { doctorService } from '@/features/admin/doctors/services/doctorService';
 
 const { Header, Content, Sider } = Layout;
 const { Text } = Typography;
@@ -24,12 +26,49 @@ const DoctorLayout: React.FC = () => {
 
     // Fetch auth from store
     const { user, logout, isAuthenticated } = useAuthStore();
+    const [stats, setStats] = useState({ total: 0, scheduled: 0, completed: 0, cancelled: 0 });
+    const [profileImage, setProfileImage] = useState<string | null>(null);
 
     useEffect(() => {
+        const fetchProfile = async () => {
+            if (user?.doctorId) {
+                try {
+                    const res = await doctorService.getDoctorById(user.doctorId);
+                    if (res?.success && res.data?.profile_image) {
+                        setProfileImage(res.data.profile_image);
+                    }
+                } catch (err) {
+                    console.error('Failed to load doctor profile image');
+                }
+            }
+        };
+
+        fetchProfile();
+    }, [user?.doctorId]);
+
+    useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                const res = await appointmentService.getDoctorAppointments();
+                if (res?.success) {
+                    const data = res.data;
+                    setStats({
+                        total: data.length,
+                        scheduled: data.filter((a: any) => a.status === 'scheduled').length,
+                        completed: data.filter((a: any) => a.status === 'completed').length,
+                        cancelled: data.filter((a: any) => a.status === 'cancelled').length,
+                    });
+                }
+            } catch (error) {
+                console.error('Failed to fetch stats', error);
+            }
+        };
+        fetchStats();
+
         const handleResize = () => setScreenSize(window.innerWidth);
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
-    }, []);
+    }, [location.pathname]);
 
     const handleLogout = () => {
         logout();
@@ -45,14 +84,73 @@ const DoctorLayout: React.FC = () => {
         return <Navigate to="/" replace />;
     }
 
+    const formatDoctorName = (name: string) => {
+        if (!name) return 'Doctor';
+        let cleanName = name.trim();
+        if (/^dr\.?\s+/i.test(cleanName)) {
+            cleanName = cleanName.replace(/^dr\.?\s+/i, '');
+        }
+        cleanName = cleanName.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+        return `Dr. ${cleanName}`;
+    };
+
+    const currentPath = location.pathname + location.search;
+
+    const renderBadge = (count: number, color: string, path: string) => {
+        if (count === undefined || count === null) return null;
+        const isSelected = currentPath === path;
+        const finalColor = isSelected ? '#ffffff' : color;
+        const finalBg = isSelected ? 'rgba(255, 255, 255, 0.2)' : `${color}1A`;
+        const finalShadow = isSelected ? 'none' : `0 0 10px ${color}33`;
+
+        return (
+            <div style={{
+                fontSize: '11px',
+                fontWeight: '700',
+                color: finalColor,
+                background: finalBg,
+                padding: '0 7px',
+                height: '20px',
+                borderRadius: '10px',
+                display: 'flex',
+                alignItems: 'center',
+                boxShadow: finalShadow
+            }}>
+                {count}
+            </div>
+        );
+    };
+
+    const renderLabel = (label: string, count: number, color: string, path: string) => (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', paddingRight: '12px' }}>
+            <span style={{ fontSize: '13px', opacity: 0.85 }}>{label}</span>
+            {renderBadge(count, color, path)}
+        </div>
+    );
+
     const menuItems = [
         { key: '/doctor', icon: <DashboardOutlined />, label: 'Overview' },
-        { key: '/doctor/patients', icon: <UserOutlined />, label: 'My Patients' },
+        { 
+            key: '/doctor/patients-parent', 
+            icon: <UserOutlined />, 
+            label: 'My Patients',
+            children: [
+                { key: '/doctor/patients', label: renderLabel('All Appointments', stats.total, colors.info, '/doctor/patients') },
+                { key: '/doctor/patients?status=scheduled', label: renderLabel('Scheduled', stats.scheduled, colors.primary, '/doctor/patients?status=scheduled') },
+                { key: '/doctor/patients?status=completed', label: renderLabel('Completed', stats.completed, colors.success, '/doctor/patients?status=completed') },
+                { key: '/doctor/patients?status=cancelled', label: renderLabel('Cancelled', stats.cancelled, colors.danger, '/doctor/patients?status=cancelled') },
+            ]
+        },
     ];
 
     const userMenu = {
         items: [
-            { key: 'profile', label: 'My Profile', icon: <UserOutlined /> },
+            { 
+                key: 'profile', 
+                label: 'My Profile', 
+                icon: <UserOutlined />,
+                onClick: () => navigate('/doctor/profile')
+            },
             {
                 key: 'logout',
                 label: 'Logout',
@@ -62,8 +160,6 @@ const DoctorLayout: React.FC = () => {
             },
         ],
     };
-
-    const currentPath = location.pathname;
 
     return (
         <Layout style={{ minHeight: '100vh', background: colors.background }}>
@@ -91,7 +187,7 @@ const DoctorLayout: React.FC = () => {
                     alignItems: 'center',
                     padding: '0 24px',
                     gap: '12px',
-                    background: `linear-gradient(90deg, #135200 0%, #002140 100%)`,
+                    background: 'transparent',
                     borderBottom: `1px solid ${colors.sidebarBorder}`
                 }}>
                     <div style={{
@@ -162,16 +258,17 @@ const DoctorLayout: React.FC = () => {
                     <Space size="small">
                         <Dropdown menu={userMenu} placement="bottomRight">
                             <Space style={{ cursor: 'pointer' }}>
-                                <Avatar
-                                    icon={<UserOutlined />}
-                                    style={{
-                                        backgroundColor: '#1890ff',
-                                        verticalAlign: 'middle'
-                                    }}
-                                />
+                                {profileImage ? (
+                                    <Avatar src={profileImage} />
+                                ) : (
+                                    <Avatar
+                                        icon={<UserOutlined />}
+                                        style={{ backgroundColor: '#1890ff', verticalAlign: 'middle' }}
+                                    />
+                                )}
                                 {screenSize >= 768 && (
                                     <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.2 }}>
-                                        <Text strong>{user?.name}</Text>
+                                        <Text strong>{formatDoctorName(user?.name || '')}</Text>
                                         <Text type="secondary" style={{ fontSize: 12 }}>Medical Practitioner</Text>
                                     </div>
                                 )}

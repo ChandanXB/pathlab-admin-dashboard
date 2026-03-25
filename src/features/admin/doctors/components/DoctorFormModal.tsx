@@ -1,5 +1,5 @@
-import React from 'react';
-import { Form, Input, Select } from 'antd';
+import { Form, Input, Select, Upload, message } from 'antd';
+import { UploadOutlined } from '@ant-design/icons';
 import type { Doctor } from '../types/doctor.types';
 import SharedModal from '@/shared/components/SharedModal';
 import { ACCOUNT_STATUSES } from '@/shared/constants/app.constants';
@@ -21,6 +21,26 @@ const DoctorFormModal: React.FC<DoctorFormModalProps> = ({
     onOk,
     onCancel,
 }) => {
+    const fileToBase64 = (file: File): Promise<string> => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = (error) => reject(error);
+        });
+    };
+
+    const handleFileUpload = async (file: File) => {
+        try {
+            const base64 = await fileToBase64(file);
+            form.setFieldsValue({ profile_image: base64 });
+            return false;
+        } catch (error) {
+            message.error('Failed to process image');
+            return Upload.LIST_IGNORE;
+        }
+    };
+
     return (
         <SharedModal
             title={editingDoctor ? "Edit Doctor" : "Onboard New Doctor"}
@@ -36,23 +56,52 @@ const DoctorFormModal: React.FC<DoctorFormModalProps> = ({
                 layout="vertical"
                 initialValues={{ status: 'active' }}
             >
+                <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start' }}>
+                    <Form.Item 
+                        name="profile_image" 
+                        label="Profile Photo" 
+                        style={{ margin: 0 }}
+                        getValueFromEvent={() => {
+                            // AntD Upload throws an event, we ignore it and return the string we set manually
+                            return form.getFieldValue('profile_image');
+                        }}
+                    >
+                        <Upload
+                            maxCount={1}
+                            beforeUpload={handleFileUpload}
+                            accept="image/*"
+                            showUploadList={false}
+                            listType="picture-card"
+                            style={{ width: '100px', height: '100px' }}
+                        >
+                            {form.getFieldValue('profile_image') ? (
+                                <img src={form.getFieldValue('profile_image')} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }} />
+                            ) : (
+                                <div><UploadOutlined /><div style={{ marginTop: 8 }}>Upload</div></div>
+                            )}
+                        </Upload>
+                    </Form.Item>
+
+                    <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0 16px' }}>
+                        <Form.Item
+                            name="name"
+                            label="Full Name"
+                            rules={[{ required: true, message: 'Please enter doctor name' }]}
+                        >
+                            <Input placeholder="Dr. John Doe" />
+                        </Form.Item>
+
+                        <Form.Item
+                            name="specialty"
+                            label="Specialty"
+                            rules={[{ required: true, message: 'Please enter specialty' }]}
+                        >
+                            <Input placeholder="e.g. Cardiologist" />
+                        </Form.Item>
+                    </div>
+                </div>
+
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0 16px' }}>
-                    <Form.Item
-                        name="name"
-                        label="Full Name"
-                        rules={[{ required: true, message: 'Please enter doctor name' }]}
-                    >
-                        <Input placeholder="Dr. John Doe" />
-                    </Form.Item>
-
-                    <Form.Item
-                        name="specialty"
-                        label="Specialty"
-                        rules={[{ required: true, message: 'Please enter specialty' }]}
-                    >
-                        <Input placeholder="e.g. Cardiologist" />
-                    </Form.Item>
-
                     <Form.Item
                         name="status"
                         label="Status"

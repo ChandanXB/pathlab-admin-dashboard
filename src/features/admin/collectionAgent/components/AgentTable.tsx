@@ -1,5 +1,5 @@
 import React from 'react';
-import { Space, Button, Tag, Popconfirm } from 'antd';
+import { Space, Button, Tag, Popconfirm, Avatar } from 'antd';
 import { EditOutlined, DeleteOutlined, UserOutlined } from '@ant-design/icons';
 import InfiniteScrollTable from '@/shared/components/InfiniteScrollTable';
 import type { CollectionAgent } from '../services/collectionAgentService';
@@ -34,9 +34,13 @@ const AgentTable: React.FC<AgentTableProps> = ({
             key: 'name',
             width: '15%',
             ellipsis: true,
-            render: (text: string) => (
+            render: (text: string, record: CollectionAgent) => (
                 <Space>
-                    <UserOutlined />
+                    {record.profile_image ? (
+                        <Avatar src={record.profile_image} size="small" />
+                    ) : (
+                        <Avatar icon={<UserOutlined />} size="small" />
+                    )}
                     <span style={{ fontWeight: 600 }}>{text}</span>
                 </Space>
             ),

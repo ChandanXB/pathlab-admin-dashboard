@@ -32,9 +32,13 @@ const DoctorDetailDrawer: React.FC<DoctorDetailDrawerProps> = ({ visible, doctor
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: 24 }}>
                 <div style={{
                     width: 64, height: 64, borderRadius: '50%', backgroundColor: colors.primary + '15',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: 16
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: 16, overflow: 'hidden'
                 }}>
-                    <UserOutlined style={{ fontSize: 32, color: colors.primary }} />
+                    {doctor.profile_image ? (
+                        <img src={doctor.profile_image} alt={doctor.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                        <UserOutlined style={{ fontSize: 32, color: colors.primary }} />
+                    )}
                 </div>
                 <div>
                     <Title level={4} style={{ margin: 0, color: colors.textDark }}>{doctor.name}</Title>

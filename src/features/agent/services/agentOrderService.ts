@@ -64,6 +64,7 @@ export interface AgentProfile {
     address: string | null;
     latitude: number | null;
     longitude: number | null;
+    profile_image?: string | null;
 }
 
 export const agentOrderService = {
@@ -109,6 +110,14 @@ export const agentOrderService = {
     getAgentProfile: async (agentId: number): Promise<AgentProfile> => {
         const response = await apiClient.get(`/collection-agents/${agentId}`);
         return response.data.data;
+    },
+
+    /**
+     * Update agent profile info (e.g., profile picture)
+     */
+    updateAgentProfile: async (agentId: number, data: Partial<AgentProfile>): Promise<any> => {
+        const response = await apiClient.put(`/collection-agents/${agentId}`, data);
+        return response.data;
     },
 
     /**

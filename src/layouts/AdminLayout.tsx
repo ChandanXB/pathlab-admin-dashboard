@@ -93,7 +93,6 @@ const AdminLayout: React.FC = () => {
             children: [
                 { key: '/patients', label: 'Patients Directory' },
                 { key: '/doctors', label: 'Doctors Directory' },
-                { key: '/consultations', label: 'Consultations' },
             ]
         },
         {
