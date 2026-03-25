@@ -10,10 +10,14 @@ import UpdateStatusModal from '../../appointments/components/UpdateStatusModal';
 import RescheduleModal from '../../appointments/components/RescheduleModal';
 import CancelModal from '../../appointments/components/CancelModal';
 import InfiniteScrollTable from '@/shared/components/InfiniteScrollTable';
+import { useSearchParams } from 'react-router-dom';
 
 const { Title, Text } = Typography;
 
 const DoctorPatients: React.FC = () => {
+    const [searchParams] = useSearchParams();
+    const statusFilter = searchParams.get('status');
+
     const [appointments, setAppointments] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchText, setSearchText] = useState('');
@@ -77,6 +81,7 @@ const DoctorPatients: React.FC = () => {
     }, []);
 
     const filteredAppointments = [...appointments]
+        .filter(apt => (statusFilter ? apt.status === statusFilter : true))
         .filter(apt => 
             apt.patient?.full_name?.toLowerCase().includes(searchText.toLowerCase()) || 
             apt.patient?.patient_code?.toLowerCase().includes(searchText.toLowerCase()) ||

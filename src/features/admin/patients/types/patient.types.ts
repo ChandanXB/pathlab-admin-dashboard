@@ -12,6 +12,9 @@ export interface Patient {
     user_id?: number;
     createdAt: string;
     updatedAt: string;
+    added_by_id?: number;
+    relation?: string;
+    children?: Patient[];
     user?: {
         id: number;
         name: string;

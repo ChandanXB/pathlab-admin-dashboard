@@ -1,12 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Table, Typography, Space, Tag, Input, message } from 'antd';
-import { MedicineBoxOutlined, SearchOutlined, UserOutlined, CalendarOutlined } from '@ant-design/icons';
+import { Card, Table, Typography, Space, Tag, Input, message, Image, Button } from 'antd';
+import { MedicineBoxOutlined, SearchOutlined, UserOutlined, CalendarOutlined, FileTextOutlined } from '@ant-design/icons';
 import apiClient from '@/config/apiClient';
 import colors from '@/styles/colors';
 
 const { Title, Text } = Typography;
 
-const ConsultationManager: React.FC = () => {
+interface ConsultationManagerProps {
+    hideHeader?: boolean;
+}
+
+const ConsultationManager: React.FC<ConsultationManagerProps> = ({ hideHeader = false }) => {
     const [consultations, setConsultations] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchText, setSearchText] = useState('');
@@ -84,6 +88,40 @@ const ConsultationManager: React.FC = () => {
             ),
         },
         {
+            title: 'Patient Report',
+            key: 'report',
+            width: 140,
+            render: (_: any, record: any) => {
+                const extractReportUrl = (notes?: string) => {
+                    if (!notes) return null;
+                    const match = notes.match(/Attached Report:\s*(https?:\/\/[^\s]+)/);
+                    return match ? match[1] : null;
+                };
+                const url = extractReportUrl(record.notes);
+                if (url) {
+                    if (url.toLowerCase().endsWith('.pdf')) {
+                        return (
+                            <Button type="link" size="small" onClick={() => window.open(url, '_blank')} style={{ fontWeight: 500, padding: 0 }}>
+                                <FileTextOutlined style={{ marginRight: 4 }} /> View PDF
+                            </Button>
+                        );
+                    }
+                    return (
+                        <div style={{ background: '#fff', padding: '2px', borderRadius: '6px', border: '1px solid #f0f0f0', display: 'inline-flex' }}>
+                            <Image
+                                src={url}
+                                width={48}
+                                height={36}
+                                style={{ objectFit: 'cover', borderRadius: '4px', cursor: 'pointer' }}
+                                fallback="https://via.placeholder.com/48?text=Img"
+                            />
+                        </div>
+                    );
+                }
+                return <Text type="secondary" style={{ whiteSpace: 'nowrap' }}>-</Text>;
+            },
+        },
+        {
             title: 'Precaution Status',
             key: 'precaution',
             width: 140,
@@ -107,13 +145,15 @@ const ConsultationManager: React.FC = () => {
     ];
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', height: '100%' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                    <Title level={2} style={{ margin: 0 }}>Consultations</Title>
-                    <Text type="secondary">Monitor patient-doctor appointments and precaution statuses.</Text>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: hideHeader ? '0px' : '24px', height: '100%' }}>
+            {!hideHeader && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+                    <div>
+                        <Title level={2} style={{ margin: 0 }}>Consultations</Title>
+                        <Text type="secondary">Monitor patient-doctor appointments and precaution statuses.</Text>
+                    </div>
                 </div>
-            </div>
+            )}
 
             <Card bordered={false} className="shadow-sm" style={{ flex: 1, display: 'flex', flexDirection: 'column', borderRadius: '12px' }}>
                 <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'flex-start' }}>

@@ -61,7 +61,11 @@ const AgentDetailDrawer: React.FC<AgentDetailDrawerProps> = ({ visible, agent, o
         <Drawer
             title={
                 <Space>
-                    <Avatar icon={<UserOutlined />} style={{ backgroundColor: '#1890ff' }} />
+                    {agent.profile_image ? (
+                        <Avatar src={agent.profile_image} size="large" />
+                    ) : (
+                        <Avatar icon={<UserOutlined />} size="large" style={{ backgroundColor: '#1890ff' }} />
+                    )}
                     <div>
                         <div style={{ fontSize: '16px', fontWeight: 600 }}>{agent.name}</div>
                         <Text type="secondary" style={{ fontSize: '12px' }}>ID: AG-{agent.id.toString().padStart(4, '0')}</Text>

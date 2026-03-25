@@ -7,6 +7,7 @@ export interface Doctor {
     bio?: string;
     address?: string;
     experience_years?: number;
+    profile_image?: string;
     status: 'active' | 'inactive';
     createdAt?: string;
     updatedAt?: string;

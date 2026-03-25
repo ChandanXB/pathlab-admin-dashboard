@@ -1,6 +1,6 @@
 import React from 'react';
 import { Tag, Space, Button, Popconfirm } from 'antd';
-import { EditOutlined, DeleteOutlined, UserOutlined, EyeOutlined } from '@ant-design/icons';
+import { EditOutlined, DeleteOutlined, UserOutlined, EyeOutlined, DownOutlined, RightOutlined } from '@ant-design/icons';
 import InfiniteScrollTable from '@/shared/components/InfiniteScrollTable';
 import type { Patient } from '../types/patient.types';
 import dayjs from 'dayjs';
@@ -38,17 +38,22 @@ const PatientTable: React.FC<PatientTableProps> = ({
             title: 'Patient Code',
             dataIndex: 'patient_code',
             key: 'patient_code',
-            width: 140,
+            width: 200,
             render: (text: string) => <strong style={{ whiteSpace: 'nowrap' }}>{text}</strong>,
         },
         {
             title: 'Name',
             dataIndex: 'full_name',
             key: 'full_name',
-            render: (text: string) => (
+            render: (text: string, record: Patient) => (
                 <Space>
                     <UserOutlined />
                     {text}
+                    {record.relation && record.relation.toLowerCase() !== 'self' && (
+                        <Tag color="cyan" style={{ marginLeft: 4 }}>
+                            {record.relation}
+                        </Tag>
+                    )}
                 </Space>
             ),
         },
@@ -125,16 +130,52 @@ const PatientTable: React.FC<PatientTableProps> = ({
     ];
 
     return (
-        <InfiniteScrollTable
-            columns={columns}
-            dataSource={data}
-            loading={loading}
-            loadingMore={loadingMore}
-            hasMore={hasMore}
-            next={onLoadMore}
-            scroll={scroll}
-            rowKey="id"
-        />
+        <React.Fragment>
+            <style>
+                {`
+                .family-child-row {
+                    background-color: #faf3f6 !important;
+                }
+                .family-child-row td {
+                    border-bottom: 1px dashed #f0f0f0 !important;
+                }
+                `}
+            </style>
+            <InfiniteScrollTable
+                columns={columns}
+                dataSource={data}
+                loading={loading}
+                loadingMore={loadingMore}
+                hasMore={hasMore}
+                next={onLoadMore}
+                scroll={scroll}
+                rowKey="id"
+                rowClassName={(record: Patient) => record.added_by_id ? 'family-child-row' : ''}
+                expandable={{
+                    expandIconColumnIndex: 0,
+                    indentSize: 24,
+                    expandIcon: ({ expanded, onExpand, record }) => {
+                        const hasChildren = record.children && record.children.length > 0;
+                        if (hasChildren) {
+                            return (
+                                <Button
+                                    type="text"
+                                    size="small"
+                                    onClick={(e) => onExpand(record, e)}
+                                    icon={expanded ? <DownOutlined style={{ fontSize: '10px' }} /> : <RightOutlined style={{ fontSize: '10px' }} />}
+                                    style={{ marginRight: 8, width: 20, height: 20, padding: 0, borderRadius: '4px', backgroundColor: '#f0f5ff' }}
+                                />
+                            );
+                        }
+                        // Spacer for primary patients without children to keep vertical alignment
+                        if (!record.added_by_id) {
+                            return <span style={{ display: 'inline-block', width: 28 }} />;
+                        }
+                        return null;
+                    }
+                }}
+            />
+        </React.Fragment>
     );
 };
 

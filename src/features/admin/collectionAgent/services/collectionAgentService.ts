@@ -12,6 +12,7 @@ export interface CollectionAgent {
     latitude?: number;
     longitude?: number;
     user_id?: number;
+    profile_image?: string;
     _count?: {
         lab_orders: number;
     };
@@ -30,6 +31,7 @@ export interface CollectionAgentFormData {
     address?: string;
     latitude?: number;
     longitude?: number;
+    profile_image?: string;
 }
 
 export const collectionAgentService = {
