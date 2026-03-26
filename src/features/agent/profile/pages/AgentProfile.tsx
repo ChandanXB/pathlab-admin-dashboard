@@ -17,6 +17,7 @@ import { useAuthStore } from '@/store/authStore';
 import { useAgentOrders } from '../../hooks/useAgentOrders';
 import { agentOrderService } from '../../services/agentOrderService';
 import colors from '@/styles/colors';
+import { formatName } from '@/shared/utils/nameUtils';
 
 const { Title, Text } = Typography;
 
@@ -121,7 +122,7 @@ const AgentProfile: React.FC = () => {
                         </div>
                         <div>
                             <Title level={3} style={{ color: colors.white, margin: 0 }}>
-                                {user?.name || profile?.name || 'Agent'}
+                                {formatName(user?.name || profile?.name) || 'Agent'}
                             </Title>
                             <Space>
                                 <Tag color={`${colors.white}${colors.alpha.badgeBg}`} style={{ color: colors.white, borderRadius: '8px', border: 'none' }}>
@@ -185,7 +186,7 @@ const AgentProfile: React.FC = () => {
                         <Text>{profile?.email || user?.email || 'N/A'}</Text>
                     </Descriptions.Item>
                     <Descriptions.Item label={<><EnvironmentOutlined /> Address</>} span={2}>
-                        <Text>{profile?.address || 'Not set'}</Text>
+                        <Text>{formatName(profile?.address) || 'Not set'}</Text>
                     </Descriptions.Item>
                 </Descriptions>
             </Card>
@@ -200,12 +201,12 @@ const AgentProfile: React.FC = () => {
                 <Descriptions column={{ xs: 1, sm: 2 }} labelStyle={{ color: colors.charts.text, fontWeight: 500 }}>
                     <Descriptions.Item label="Vehicle Type">
                         <Tag color="blue" style={{ borderRadius: '8px' }}>
-                            {profile?.vehicle_type || 'Not set'}
+                            {formatName(profile?.vehicle_type) || 'Not set'}
                         </Tag>
                     </Descriptions.Item>
                     <Descriptions.Item label="Vehicle Number">
                         <Text strong style={{ fontSize: '16px', letterSpacing: '1px' }}>
-                            {profile?.vehicle_no || 'Not set'}
+                            {profile?.vehicle_no?.toUpperCase() || 'Not set'}
                         </Text>
                     </Descriptions.Item>
                 </Descriptions>

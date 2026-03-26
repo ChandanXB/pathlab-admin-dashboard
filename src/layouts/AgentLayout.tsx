@@ -13,6 +13,7 @@ import colors from '@/styles/colors';
 import '@/styles/layouts/AgentLayout.css';
 import { useAuthStore } from '@/store/authStore';
 import { labOrderService } from '@/features/admin/labOrder/services/labOrderService';
+import { formatName } from '@/shared/utils/nameUtils';
 
 const { Header, Content, Sider } = Layout;
 const { Text } = Typography;
@@ -270,7 +271,7 @@ const AgentLayout: React.FC = () => {
                                 />
                                 {screenSize >= 768 && (
                                     <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.2 }}>
-                                        <Text strong>{user?.name}</Text>
+                                        <Text strong>{formatName(user?.name)}</Text>
                                         <Text type="secondary" style={{ fontSize: 12 }}>Collection Agent</Text>
                                     </div>
                                 )}

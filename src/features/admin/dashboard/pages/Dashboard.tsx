@@ -82,7 +82,7 @@ const Dashboard: React.FC = () => {
                     { title: 'Home' },
                     { title: 'Dashboard' }
                 ]} />
-                <Title level={2} style={{ marginTop: 8 }}>Admin Intelligence Overview</Title>
+                <Title level={2} style={{ marginTop: 8 }}>Admin Analytics</Title>
             </div>
 
             {/* Stats Section */}

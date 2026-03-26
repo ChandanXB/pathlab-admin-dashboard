@@ -34,6 +34,7 @@ import {
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import dayjs from 'dayjs';
 import { collectionAgentService, type CollectionAgent } from '../services/collectionAgentService';
+import { formatName } from '@/shared/utils/nameUtils';
 import { LabOrderDetailDrawer, ReportUploadModal } from '../../labOrder/components';
 import { labOrderService } from '../../labOrder/services/labOrderService';
 import type { LabOrder } from '../../labOrder/types/labOrder.types';
@@ -154,7 +155,7 @@ const AgentProfilePage: React.FC = () => {
                     items={[
                         { title: <Link to="/">Dashboard</Link> },
                         { title: <Link to="/collection-agents">Collection Agents</Link> },
-                        { title: agent.name },
+                        { title: formatName(agent.name) },
                     ]}
                 />
             </div>
@@ -170,7 +171,7 @@ const AgentProfilePage: React.FC = () => {
                     </Col>
                     <Col xs={24} sm={20} md={13} lg={14}>
                         <Space direction="vertical" size={0}>
-                            <Title level={2} style={{ margin: 0 }}>{agent.name}</Title>
+                            <Title level={2} style={{ margin: 0 }}>{formatName(agent.name)}</Title>
                             <Space split={<Divider type="vertical" />} wrap>
                                 <Text type="secondary"><BarcodeOutlined /> ID: AG-{agent.id.toString().padStart(4, '0')}</Text>
                                 <Tag color={agent.status === 'active' ? 'green' : 'red'}>
@@ -207,19 +208,19 @@ const AgentProfilePage: React.FC = () => {
                                 <Col xs={24} xl={16}>
                                     <Card title="Detailed Information" bordered={false} style={{ borderRadius: '12px' }}>
                                         <Descriptions column={{ xxl: 2, xl: 2, lg: 2, md: 2, sm: 1, xs: 1 }} bordered size="middle">
-                                            <Descriptions.Item label="Full Name">{agent.name}</Descriptions.Item>
+                                            <Descriptions.Item label="Full Name">{formatName(agent.name)}</Descriptions.Item>
                                             <Descriptions.Item label="Phone"><Space><PhoneOutlined /> {agent.phone}</Space></Descriptions.Item>
                                             <Descriptions.Item label="Email"><Space><MailOutlined /> {agent.email || 'N/A'}</Space></Descriptions.Item>
                                             <Descriptions.Item label="Status">
                                                 <Badge status={agent.status === 'active' ? 'success' : 'error'} text={agent.status.toUpperCase()} />
                                             </Descriptions.Item>
-                                            <Descriptions.Item label="Vehicle Type"><Space><CarOutlined /> {agent.vehicle_type || 'N/A'}</Space></Descriptions.Item>
-                                            <Descriptions.Item label="Vehicle No">{agent.vehicle_no || 'N/A'}</Descriptions.Item>
+                                            <Descriptions.Item label="Vehicle Type"><Space><CarOutlined /> {formatName(agent.vehicle_type) || 'N/A'}</Space></Descriptions.Item>
+                                            <Descriptions.Item label="Vehicle No">{agent.vehicle_no?.toUpperCase() || 'N/A'}</Descriptions.Item>
                                             <Descriptions.Item label="Joined On">{dayjs(agent.createdAt).format('DD MMMM YYYY')}</Descriptions.Item>
                                             <Descriptions.Item label="Address" span={2}>
                                                 <Space align="start">
                                                     <EnvironmentOutlined style={{ marginTop: '4px', color: '#ff4d4f' }} />
-                                                    {agent.address || 'N/A'}
+                                                    {formatName(agent.address) || 'N/A'}
                                                 </Space>
                                             </Descriptions.Item>
                                         </Descriptions>
@@ -279,7 +280,7 @@ const AgentProfilePage: React.FC = () => {
                                             >
                                                 <Space direction="vertical" size={12} style={{ width: '100%' }}>
                                                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                        <Space><UserOutlined style={{ color: '#8c8c8c' }} /> <Text>{order.patient?.full_name}</Text></Space>
+                                                        <Space><UserOutlined style={{ color: '#8c8c8c' }} /> <Text>{formatName(order.patient?.full_name)}</Text></Space>
                                                         <Text strong>₹{order.total_amount}</Text>
                                                     </div>
                                                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
