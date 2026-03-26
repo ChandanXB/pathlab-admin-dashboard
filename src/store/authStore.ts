@@ -11,6 +11,8 @@ interface User {
     };
     agentId?: number;
     doctorId?: number;
+    profile_image?: string;
+    phone?: string;
 }
 
 interface AuthState {

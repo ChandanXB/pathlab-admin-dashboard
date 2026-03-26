@@ -18,6 +18,7 @@ import { useAuthStore } from '@/store/authStore';
 import PickupDetailDrawer from '../../components/PickupDetailDrawer';
 import { WeeklyTrendsChart, ActivityDistributionChart, PerformanceSummaryChart, PriorityBreakdownChart } from '../components/DashboardCharts';
 import type { AgentOrder } from '../../services/agentOrderService';
+import { formatName } from '@/shared/utils/nameUtils';
 
 const { Title, Text } = Typography;
 
@@ -140,7 +141,7 @@ const AgentDashboard: React.FC = () => {
                                 if (hour < 12) return 'Good Morning';
                                 if (hour < 17) return 'Good Afternoon';
                                 return 'Good Evening';
-                            })()}, {user?.name.split(' ')[0]}! 👋
+                            })()}, {formatName(user?.name.split(' ')[0])}! 👋
                         </Title>
                         <Text style={{ color: 'rgba(255,255,255,0.9)', fontSize: '16px', display: 'block', marginTop: '4px' }}>
                             {dayjs().format('dddd, DD MMMM YYYY')} • Agent Dashboard
@@ -374,7 +375,7 @@ const AgentDashboard: React.FC = () => {
                                         <div style={{ marginTop: '4px' }}>
                                             <Space size="small" style={{ marginBottom: '6px' }}>
                                                 <UserOutlined style={{ color: colors.charts.text }} />
-                                                <Text style={{ color: colors.textDark, opacity: 0.85 }}>{item.patient?.full_name || 'N/A'}</Text>
+                                                <Text style={{ color: colors.textDark, opacity: 0.85 }}>{formatName(item.patient?.full_name) || 'N/A'}</Text>
                                                 {item.patient?.phone && (
                                                     <Text type="secondary" style={{ fontSize: '12px' }}>• {item.patient.phone}</Text>
                                                 )}

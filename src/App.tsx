@@ -13,6 +13,7 @@ import CollectionAgentManager from '@/features/admin/collectionAgent/pages/Colle
 import AgentProfilePage from '@/features/admin/collectionAgent/pages/AgentProfilePage';
 import DoctorManager from '@/features/admin/doctors/pages/DoctorManager';
 import CityManager from '@/features/admin/locations/pages/CityManager';
+import AdminProfile from '@/features/admin/profile/pages/AdminProfile';
 import ProtectedRoute from '@/shared/components/ProtectedRoute';
 import AdminLayout from '@/layouts/AdminLayout';
 import AgentLayout from '@/layouts/AgentLayout';
@@ -48,6 +49,7 @@ function App() {
               <Route path="collection-agents/:id" element={<AgentProfilePage />} />
               <Route path="doctors" element={<DoctorManager />} />
               <Route path="service-cities" element={<CityManager />} />
+              <Route path="profile" element={<AdminProfile />} />
               {/* Fallback for development/typos */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>

@@ -4,6 +4,7 @@ import { EditOutlined, DeleteOutlined, UserOutlined, EyeOutlined, DownOutlined, 
 import InfiniteScrollTable from '@/shared/components/InfiniteScrollTable';
 import type { Patient } from '../types/patient.types';
 import dayjs from 'dayjs';
+import { formatName } from '@/shared/utils/nameUtils';
 
 interface PatientTableProps {
     data: Patient[];
@@ -48,10 +49,10 @@ const PatientTable: React.FC<PatientTableProps> = ({
             render: (text: string, record: Patient) => (
                 <Space>
                     <UserOutlined />
-                    {text}
+                    {formatName(text)}
                     {record.relation && record.relation.toLowerCase() !== 'self' && (
                         <Tag color="cyan" style={{ marginLeft: 4 }}>
-                            {record.relation}
+                            {formatName(record.relation)}
                         </Tag>
                     )}
                 </Space>

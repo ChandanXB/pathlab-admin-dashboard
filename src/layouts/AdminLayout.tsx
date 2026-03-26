@@ -19,6 +19,7 @@ import { useAuthStore } from '@/store/authStore';
 import { ORDER_STATUSES } from '@/shared/constants/app.constants';
 import { labOrderService } from '@/features/admin/labOrder/services/labOrderService';
 import { collectionAgentService, type CollectionAgent } from '@/features/admin/collectionAgent/services/collectionAgentService';
+import { formatName } from '@/shared/utils/nameUtils';
 
 const { Header, Content, Sider } = Layout;
 const { Text } = Typography;
@@ -168,7 +169,12 @@ const AdminLayout: React.FC = () => {
 
     const userMenu = {
         items: [
-            { key: 'profile', label: 'Profile Settings', icon: <UserOutlined /> },
+            { 
+                key: 'profile', 
+                label: 'Profile Settings', 
+                icon: <UserOutlined />,
+                onClick: () => navigate('/profile')
+            },
             {
                 key: 'logout',
                 label: 'Logout',
@@ -323,6 +329,7 @@ const AdminLayout: React.FC = () => {
                         <Dropdown menu={userMenu} placement="bottomRight">
                             <Space style={{ cursor: 'pointer' }}>
                                 <Avatar
+                                    src={user?.profile_image}
                                     icon={<UserOutlined />}
                                     style={{
                                         backgroundColor: themeToken.colorPrimary,
@@ -331,8 +338,8 @@ const AdminLayout: React.FC = () => {
                                 />
                                 {screenSize >= 768 && (
                                     <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.2 }}>
-                                        <Text strong>{user?.name || 'User'}</Text>
-                                        <Text type="secondary" style={{ fontSize: 12 }}>{user?.role?.name || 'Administrator'}</Text>
+                                        <Text strong>{formatName(user?.name) || 'User'}</Text>
+                                        <Text type="secondary" style={{ fontSize: 12 }}>{formatName(user?.role?.name) || 'Administrator'}</Text>
                                     </div>
                                 )}
                             </Space>

@@ -3,6 +3,7 @@ import { Space, Button, Tag, Popconfirm, Tooltip, Avatar } from 'antd';
 import { EditOutlined, DeleteOutlined, UserOutlined } from '@ant-design/icons';
 import InfiniteScrollTable from '@/shared/components/InfiniteScrollTable';
 import type { Doctor } from '../types/doctor.types';
+import { formatName, formatDoctorName } from '@/shared/utils/nameUtils';
 
 interface DoctorTableProps {
     doctors: Doctor[];
@@ -39,7 +40,7 @@ const DoctorTable: React.FC<DoctorTableProps> = ({
                     ) : (
                         <Avatar icon={<UserOutlined />} size="small" />
                     )}
-                    <span style={{ fontWeight: 600 }}>{text}</span>
+                    <span style={{ fontWeight: 600 }}>{formatDoctorName(record.name)}</span>
                 </Space>
             ),
         },
@@ -47,7 +48,7 @@ const DoctorTable: React.FC<DoctorTableProps> = ({
             title: 'Specialty',
             dataIndex: 'specialty',
             key: 'specialty',
-            render: (specialty: string) => <Tag color="blue">{specialty}</Tag>
+            render: (specialty: string) => <Tag color="blue">{formatName(specialty)}</Tag>
         },
         {
             title: 'Phone',

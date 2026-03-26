@@ -3,6 +3,7 @@ import { Space, Button, Tag, Popconfirm, Avatar } from 'antd';
 import { EditOutlined, DeleteOutlined, UserOutlined } from '@ant-design/icons';
 import InfiniteScrollTable from '@/shared/components/InfiniteScrollTable';
 import type { CollectionAgent } from '../services/collectionAgentService';
+import { formatName } from '@/shared/utils/nameUtils';
 
 interface AgentTableProps {
     agents: CollectionAgent[];
@@ -41,7 +42,7 @@ const AgentTable: React.FC<AgentTableProps> = ({
                     ) : (
                         <Avatar icon={<UserOutlined />} size="small" />
                     )}
-                    <span style={{ fontWeight: 600 }}>{text}</span>
+                    <span style={{ fontWeight: 600 }}>{formatName(text)}</span>
                 </Space>
             ),
         },
@@ -58,7 +59,7 @@ const AgentTable: React.FC<AgentTableProps> = ({
             width: '16%',
             ellipsis: true,
             render: (_: any, record: CollectionAgent) => (
-                <span>{record.vehicle_type} {record.vehicle_no ? `(${record.vehicle_no})` : ''}</span>
+                <span>{formatName(record.vehicle_type)} {record.vehicle_no ? `(${record.vehicle_no.toUpperCase()})` : ''}</span>
             ),
         },
         {

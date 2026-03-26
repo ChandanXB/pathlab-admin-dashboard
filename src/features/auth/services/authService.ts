@@ -36,5 +36,16 @@ export const authService = {
 
     isAuthenticated: () => {
         return useAuthStore.getState().isAuthenticated;
+    },
+    getProfile: async () => {
+        const response = await apiClient.get('/auth/profile');
+        return response.data;
+    },
+    updateProfile: async (data: any) => {
+        const response = await apiClient.patch('/auth/profile', data);
+        if (response.data.success) {
+            useAuthStore.getState().updateUser(response.data.data);
+        }
+        return response.data;
     }
 };

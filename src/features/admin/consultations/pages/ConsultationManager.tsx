@@ -3,6 +3,7 @@ import { Card, Table, Typography, Space, Tag, Input, message, Image, Button } fr
 import { MedicineBoxOutlined, SearchOutlined, UserOutlined, CalendarOutlined, FileTextOutlined } from '@ant-design/icons';
 import apiClient from '@/config/apiClient';
 import colors from '@/styles/colors';
+import { formatName, formatDoctorName } from '@/shared/utils/nameUtils';
 
 const { Title, Text } = Typography;
 
@@ -57,7 +58,7 @@ const ConsultationManager: React.FC<ConsultationManagerProps> = ({ hideHeader = 
             width: 200,
             render: (_: any, record: any) => (
                 <Space direction="vertical" size={0}>
-                    <Text strong><UserOutlined style={{ marginRight: 6 }} />{record.patient?.full_name}</Text>
+                    <Text strong><UserOutlined style={{ marginRight: 6 }} />{formatName(record.patient?.full_name)}</Text>
                     <Text type="secondary" style={{ fontSize: 12 }}>{record.patient?.patient_code}</Text>
                 </Space>
             ),
@@ -68,8 +69,8 @@ const ConsultationManager: React.FC<ConsultationManagerProps> = ({ hideHeader = 
             width: 200,
             render: (_: any, record: any) => (
                 <Space direction="vertical" size={0}>
-                    <Text strong><MedicineBoxOutlined style={{ marginRight: 6 }} />Dr. {record.doctor?.name}</Text>
-                    <Text type="secondary" style={{ fontSize: 12 }}>{record.doctor?.specialty}</Text>
+                    <Text strong><MedicineBoxOutlined style={{ marginRight: 6 }} />{formatDoctorName(record.doctor?.name)}</Text>
+                    <Text type="secondary" style={{ fontSize: 12 }}>{formatName(record.doctor?.specialty)}</Text>
                 </Space>
             ),
         },
