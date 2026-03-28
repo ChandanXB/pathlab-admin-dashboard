@@ -14,7 +14,8 @@ import {
     Modal, 
     Form, 
     Input,
-    Tag
+    Tag,
+    Switch
 } from 'antd';
 import {
     UserOutlined,
@@ -25,6 +26,7 @@ import {
     SaveOutlined,
     CloseOutlined,
     IdcardOutlined,
+    CreditCardOutlined,
 } from '@ant-design/icons';
 import { useAuthStore } from '@/store/authStore';
 import { authService } from '@/features/auth/services/authService';
@@ -47,6 +49,7 @@ const AdminProfile: React.FC = () => {
                 name: user.name,
                 email: user.email,
                 phone: user.phone || '',
+                is_razorpay_enabled: user.is_razorpay_enabled ?? true,
             });
         }
     }, [user, form]);
@@ -199,21 +202,43 @@ const AdminProfile: React.FC = () => {
 
                 <div style={{ padding: '24px 28px' }}>
                     {!isEditing ? (
-                        <Descriptions 
-                            column={{ xs: 1, sm: 2 }} 
-                            labelStyle={{ color: colors.textSecondary, fontWeight: 500 }}
-                            bordered
-                        >
-                            <Descriptions.Item label={<><UserOutlined style={{ marginRight: 8 }} /> Full Name</>} span={2}>
-                                <Text strong style={{ fontSize: '16px' }}>{formatName(user.name)}</Text>
-                            </Descriptions.Item>
-                            <Descriptions.Item label={<><MailOutlined style={{ marginRight: 8 }} /> Email Address</>}>
-                                <Text>{user.email}</Text>
-                            </Descriptions.Item>
-                            <Descriptions.Item label={<><PhoneOutlined style={{ marginRight: 8 }} /> Phone Number</>}>
-                                <Text>{user.phone || 'Not provided'}</Text>
-                            </Descriptions.Item>
-                        </Descriptions>
+                        <Row gutter={[12, 12]}>
+                            {[
+                                { icon: <UserOutlined />, label: 'FULL NAME', value: formatName(user.name), color: colors.primary, strong: true },
+                                { icon: <MailOutlined />, label: 'EMAIL ADDRESS', value: user.email, color: colors.primary, strong: false },
+                                { icon: <PhoneOutlined />, label: 'PHONE NUMBER', value: user.phone || 'Not provided', color: colors.primary, strong: false },
+                                { icon: <CreditCardOutlined />, label: 'RAZORPAY PAYMENT', tag: true, color: colors.primary }
+                            ].map((item, index) => (
+                                <Col key={index} xs={24} sm={12} md={6}>
+                                    <div style={{ 
+                                        background: '#fafafa', 
+                                        padding: '12px 16px', 
+                                        borderRadius: '12px', 
+                                        border: '1px solid #f0f0f0',
+                                        height: '100%',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: '4px'
+                                    }}>
+                                        <Space style={{ color: item.color, fontSize: '10px' }}>
+                                            {item.icon}
+                                            <Text type="secondary" style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.02em' }}>{item.label}</Text>
+                                        </Space>
+                                        {item.tag ? (
+                                            <div style={{ marginTop: 2 }}>
+                                                <Tag color={user.is_razorpay_enabled ? 'green' : 'red'} style={{ borderRadius: '4px', margin: 0, fontSize: '11px' }}>
+                                                    {user.is_razorpay_enabled ? 'ENABLED' : 'DISABLED'}
+                                                </Tag>
+                                            </div>
+                                        ) : (
+                                            <Text strong={item.strong} style={{ fontSize: '13px', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                {item.value}
+                                            </Text>
+                                        )}
+                                    </div>
+                                </Col>
+                            ))}
+                        </Row>
                     ) : (
                         <Form
                             form={form}
@@ -253,6 +278,19 @@ const AdminProfile: React.FC = () => {
                                         label="Phone Number"
                                     >
                                         <Input prefix={<PhoneOutlined />} placeholder="Phone Number" />
+                                    </Form.Item>
+                                </Col>
+                                <Col xs={24} md={12}>
+                                    <Form.Item
+                                        name="is_razorpay_enabled"
+                                        label="Razorpay Payment Status"
+                                        valuePropName="checked"
+                                        help="Enable or disable Razorpay as a payment option for consultations"
+                                    >
+                                        <Switch 
+                                            checkedChildren="Enabled" 
+                                            unCheckedChildren="Disabled" 
+                                        />
                                     </Form.Item>
                                 </Col>
                             </Row>

@@ -170,7 +170,7 @@ const DoctorPatients: React.FC = () => {
             title: 'Status',
             dataIndex: 'status',
             key: 'status',
-            width: 120,
+            width: 150,
             render: (status: string) => {
                 const color = status === 'scheduled' ? 'blue' : status === 'completed' ? 'green' : 'red';
                 return <Tag color={color} style={{ whiteSpace: 'nowrap', margin: 0 }}>{status.toUpperCase()}</Tag>;
@@ -179,7 +179,8 @@ const DoctorPatients: React.FC = () => {
         {
             title: 'Actions',
             key: 'actions',
-            width: 140,
+            width: 150,
+            align: 'right' as const,
             render: (_: any, record: any) => {
                 const items: MenuProps['items'] = [
                     {

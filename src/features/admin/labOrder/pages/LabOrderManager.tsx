@@ -93,6 +93,24 @@ const LabOrderManager: React.FC = () => {
 
 
 
+    const [screenSize, setScreenSize] = useState(window.innerWidth);
+    const isMobile = screenSize < 768;
+
+    useEffect(() => {
+        const handleResize = () => setScreenSize(window.innerWidth);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    // Load default columns based on device
+    useEffect(() => {
+        if (isMobile) {
+            setVisibleColumns(['order_info', 'patient', 'status', 'actions']);
+        } else {
+            setVisibleColumns(['order_info', 'patient', 'tests', 'agent', 'agent_assign', 'amount', 'status', 'actions']);
+        }
+    }, [isMobile]);
+
     const [tableHeight, setTableHeight] = useState(400);
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -100,7 +118,6 @@ const LabOrderManager: React.FC = () => {
         const observer = new ResizeObserver((entries) => {
             for (const entry of entries) {
                 if (entry.target === containerRef.current) {
-                    // Deduct ~55 for header height
                     setTableHeight(Math.max(200, entry.contentRect.height - 55));
                 }
             }
@@ -123,7 +140,6 @@ const LabOrderManager: React.FC = () => {
     const handleSubmit = async (values: any) => {
         let success = false;
 
-        // Final transformations
         const payload = {
             ...values,
             scheduled_date: values.scheduled_date ? values.scheduled_date.toISOString() : undefined,
@@ -188,24 +204,30 @@ const LabOrderManager: React.FC = () => {
     );
 
     return (
-        <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: isMobile ? '12px' : '16px' }}>
+            <div style={{ 
+                display: 'flex', 
+                flexDirection: isMobile ? 'column' : 'row',
+                justifyContent: 'space-between', 
+                alignItems: isMobile ? 'stretch' : 'center',
+                gap: isMobile ? '16px' : '0'
+            }}>
                 <Space align="center" size="middle">
                     <div style={{
                         background: '#1890ff',
-                        padding: '10px',
+                        padding: isMobile ? '8px' : '10px',
                         borderRadius: '12px',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center'
                     }}>
-                        <ExperimentOutlined style={{ fontSize: '24px', color: 'white' }} />
+                        <ExperimentOutlined style={{ fontSize: isMobile ? '20px' : '24px', color: 'white' }} />
                     </div>
                     <div>
-                        <Title level={3} style={{ margin: 0 }}>Lab Test Orders</Title>
-                        <Space>
-                            <Badge status="processing" text={`${pagination.total} Total Orders`} />
-                            <Badge status="warning" text="Manage Life-cycle" />
+                        <Title level={isMobile ? 4 : 3} style={{ margin: 0 }}>Lab Test Orders</Title>
+                        <Space wrap={isMobile}>
+                            <Badge status="processing" text={`${pagination.total} Orders`} />
+                            {!isMobile && <Badge status="warning" text="Manage Life-cycle" />}
                         </Space>
                     </div>
                 </Space>
@@ -213,8 +235,12 @@ const LabOrderManager: React.FC = () => {
                     type="primary"
                     icon={<PlusOutlined />}
                     onClick={handleAdd}
-                    size="large"
-                    style={{ borderRadius: '8px', boxShadow: '0 4px 10px rgba(24, 144, 255, 0.3)' }}
+                    size={isMobile ? "middle" : "large"}
+                    style={{ 
+                        borderRadius: '8px', 
+                        boxShadow: '0 4px 10px rgba(24, 144, 255, 0.3)',
+                        width: isMobile ? '100%' : 'auto'
+                    }}
                 >
                     Create New Order
                 </Button>
@@ -255,7 +281,7 @@ const LabOrderManager: React.FC = () => {
                         onUploadReport={handleUploadReport}
                         onUploadProof={handleUploadProof}
                         visibleColumns={visibleColumns}
-                        scroll={{ y: tableHeight }}
+                        scroll={{ x: isMobile ? 'max-content' : undefined, y: tableHeight }}
                     />
                 </div>
             </Card>

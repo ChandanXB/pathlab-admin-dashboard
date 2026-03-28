@@ -75,6 +75,11 @@ const DoctorManager: React.FC = () => {
                 delete values.experience_years;
             }
 
+            if (values.consultation_fee !== undefined && values.consultation_fee !== null && values.consultation_fee !== '') {
+                values.consultation_fee = parseFloat(values.consultation_fee);
+            } else {
+                delete values.consultation_fee;
+            }
             if (editingDoctor) {
                 const success = await updateDoctor(editingDoctor.id, values);
                 if (success) setIsModalOpen(false);
@@ -88,6 +93,15 @@ const DoctorManager: React.FC = () => {
         }
     };
 
+    const [screenSize, setScreenSize] = useState(window.innerWidth);
+    const isMobile = screenSize < 768;
+
+    useEffect(() => {
+        const handleResize = () => setScreenSize(window.innerWidth);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     const [tableHeight, setTableHeight] = useState(400);
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -95,7 +109,6 @@ const DoctorManager: React.FC = () => {
         const observer = new ResizeObserver((entries) => {
             for (const entry of entries) {
                 if (entry.target === containerRef.current) {
-                    // Deduct header height from container
                     setTableHeight(Math.max(200, entry.contentRect.height - 55));
                 }
             }
@@ -106,43 +119,59 @@ const DoctorManager: React.FC = () => {
     }, []);
 
     return (
-        <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: '24px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+        <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: isMobile ? '16px' : '24px' }}>
+            <div style={{ 
+                display: 'flex', 
+                flexDirection: isMobile ? 'column' : 'row',
+                justifyContent: 'space-between', 
+                alignItems: isMobile ? 'stretch' : 'center',
+                gap: isMobile ? '16px' : '0',
+                flexShrink: 0 
+            }}>
                 <Space align="center" size="middle">
                     <div style={{
                         background: colors.info,
-                        padding: '10px',
+                        padding: isMobile ? '8px' : '10px',
                         borderRadius: '12px',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center'
                     }}>
-                        <MedicineBoxOutlined style={{ fontSize: '24px', color: colors.white }} />
+                        <MedicineBoxOutlined style={{ fontSize: isMobile ? '20px' : '24px', color: colors.white }} />
                     </div>
                     <div>
-                        <Title level={3} style={{ margin: 0 }}>Doctor Management</Title>
-                        <Text type="secondary">Onboard and manage medical professionals</Text>
+                        <Title level={isMobile ? 4 : 3} style={{ margin: 0 }}>Doctor Management</Title>
+                        {!isMobile && <Text type="secondary">Onboard and manage medical professionals</Text>}
                     </div>
                 </Space>
                 <Button
                     type="primary"
                     icon={<PlusOutlined />}
                     onClick={handleAdd}
-                    size="large"
+                    size={isMobile ? "middle" : "large"}
+                    block={isMobile}
                 >
                     Onboard New Doctor
                 </Button>
             </div>
 
             <Card
-                styles={{ body: { flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: '24px' } }}
+                styles={{ 
+                    body: { 
+                        flex: 1, 
+                        display: 'flex', 
+                        flexDirection: 'column', 
+                        overflow: 'hidden', 
+                        padding: isMobile ? '16px' : '24px' 
+                    } 
+                }}
                 style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
             >
                 <div style={{ marginBottom: 16, flexShrink: 0 }}>
                     <Input
-                        placeholder="Search by name, specialty, or email"
+                        placeholder="Search doctors..."
                         prefix={<SearchOutlined />}
-                        style={{ width: 350 }}
+                        style={{ width: isMobile ? '100%' : 350 }}
                         allowClear
                         onChange={(e) => handleSearch(e.target.value)}
                     />
@@ -158,7 +187,7 @@ const DoctorManager: React.FC = () => {
                         onDelete={handleDelete}
                         onRowClick={handleRowClick}
                         onLoadMore={loadMore}
-                        scroll={{ y: tableHeight }}
+                        scroll={{ x: isMobile ? 'max-content' : undefined, y: tableHeight }}
                     />
                 </div>
             </Card>

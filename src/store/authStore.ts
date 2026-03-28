@@ -13,6 +13,7 @@ interface User {
     doctorId?: number;
     profile_image?: string;
     phone?: string;
+    is_razorpay_enabled?: boolean;
 }
 
 interface AuthState {
