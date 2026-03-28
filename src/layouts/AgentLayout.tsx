@@ -162,36 +162,25 @@ const AgentLayout: React.FC = () => {
 
     const currentPath = location.pathname + location.search;
     const selectedKey = currentPath.includes('status=') ? currentPath : location.pathname;
+    const isMobile = screenSize < 992;
 
-    return (
-        <Layout style={{ minHeight: '100vh', background: colors.background }}>
-            <Sider
-                trigger={null}
-                collapsible
-                collapsed={collapsed}
-                breakpoint="lg"
-                collapsedWidth={screenSize < 768 ? 0 : 80}
-                width={260}
-                style={{
-                    overflow: 'auto',
-                    height: '100vh',
-                    position: 'fixed',
-                    left: 0,
-                    top: 0,
-                    bottom: 0,
-                    boxShadow: `2px 0 8px 0 ${colors.layout.agentSiderShadow}`,
-                    zIndex: 100,
-                }}
-            >
-                <div style={{
-                    height: 64,
-                    display: 'flex',
-                    alignItems: 'center',
-                    padding: '0 24px',
-                    gap: '12px',
-                    background: `linear-gradient(90deg, ${colors.sidebarBg} 0%, ${colors.layout.agentSidebarEnd} 100%)`,
-                    borderBottom: `1px solid ${colors.sidebarBorder}`
-                }}>
+    useEffect(() => {
+        if (isMobile) setCollapsed(true);
+    }, [location.pathname, isMobile]);
+
+    const SidebarContent = (
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: colors.sidebarBg }}>
+            <div style={{
+                height: 64,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '0 24px',
+                background: `linear-gradient(90deg, ${colors.sidebarBg} 0%, ${colors.layout.agentSidebarEnd} 100%)`,
+                borderBottom: `1px solid ${colors.sidebarBorder}`,
+                flexShrink: 0
+            }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <div style={{
                         width: 32,
                         height: 32,
@@ -204,40 +193,110 @@ const AgentLayout: React.FC = () => {
                     }}>
                         <UserOutlined style={{ color: colors.white, fontSize: 18 }} />
                     </div>
-                    {!collapsed && <Text strong style={{ color: colors.white, fontSize: 18, whiteSpace: 'nowrap' }}>Agent Portal</Text>}
+                    {(!collapsed || isMobile) && <Text strong style={{ color: colors.white, fontSize: 18, whiteSpace: 'nowrap' }}>Agent Portal</Text>}
                 </div>
+                {isMobile && (
+                    <Button 
+                        type="text" 
+                        icon={<MenuFoldOutlined style={{ color: colors.white }} />} 
+                        onClick={() => setCollapsed(true)}
+                    />
+                )}
+            </div>
 
+            <div style={{ flex: 1, overflowY: 'auto', padding: '16px 0' }}>
                 <Menu
                     theme="dark"
                     mode="inline"
                     selectedKeys={[selectedKey]}
                     defaultOpenKeys={location.pathname.includes('/agent/pickups') ? ['pickups-dropdown'] : []}
                     onClick={({ key }) => navigate(key)}
-                    style={{ borderRight: 0, marginTop: 16 }}
+                    style={{ borderRight: 0, background: 'transparent' }}
                     items={menuItems}
                 />
+            </div>
 
-                <div style={{ position: 'absolute', bottom: 20, width: '100%', padding: '0 16px' }}>
-                    <Button
-                        type="text"
-                        danger
-                        icon={<LogoutOutlined />}
-                        block={!collapsed}
-                        onClick={handleLogout}
-                        style={{ color: 'rgba(255,255,255,0.65)', display: 'flex', alignItems: 'center', justifyContent: collapsed ? 'center' : 'flex-start' }}
+            <div style={{ padding: '16px', borderTop: `1px solid ${colors.sidebarBorder}` }}>
+                <Button
+                    type="text"
+                    danger
+                    icon={<LogoutOutlined />}
+                    block={!collapsed || isMobile}
+                    onClick={handleLogout}
+                    style={{ 
+                        color: 'rgba(255,255,255,0.65)', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: (collapsed && !isMobile) ? 'center' : 'flex-start',
+                        background: `${colors.white}${colors.alpha.sidebarShadow}`,
+                        borderRadius: '6px'
+                    }}
+                >
+                    {(!collapsed || isMobile) && 'Logout'}
+                </Button>
+            </div>
+        </div>
+    );
+
+    return (
+        <Layout style={{ minHeight: '100vh', background: colors.background }}>
+            {isMobile ? (
+                <div 
+                    style={{ 
+                        position: 'fixed', 
+                        top: 0, 
+                        left: 0, 
+                        right: 0, 
+                        bottom: 0, 
+                        background: 'rgba(0,0,0,0.45)', 
+                        zIndex: 1000,
+                        visibility: !collapsed ? 'visible' : 'hidden',
+                        opacity: !collapsed ? 1 : 0,
+                        transition: 'all 0.3s'
+                    }}
+                    onClick={() => setCollapsed(true)}
+                >
+                    <div 
+                        style={{ 
+                            width: 260, 
+                            height: '100%', 
+                            transform: !collapsed ? 'translateX(0)' : 'translateX(-100%)',
+                            transition: 'transform 0.3s ease',
+                            boxShadow: '4px 0 16px rgba(0,0,0,0.2)'
+                        }}
+                        onClick={(e) => e.stopPropagation()}
                     >
-                        {!collapsed && 'Logout'}
-                    </Button>
+                        {SidebarContent}
+                    </div>
                 </div>
-            </Sider>
+            ) : (
+                <Sider
+                    trigger={null}
+                    collapsible
+                    collapsed={collapsed}
+                    width={260}
+                    style={{
+                        height: '100vh',
+                        position: 'fixed',
+                        left: 0,
+                        top: 0,
+                        bottom: 0,
+                        boxShadow: `2px 0 8px 0 ${colors.layout.agentSiderShadow}`,
+                        zIndex: 100,
+                        background: colors.sidebarBg
+                    }}
+                >
+                    {SidebarContent}
+                </Sider>
+            )}
 
             <Layout style={{
-                marginLeft: screenSize < 768 ? 0 : (collapsed ? 80 : 260),
+                marginLeft: isMobile ? 0 : (collapsed ? 80 : 260),
                 transition: 'all 0.2s',
                 display: 'flex',
                 flexDirection: 'column',
                 height: '100vh',
-                width: screenSize < 768 ? '100%' : `calc(100% - ${collapsed ? 80 : 260}px)`,
+                width: isMobile ? '100%' : `calc(100% - ${collapsed ? 80 : 260}px)`,
                 overflow: 'hidden'
             }}>
                 <Header style={{
@@ -256,23 +315,24 @@ const AgentLayout: React.FC = () => {
                         type="text"
                         icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
                         onClick={() => setCollapsed(!collapsed)}
-                        style={{ fontSize: '16px', width: 48, height: 48 }}
+                        style={{ fontSize: '18px', width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                     />
 
-                    <Space size="small">
-                        <Dropdown menu={userMenu} placement="bottomRight">
-                            <Space style={{ cursor: 'pointer' }}>
+                    <Space size="middle">
+                        <Dropdown menu={userMenu} placement="bottomRight" arrow>
+                            <Space style={{ cursor: 'pointer', padding: '4px 8px', borderRadius: '8px' }} className="user-dropdown-trigger">
                                 <Avatar
                                     icon={<UserOutlined />}
                                     style={{
                                         backgroundColor: colors.success,
-                                        verticalAlign: 'middle'
+                                        verticalAlign: 'middle',
+                                        boxShadow: '0 2px 8px rgba(16,185,129,0.15)'
                                     }}
                                 />
-                                {screenSize >= 768 && (
+                                {!isMobile && (
                                     <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.2 }}>
                                         <Text strong>{formatName(user?.name)}</Text>
-                                        <Text type="secondary" style={{ fontSize: 12 }}>Collection Agent</Text>
+                                        <Text type="secondary" style={{ fontSize: 11 }}>Collection Agent</Text>
                                     </div>
                                 )}
                             </Space>
@@ -283,7 +343,7 @@ const AgentLayout: React.FC = () => {
                 <Content style={{
                     flex: 1,
                     overflow: 'auto',
-                    padding: screenSize < 768 ? '16px 12px' : '24px',
+                    padding: isMobile ? '16px' : '24px',
                     background: colors.background,
                     display: 'flex',
                     flexDirection: 'column'

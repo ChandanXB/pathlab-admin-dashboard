@@ -9,16 +9,19 @@ import type { Doctor } from '@/features/admin/doctors/types/doctor.types';
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
 
+const toTitleCase = (str: string) => {
+    if (!str) return '';
+    return str.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+};
+
 const formatDoctorName = (name: string) => {
     if (!name) return 'Doctor';
     let cleanName = name.trim();
+    // Handle redundant Dr. prefix
     if (/^dr\.?\s+/i.test(cleanName)) {
         cleanName = cleanName.replace(/^dr\.?\s+/i, '');
     }
-    cleanName = cleanName.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-    // We do NOT prepend "Dr. " here, because the JSX specifically does: Dr. {formatDoctorName(...)}
-    // Actually, let's just make this function output the fully formatted "Dr. xyz" and replace the hardcoded "Dr. " in JSX.
-    return `Dr. ${cleanName}`;
+    return `Dr. ${toTitleCase(cleanName)}`;
 };
 
 const DoctorProfile: React.FC = () => {
@@ -51,10 +54,10 @@ const DoctorProfile: React.FC = () => {
     const handleTabChange = (key: string) => {
         if (key === 'edit' && profile) {
             form.setFieldsValue({
-                name: profile.name,
+                name: toTitleCase(profile.name.replace(/^dr\.?\s+/i, '')),
                 email: profile.email,
                 phone: profile.phone,
-                specialty: profile.specialty,
+                specialty: toTitleCase(profile.specialty || ''),
                 experience_years: profile.experience_years,
                 address: profile.address,
                 bio: profile.bio,
@@ -73,12 +76,20 @@ const DoctorProfile: React.FC = () => {
             const values = await form.validateFields();
             if (!user?.doctorId) return;
             setSaving(true);
-            const res = await doctorService.updateDoctor(user.doctorId, values);
+            const res = await doctorService.updateDoctor(user.doctorId, {
+                ...values,
+                name: toTitleCase(values.name),
+                specialty: values.specialty ? toTitleCase(values.specialty) : values.specialty
+            });
             if (res.success) {
                 message.success('Profile updated successfully');
                 setActiveTab('overview');
                 fetchProfile();
-                updateUser({ ...user, name: values.name, email: values.email });
+                updateUser({ 
+                    ...user, 
+                    name: toTitleCase(values.name), 
+                    email: values.email 
+                });
             }
         } catch (error: any) {
             if (error.errorFields) return; // Validation failed
@@ -158,9 +169,9 @@ const DoctorProfile: React.FC = () => {
                             <Title level={2} style={{ color: colors.white, margin: 0, fontWeight: 700 }}>
                                 {formatDoctorName(profile?.name || user?.name || '')}
                             </Title>
-                            <Space align="center" style={{ marginTop: 8 }}>
-                                <Text style={{ color: colors.white, opacity: 0.9, fontSize: 16, textTransform: 'capitalize' }}>
-                                    {profile?.specialty || 'General Practitioner'}
+                             <Space align="center" style={{ marginTop: 8 }}>
+                                <Text style={{ color: colors.white, opacity: 0.9, fontSize: 16 }}>
+                                    {profile?.specialty ? toTitleCase(profile.specialty) : 'General Practitioner'}
                                 </Text>
                             </Space>
                         </div>

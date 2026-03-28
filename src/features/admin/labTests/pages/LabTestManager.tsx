@@ -60,15 +60,22 @@ const LabTestManager: React.FC = () => {
         deleteCategory,
     } = useCategories(activeTab === 'categories');
 
+    const [screenSize, setScreenSize] = useState(window.innerWidth);
+    const isMobile = screenSize < 768;
+
+    useEffect(() => {
+        const handleResize = () => setScreenSize(window.innerWidth);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     // ===== DYNAMIC HEIGHT CALCULATION =====
     useEffect(() => {
         const observer = new ResizeObserver((entries) => {
             for (const entry of entries) {
                 if (entry.target === testContainerRef.current) {
-                    // Deduct ~50 to account for the table header height
                     setTestTableHeight(Math.max(200, entry.contentRect.height - 50));
                 } else if (entry.target === categoryContainerRef.current) {
-                    // Deduct ~50 to account for the table header height
                     setCategoryTableHeight(Math.max(200, entry.contentRect.height - 50));
                 }
             }
@@ -166,12 +173,12 @@ const LabTestManager: React.FC = () => {
     };
 
     return (
-        <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ marginBottom: 16 }}>
+        <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: isMobile ? '8px' : '16px' }}>
+            <div style={{ marginBottom: isMobile ? 8 : 16 }}>
                 <Breadcrumb items={[
                     { title: 'Home' },
-                    { title: 'Lab Management' },
-                    { title: 'Tests & Packages' }
+                    { title: isMobile ? 'Lab' : 'Lab Management' },
+                    { title: isMobile ? 'Tests' : 'Tests & Packages' }
                 ]} />
             </div>
 
@@ -179,18 +186,49 @@ const LabTestManager: React.FC = () => {
                 bordered={false}
                 className="shadow-sm"
                 style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
-                styles={{ body: { flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: '12px 24px' } }}
+                styles={{ 
+                    body: { 
+                        flex: 1, 
+                        display: 'flex', 
+                        flexDirection: 'column', 
+                        overflow: 'hidden', 
+                        padding: isMobile ? '8px 12px' : '12px 24px' 
+                    } 
+                }}
             >
                 <Tabs
                     activeKey={activeTab}
                     onChange={setActiveTab}
                     style={{ height: '100%' }}
+                    tabBarExtraContent={isMobile ? undefined : {
+                        right: activeTab === 'categories' ? (
+                            <Button type="primary" icon={<PlusOutlined />} onClick={handleAddCategory}>
+                                Add Category
+                            </Button>
+                        ) : (
+                            <Button type="primary" icon={<PlusOutlined />} onClick={handleAddTest}>
+                                Add Test
+                            </Button>
+                        )
+                    }}
                     items={[
                         {
                             key: 'tests',
                             label: 'Lab Tests',
                             children: (
                                 <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                                    {isMobile && (
+                                        <div style={{ marginBottom: 16 }}>
+                                            <Button 
+                                                type="primary" 
+                                                icon={<PlusOutlined />} 
+                                                onClick={handleAddTest}
+                                                block
+                                            >
+                                                Add New Test
+                                            </Button>
+                                        </div>
+                                    )}
                                     <div style={{ flexShrink: 0 }}>
                                         <TestFilters
                                             filters={testFilters}
@@ -211,7 +249,7 @@ const LabTestManager: React.FC = () => {
                                             hasMore={testPagination.hasMore}
                                             onEdit={handleEditTest}
                                             onDelete={deleteTest}
-                                            scroll={{ y: testTableHeight, x: 900 }}
+                                            scroll={{ y: testTableHeight, x: isMobile ? 'max-content' : 900 }}
                                             onScroll={fetchMoreTests}
                                         />
                                     </div>
@@ -223,6 +261,18 @@ const LabTestManager: React.FC = () => {
                             label: 'Categories',
                             children: (
                                 <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                                    {isMobile && (
+                                        <div style={{ marginBottom: 16 }}>
+                                            <Button 
+                                                type="primary" 
+                                                icon={<PlusOutlined />} 
+                                                onClick={handleAddCategory}
+                                                block
+                                            >
+                                                Add New Category
+                                            </Button>
+                                        </div>
+                                    )}
                                     <div style={{ flexShrink: 0 }}>
                                         <CategoryFilters
                                             filters={categoryFilters}
@@ -243,24 +293,13 @@ const LabTestManager: React.FC = () => {
                                             onEdit={handleEditCategory}
                                             onDelete={deleteCategory}
                                             onNext={fetchMoreCategories}
-                                            scroll={{ y: categoryTableHeight, x: 800 }}
+                                            scroll={{ y: categoryTableHeight, x: isMobile ? 'max-content' : 800 }}
                                         />
                                     </div>
                                 </div>
                             )
                         }
                     ]}
-                    tabBarExtraContent={
-                        activeTab === 'categories' ? (
-                            <Button type="primary" icon={<PlusOutlined />} onClick={handleAddCategory}>
-                                Add Category
-                            </Button>
-                        ) : (
-                            <Button type="primary" icon={<PlusOutlined />} onClick={handleAddTest}>
-                                Add Test
-                            </Button>
-                        )
-                    }
                 />
             </Card>
 

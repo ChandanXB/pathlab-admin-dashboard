@@ -135,13 +135,13 @@ const AdminLayout: React.FC = () => {
                                     fontSize: '11px',
                                     fontWeight: '700',
                                     color: status.color,
-                                    background: `${status.color}${colors.alpha.badgeBg}`, // Translucent background
+                                    background: `${status.color}${colors.alpha.badgeBg}`,
                                     padding: '0 7px',
                                     height: '20px',
                                     borderRadius: '10px',
                                     display: 'flex',
                                     alignItems: 'center',
-                                    boxShadow: `0 0 10px ${status.color}${colors.alpha.badgeGlow}` // Subtle glow matching image 4
+                                    boxShadow: `0 0 10px ${status.color}${colors.alpha.badgeGlow}`
                                 }}>
                                     {orderStats.statusCounts[status.value]}
                                 </div>
@@ -186,120 +186,164 @@ const AdminLayout: React.FC = () => {
     };
 
     const currentPath = location.pathname + location.search;
+    const isMobile = screenSize < 992;
+
+    useEffect(() => {
+        if (isMobile) setCollapsed(true);
+    }, [location.pathname, isMobile]);
+
+    const SidebarContent = (
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: colors.sidebarBg }}>
+            <div style={{
+                height: 64,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '0 24px',
+                background: `linear-gradient(90deg, ${colors.sidebarBg} 0%, ${colors.layout.agentSidebarEnd} 100%)`,
+                borderBottom: `1px solid ${colors.sidebarBorder}`,
+                flexShrink: 0
+            }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{
+                        width: 32,
+                        height: 32,
+                        background: themeToken.colorPrimary,
+                        borderRadius: '8px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0
+                    }}>
+                        <ExperimentOutlined style={{ color: colors.white, fontSize: 18 }} />
+                    </div>
+                    {(!collapsed || isMobile) && <Text strong style={{ color: colors.white, fontSize: 18, whiteSpace: 'nowrap' }}>PathLab</Text>}
+                </div>
+                {isMobile && (
+                    <Button 
+                        type="text" 
+                        icon={<MenuFoldOutlined style={{ color: colors.white }} />} 
+                        onClick={() => setCollapsed(true)}
+                    />
+                )}
+            </div>
+
+            <div
+                className="sidebar-menu-container"
+                style={{
+                    flex: 1,
+                    overflowY: 'auto',
+                    overflowX: 'hidden',
+                    padding: '16px 0'
+                }}
+            >
+                <Menu
+                    theme="dark"
+                    mode="inline"
+                    selectedKeys={[currentPath]}
+                    openKeys={openKeys}
+                    onOpenChange={(keys) => {
+                        const latestOpenKey = keys.find(key => openKeys.indexOf(key) === -1);
+                        if (latestOpenKey) {
+                            setOpenKeys([latestOpenKey]);
+                        } else {
+                            setOpenKeys([]);
+                        }
+                    }}
+                    onClick={({ key }) => navigate(key)}
+                    style={{ borderRight: 0, background: 'transparent' }}
+                    items={menuItems}
+                />
+            </div>
+
+            <div style={{
+                padding: '16px',
+                borderTop: `1px solid ${colors.sidebarBorder}`,
+                flexShrink: 0,
+                background: `${colors.sidebarBg}80`,
+                backdropFilter: 'blur(8px)'
+            }}>
+                <Button
+                    type="text"
+                    danger
+                    icon={<LogoutOutlined />}
+                    block={!collapsed || isMobile}
+                    onClick={handleLogout}
+                    style={{
+                        color: 'rgba(255,255,255,0.65)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: (collapsed && !isMobile) ? 'center' : 'flex-start',
+                        padding: (collapsed && !isMobile) ? '4px 0' : '4px 8px',
+                        background: `${colors.white}${colors.alpha.sidebarShadow}`,
+                        borderRadius: '6px'
+                    }}
+                >
+                    {(!collapsed || isMobile) && 'Sign Out'}
+                </Button>
+            </div>
+        </div>
+    );
 
     return (
         <Layout style={{ minHeight: '100vh', background: colors.background }}>
-            <Sider
-                trigger={null}
-                collapsible
-                collapsed={collapsed}
-                breakpoint="lg"
-                collapsedWidth={screenSize < 768 ? 0 : 80}
-                width={260}
-                style={{
-                    height: '100vh',
-                    position: 'fixed',
-                    left: 0,
-                    top: 0,
-                    bottom: 0,
-                    boxShadow: `2px 0 8px 0 ${colors.layout.agentSiderShadow}`,
-                    zIndex: 100,
-                    background: colors.sidebarBg
-                }}
-            >
-                <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-                    {/* Logo Section */}
-                    <div style={{
-                        height: 64,
-                        display: 'flex',
-                        alignItems: 'center',
-                        padding: '0 24px',
-                        gap: '12px',
-                        background: `linear-gradient(90deg, ${colors.sidebarBg} 0%, ${colors.layout.agentSidebarEnd} 100%)`,
-                        borderBottom: `1px solid ${colors.sidebarBorder}`,
-                        flexShrink: 0
-                    }}>
-                        <div style={{
-                            width: 32,
-                            height: 32,
-                            background: themeToken.colorPrimary,
-                            borderRadius: '8px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            flexShrink: 0
-                        }}>
-                            <ExperimentOutlined style={{ color: colors.white, fontSize: 18 }} />
-                        </div>
-                        {!collapsed && <Text strong style={{ color: colors.white, fontSize: 18, whiteSpace: 'nowrap' }}>PathLab</Text>}
-                    </div>
-
-                    {/* Menu Section - Scrollable */}
-                    <div
-                        className="sidebar-menu-container"
-                        style={{
-                            flex: 1,
-                            overflowY: 'auto',
-                            overflowX: 'hidden',
-                            padding: '16px 0'
+            {isMobile ? (
+                <div 
+                    style={{ 
+                        position: 'fixed', 
+                        top: 0, 
+                        left: 0, 
+                        right: 0, 
+                        bottom: 0, 
+                        background: 'rgba(0,0,0,0.45)', 
+                        zIndex: 1000,
+                        visibility: !collapsed ? 'visible' : 'hidden',
+                        opacity: !collapsed ? 1 : 0,
+                        transition: 'all 0.3s'
+                    }}
+                    onClick={() => setCollapsed(true)}
+                >
+                    <div 
+                        style={{ 
+                            width: 260, 
+                            height: '100%', 
+                            transform: !collapsed ? 'translateX(0)' : 'translateX(-100%)',
+                            transition: 'transform 0.3s ease',
+                            boxShadow: '4px 0 16px rgba(0,0,0,0.2)'
                         }}
+                        onClick={(e) => e.stopPropagation()}
                     >
-                        <Menu
-                            theme="dark"
-                            mode="inline"
-                            selectedKeys={[currentPath]}
-                            openKeys={openKeys}
-                            onOpenChange={(keys) => {
-                                const latestOpenKey = keys.find(key => openKeys.indexOf(key) === -1);
-                                if (latestOpenKey) {
-                                    setOpenKeys([latestOpenKey]);
-                                } else {
-                                    setOpenKeys([]);
-                                }
-                            }}
-                            onClick={({ key }) => navigate(key)}
-                            style={{ borderRight: 0, background: 'transparent' }}
-                            items={menuItems}
-                        />
-                    </div>
-
-                    {/* Bottom Section - Fixed */}
-                    <div style={{
-                        padding: '16px',
-                        borderTop: `1px solid ${colors.sidebarBorder}`,
-                        flexShrink: 0,
-                        background: `${colors.sidebarBg}80`, // 50% opacity version of sidebarBg
-                        backdropFilter: 'blur(8px)'
-                    }}>
-
-                        <Button
-                            type="text"
-                            danger
-                            icon={<LogoutOutlined />}
-                            block={!collapsed}
-                            onClick={handleLogout}
-                            style={{
-                                color: 'rgba(255,255,255,0.65)',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: collapsed ? 'center' : 'flex-start',
-                                padding: collapsed ? '4px 0' : '4px 8px',
-                                background: `${colors.white}${colors.alpha.sidebarShadow}`,
-                                borderRadius: '6px'
-                            }}
-                        >
-                            {!collapsed && 'Sign Out'}
-                        </Button>
+                        {SidebarContent}
                     </div>
                 </div>
-            </Sider>
+            ) : (
+                <Sider
+                    trigger={null}
+                    collapsible
+                    collapsed={collapsed}
+                    width={260}
+                    style={{
+                        height: '100vh',
+                        position: 'fixed',
+                        left: 0,
+                        top: 0,
+                        bottom: 0,
+                        boxShadow: `2px 0 8px 0 ${colors.layout.agentSiderShadow}`,
+                        zIndex: 100,
+                        background: colors.sidebarBg
+                    }}
+                >
+                    {SidebarContent}
+                </Sider>
+            )}
 
             <Layout style={{
-                marginLeft: screenSize < 768 ? 0 : (collapsed ? 80 : 260),
+                marginLeft: isMobile ? 0 : (collapsed ? 80 : 260),
                 transition: 'all 0.2s',
                 display: 'flex',
                 flexDirection: 'column',
                 height: '100vh',
+                width: isMobile ? '100%' : `calc(100% - ${collapsed ? 80 : 260}px)`,
                 overflow: 'hidden'
             }}>
                 <Header style={{
@@ -318,28 +362,29 @@ const AdminLayout: React.FC = () => {
                         type="text"
                         icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
                         onClick={() => setCollapsed(!collapsed)}
-                        style={{ fontSize: '16px', width: 48, height: 48 }}
+                        style={{ fontSize: '18px', width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                     />
 
-                    <Space size="small">
-                        <Badge count={5} size="small">
-                            <Button type="text" icon={<BellOutlined style={{ fontSize: 18 }} />} />
+                    <Space size="middle">
+                        <Badge count={5} size="small" style={{ boxShadow: 'none' }}>
+                            <Button type="text" icon={<BellOutlined style={{ fontSize: 18, color: '#64748b' }} />} />
                         </Badge>
-                        {screenSize >= 768 && <Divider type="vertical" />}
-                        <Dropdown menu={userMenu} placement="bottomRight">
-                            <Space style={{ cursor: 'pointer' }}>
+                        <Divider type="vertical" style={{ height: 24 }} />
+                        <Dropdown menu={userMenu} placement="bottomRight" arrow>
+                            <Space style={{ cursor: 'pointer', padding: '4px 8px', borderRadius: '8px', transition: 'all 0.2s' }} className="user-dropdown-trigger">
                                 <Avatar
                                     src={user?.profile_image}
                                     icon={<UserOutlined />}
                                     style={{
                                         backgroundColor: themeToken.colorPrimary,
-                                        verticalAlign: 'middle'
+                                        verticalAlign: 'middle',
+                                        boxShadow: '0 2px 8px rgba(0,74,173,0.15)'
                                     }}
                                 />
-                                {screenSize >= 768 && (
+                                {!isMobile && (
                                     <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.2 }}>
-                                        <Text strong>{formatName(user?.name) || 'User'}</Text>
-                                        <Text type="secondary" style={{ fontSize: 12 }}>{formatName(user?.role?.name) || 'Administrator'}</Text>
+                                        <Text strong style={{ fontSize: 14 }}>{formatName(user?.name) || 'User'}</Text>
+                                        <Text type="secondary" style={{ fontSize: 11 }}>{formatName(user?.role?.name) || 'Administrator'}</Text>
                                     </div>
                                 )}
                             </Space>
@@ -351,9 +396,9 @@ const AdminLayout: React.FC = () => {
                     flex: 1,
                     display: 'flex',
                     flexDirection: 'column',
-                    overflowY: location.pathname === '/' ? 'auto' : 'hidden',
+                    overflowY: 'auto',
                     overflowX: 'hidden',
-                    padding: screenSize < 768 ? '16px 12px' : '24px',
+                    padding: isMobile ? '16px' : '24px',
                     background: colors.background,
                 }}>
                     <Outlet />

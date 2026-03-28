@@ -29,6 +29,15 @@ const CityManager: React.FC = () => {
     const [editingCity, setEditingCity] = useState<ServiceableCity | null>(null);
     const [form] = Form.useForm();
 
+    const [screenSize, setScreenSize] = useState(window.innerWidth);
+    const isMobile = screenSize < 768;
+
+    useEffect(() => {
+        const handleResize = () => setScreenSize(window.innerWidth);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     const fetchCities = async () => {
         setLoading(true);
         try {
@@ -129,7 +138,7 @@ const CityManager: React.FC = () => {
                         <EnvironmentOutlined style={{ color: colors.primary }} />
                         <Text strong>{text}</Text>
                     </Space>
-                    {record.address && (
+                    {record.address && !isMobile && (
                         <Text type="secondary" style={{ fontSize: '12px', marginLeft: '24px' }}>
                             {record.address}
                         </Text>
@@ -148,7 +157,7 @@ const CityManager: React.FC = () => {
             dataIndex: 'villages',
             key: 'villages',
             render: (villages: string[]) => (
-                <div style={{ maxWidth: '200px' }}>
+                <div style={{ maxWidth: isMobile ? '120px' : '200px' }}>
                     {villages && villages.length > 0 ? (
                         villages.map(v => (
                             <Tag key={v} color="blue" style={{ marginBottom: '4px' }}>{v}</Tag>
@@ -167,33 +176,28 @@ const CityManager: React.FC = () => {
                 <Switch 
                     checked={status === 'active'} 
                     onChange={(checked) => handleToggleStatus(record, checked)}
-                    checkedChildren="Active"
-                    unCheckedChildren="Inactive"
+                    size={isMobile ? "small" : "default"}
+                    checkedChildren={isMobile ? "" : "Active"}
+                    unCheckedChildren={isMobile ? "" : "Inactive"}
                 />
             ),
-        },
-        {
-            title: 'Created At',
-            dataIndex: 'createdAt',
-            key: 'createdAt',
-            render: (date: string) => new Date(date).toLocaleDateString(),
         },
         {
             title: 'Actions',
             key: 'actions',
             render: (_: any, record: ServiceableCity) => (
-                <Space size="middle">
+                <Space size={isMobile ? 4 : "middle"}>
                     <Button 
                         type="text" 
                         icon={<EditOutlined />} 
                         onClick={() => handleEdit(record)}
                         style={{ color: colors.info }}
+                        size={isMobile ? "small" : "middle"}
                     >
-                        Edit
+                        {!isMobile && "Edit"}
                     </Button>
                     <Popconfirm
                         title="Delete City"
-                        description="Are you sure you want to delete this city?"
                         onConfirm={() => handleDelete(record.id)}
                         okText="Yes"
                         cancelText="No"
@@ -203,8 +207,9 @@ const CityManager: React.FC = () => {
                             type="text" 
                             danger 
                             icon={<DeleteOutlined />}
+                            size={isMobile ? "small" : "middle"}
                         >
-                            Delete
+                            {!isMobile && "Delete"}
                         </Button>
                     </Popconfirm>
                 </Space>
@@ -213,35 +218,49 @@ const CityManager: React.FC = () => {
     ];
 
     return (
-        <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <Breadcrumb items={[
-                { title: 'Home' },
-                { title: 'Location Management' },
-                { title: 'Serviceable Cities' }
-            ]} />
+        <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: isMobile ? 8 : 16 }}>
+            <div style={{ marginBottom: isMobile ? 8 : 16 }}>
+                <Breadcrumb items={[
+                    { title: 'Home' },
+                    { title: isMobile ? 'Locations' : 'Location Management' },
+                    { title: isMobile ? 'Cities' : 'Serviceable Cities' }
+                ]} />
+            </div>
 
             <Card
                 title={
                     <Space>
                         <EnvironmentOutlined />
-                        <span>Manage Serviceable Cities</span>
+                        <span>{isMobile ? "Manage Cities" : "Manage Serviceable Cities"}</span>
                     </Space>
                 }
-                extra={
+                extra={!isMobile && (
                     <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
                         Add New City
                     </Button>
-                }
+                )}
                 bordered={false}
                 className="shadow-sm"
-                style={{ flex: 1 }}
+                style={{ flex: 1, display: 'flex', flexDirection: 'column' }}
+                styles={{ 
+                    header: { padding: isMobile ? '8px 16px' : '16px 24px' },
+                    body: { padding: isMobile ? '8px' : '24px', flex: 1, overflow: 'auto' } 
+                }}
             >
+                {isMobile && (
+                    <div style={{ padding: '8px 8px 16px' }}>
+                        <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd} block>
+                            Add New City
+                        </Button>
+                    </div>
+                )}
                 <Table 
                     columns={columns as any} 
                     dataSource={cities} 
                     rowKey="id" 
                     loading={loading}
-                    pagination={{ pageSize: 10 }}
+                    pagination={{ pageSize: 10, size: 'small' }}
+                    scroll={{ x: isMobile ? 'max-content' : undefined }}
                 />
             </Card>
 
@@ -252,9 +271,10 @@ const CityManager: React.FC = () => {
                 onCancel={() => setIsModalVisible(false)}
                 okText={editingCity ? 'Update' : 'Add'}
                 centered
+                width={isMobile ? '95%' : 520}
             >
                 <Form form={form} layout="vertical" initialValues={{ status: true, villages: [] }}>
-                    <div style={{ display: 'flex', gap: '16px' }}>
+                    <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 0 : '16px' }}>
                         <Form.Item
                             name="name"
                             label="City Name"

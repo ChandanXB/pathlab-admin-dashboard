@@ -106,6 +106,15 @@ const PatientManager: React.FC = () => {
         await deletePatient(id);
     };
 
+    const [screenSize, setScreenSize] = useState(window.innerWidth);
+    const isMobile = screenSize < 768;
+
+    useEffect(() => {
+        const handleResize = () => setScreenSize(window.innerWidth);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     const [tableHeight, setTableHeight] = useState(400);
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -148,12 +157,19 @@ const PatientManager: React.FC = () => {
             items={[
                 {
                     key: 'patients',
-                    label: <span><UnorderedListOutlined /> All Patients</span>,
+                    label: <span><UnorderedListOutlined /> {isMobile ? "Patients" : "All Patients"}</span>,
                     children: (
-                        <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-                <h1 style={{ fontSize: '24px', margin: 0 }}>Patient Management</h1>
-                <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
+                        <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: isMobile ? '12px' : '16px' }}>
+            <div style={{ 
+                display: 'flex', 
+                flexDirection: isMobile ? 'column' : 'row',
+                justifyContent: 'space-between', 
+                alignItems: isMobile ? 'stretch' : 'center',
+                gap: isMobile ? '16px' : '0',
+                marginBottom: 16 
+            }}>
+                <h1 style={{ fontSize: isMobile ? '20px' : '24px', margin: 0 }}>Patient Management</h1>
+                <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd} block={isMobile}>
                     Add New Patient
                 </Button>
             </div>
@@ -178,7 +194,7 @@ const PatientManager: React.FC = () => {
                         onView={handleView}
                         onDelete={handleDelete}
                         onLoadMore={loadMore}
-                        scroll={{ y: tableHeight }}
+                        scroll={{ x: isMobile ? 'max-content' : undefined, y: tableHeight }}
                     />
                 </div>
                 {patientPagination.hasMore && !loadingPatients && (

@@ -71,6 +71,15 @@ const CollectionAgentManager: React.FC = () => {
         }
     };
 
+    const [screenSize, setScreenSize] = useState(window.innerWidth);
+    const isMobile = screenSize < 768;
+
+    useEffect(() => {
+        const handleResize = () => setScreenSize(window.innerWidth);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     const [tableHeight, setTableHeight] = useState(400);
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -88,23 +97,41 @@ const CollectionAgentManager: React.FC = () => {
     }, []);
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 24 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: isMobile ? 16 : 24 }}>
             <Card
-                title="Collection Agents Management"
+                title={isMobile ? "Agents" : "Collection Agents Management"}
                 style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}
-                styles={{ body: { flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden', padding: '24px' } }}
+                styles={{ 
+                    header: { padding: isMobile ? '8px 16px' : '16px 24px' },
+                    body: { 
+                        flex: 1, 
+                        display: 'flex', 
+                        flexDirection: 'column', 
+                        minHeight: 0, 
+                        overflow: 'hidden', 
+                        padding: isMobile ? '16px' : '24px' 
+                    } 
+                }}
             >
-                <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', flexShrink: 0 }}>
+                <div style={{ 
+                    marginBottom: 16, 
+                    display: 'flex', 
+                    flexDirection: isMobile ? 'column' : 'row',
+                    justifyContent: 'space-between', 
+                    gap: isMobile ? 12 : 16,
+                    flexShrink: 0 
+                }}>
                     <Input
-                        placeholder="Search by name, phone or email"
+                        placeholder="Search agents..."
                         prefix={<SearchOutlined />}
-                        style={{ width: 300 }}
+                        style={{ width: isMobile ? '100%' : 300 }}
                         onChange={(e) => handleSearch(e.target.value)}
                     />
                     <Button
                         type="primary"
                         icon={<PlusOutlined />}
                         onClick={handleAdd}
+                        block={isMobile}
                     >
                         Add New Agent
                     </Button>
@@ -120,7 +147,7 @@ const CollectionAgentManager: React.FC = () => {
                         onDelete={handleDelete}
                         onRowClick={handleRowClick}
                         onLoadMore={loadMore}
-                        scroll={{ y: tableHeight }}
+                        scroll={{ x: isMobile ? 'max-content' : undefined, y: tableHeight }}
                     />
                 </div>
             </Card>

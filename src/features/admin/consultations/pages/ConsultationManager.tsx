@@ -16,6 +16,15 @@ const ConsultationManager: React.FC<ConsultationManagerProps> = ({ hideHeader = 
     const [loading, setLoading] = useState(true);
     const [searchText, setSearchText] = useState('');
 
+    const [screenSize, setScreenSize] = useState(window.innerWidth);
+    const isMobile = screenSize < 768;
+
+    useEffect(() => {
+        const handleResize = () => setScreenSize(window.innerWidth);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     useEffect(() => {
         const fetchConsultations = async () => {
             try {
@@ -46,10 +55,10 @@ const ConsultationManager: React.FC<ConsultationManagerProps> = ({ hideHeader = 
 
     const columns = [
         {
-            title: 'Consultation ID',
+            title: isMobile ? 'ID' : 'Consultation ID',
             dataIndex: 'id',
             key: 'id',
-            width: 100,
+            width: isMobile ? 80 : 100,
             render: (id: number) => <Text strong>C-{id.toString().padStart(4, '0')}</Text>,
         },
         {
@@ -146,24 +155,41 @@ const ConsultationManager: React.FC<ConsultationManagerProps> = ({ hideHeader = 
     ];
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: hideHeader ? '0px' : '24px', height: '100%' }}>
+        <div style={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            gap: hideHeader ? '0px' : (isMobile ? '12px' : '24px'), 
+            height: '100%' 
+        }}>
             {!hideHeader && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+                <div style={{ 
+                    display: 'flex', 
+                    flexDirection: isMobile ? 'column' : 'row',
+                    justifyContent: 'space-between', 
+                    alignItems: isMobile ? 'flex-start' : 'center', 
+                    marginBottom: isMobile ? 12 : 24,
+                    gap: isMobile ? 8 : 0
+                }}>
                     <div>
-                        <Title level={2} style={{ margin: 0 }}>Consultations</Title>
-                        <Text type="secondary">Monitor patient-doctor appointments and precaution statuses.</Text>
+                        <Title level={isMobile ? 3 : 2} style={{ margin: 0 }}>Consultations</Title>
+                        {!isMobile && <Text type="secondary">Monitor patient-doctor appointments and precaution statuses.</Text>}
                     </div>
                 </div>
             )}
 
-            <Card bordered={false} className="shadow-sm" style={{ flex: 1, display: 'flex', flexDirection: 'column', borderRadius: '12px' }}>
+            <Card 
+                bordered={false} 
+                className="shadow-sm" 
+                style={{ flex: 1, display: 'flex', flexDirection: 'column', borderRadius: '12px' }}
+                styles={{ body: { padding: isMobile ? '12px' : '24px', flex: 1, display: 'flex', flexDirection: 'column' } }}
+            >
                 <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'flex-start' }}>
                     <Input
-                        placeholder="Search by patient or doctor name / ID..."
+                        placeholder="Search consultations..."
                         prefix={<SearchOutlined />}
                         value={searchText}
                         onChange={(e) => setSearchText(e.target.value)}
-                        style={{ width: 350 }}
+                        style={{ width: isMobile ? '100%' : 350 }}
                         allowClear
                     />
                 </div>

@@ -33,7 +33,7 @@ const DoctorTable: React.FC<DoctorTableProps> = ({
             title: 'Name',
             dataIndex: 'name',
             key: 'name',
-            render: (text: string, record: Doctor) => (
+            render: (_: string, record: Doctor) => (
                 <Space>
                     {record.profile_image ? (
                         <Avatar src={record.profile_image} size="small" />

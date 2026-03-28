@@ -1,5 +1,5 @@
 import React from 'react';
-import { Form, Input, Select, Divider, Typography, Space, Tabs, Upload, message } from 'antd';
+import { Form, Input, Select, Divider, Typography, Space, Tabs, Upload, message, Row, Col } from 'antd';
 import {
     EnvironmentTwoTone,
     PhoneOutlined,
@@ -15,6 +15,7 @@ import type { CollectionAgent } from '../services/collectionAgentService';
 import SharedModal from '@/shared/components/SharedModal';
 import { VEHICLE_TYPES, ACCOUNT_STATUSES } from '@/shared/constants/app.constants';
 import LocationPicker from '@/shared/components/Maps/LocationPicker';
+import colors from '@/styles/colors';
 
 const { Option } = Select;
 const { Text } = Typography;
@@ -77,59 +78,70 @@ const AgentFormModal: React.FC<AgentFormModalProps> = ({
                 layout="vertical"
                 initialValues={{ status: 'active' }}
             >
-                <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
-                    <Form.Item 
-                        name="profile_image" 
-                        label="Profile Photo"
-                        getValueFromEvent={() => {
-                            // AntD Upload throws an event, we ignore it and return the string we set manually
-                            return form.getFieldValue('profile_image');
-                        }}
-                    >
-                        <Upload
-                            maxCount={1}
-                            beforeUpload={handleFileUpload}
-                            accept="image/*"
-                            showUploadList={false}
-                            listType="picture-card"
-                            style={{ width: '100px', height: '100px' }}
+                <Row gutter={24} align="top">
+                    <Col span={6}>
+                        <Form.Item 
+                            name="profile_image" 
+                            label="Profile Photo"
+                            getValueFromEvent={() => form.getFieldValue('profile_image')}
+                            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}
                         >
-                            {form.getFieldValue('profile_image') ? (
-                                <img src={form.getFieldValue('profile_image')} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }} />
-                            ) : (
-                                <div><UploadOutlined /><div style={{ marginTop: 8 }}>Upload</div></div>
-                            )}
-                        </Upload>
-                    </Form.Item>
-                    
-                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                        <Form.Item
-                            name="name"
-                            label="Full Name"
-                            rules={[{ required: true, message: 'Please enter agent name' }]}
-                        >
-                        <Input prefix={<UserAddOutlined style={{ color: '#bfbfbf' }} />} placeholder="Agent's full name" />
-                    </Form.Item>
-                    <Form.Item
-                        name="phone"
-                        label="Phone Number"
-                        style={{ flex: 1 }}
-                        rules={[{ required: true, message: 'Please enter phone number' }]}
-                    >
-                        <Input prefix={<PhoneOutlined style={{ color: '#bfbfbf' }} />} placeholder="e.g. +91 9876543210" />
-                    </Form.Item>
-                        <Form.Item
-                            name="email"
-                            label="Email Address"
-                            rules={[
-                                { required: true, message: 'Please enter email' },
-                                { type: 'email', message: 'Invalid email' }
-                            ]}
-                        >
-                            <Input prefix={<MailOutlined style={{ color: '#bfbfbf' }} />} type="email" placeholder="example@pathlab.com" />
+                            <Upload
+                                maxCount={1}
+                                beforeUpload={handleFileUpload}
+                                accept="image/*"
+                                showUploadList={false}
+                                listType="picture-card"
+                                className="avatar-uploader"
+                                style={{ width: '140px', height: '140px', margin: '0 auto' }}
+                            >
+                                {form.getFieldValue('profile_image') ? (
+                                    <img src={form.getFieldValue('profile_image')} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }} />
+                                ) : (
+                                    <Space direction="vertical" size={0}>
+                                        <UploadOutlined style={{ fontSize: '24px', color: colors.primary }} />
+                                        <div style={{ marginTop: 8, fontSize: '13px', fontWeight: 600 }}>Upload</div>
+                                    </Space>
+                                )}
+                            </Upload>
                         </Form.Item>
-                    </div>
-                </div>
+                    </Col>
+                    
+                    <Col span={18}>
+                        <Row gutter={16}>
+                            <Col span={24}>
+                                <Form.Item
+                                    name="name"
+                                    label="Full Name"
+                                    rules={[{ required: true, message: 'Please enter agent name' }]}
+                                >
+                                    <Input prefix={<UserAddOutlined style={{ color: colors.primary }} />} placeholder="Agent's full name" size="large" />
+                                </Form.Item>
+                            </Col>
+                            <Col span={24}>
+                                <Form.Item
+                                    name="phone"
+                                    label="Phone Number"
+                                    rules={[{ required: true, message: 'Please enter phone number' }]}
+                                >
+                                    <Input prefix={<PhoneOutlined style={{ color: colors.primary }} />} placeholder="e.g. +91 9876543210" size="large" />
+                                </Form.Item>
+                            </Col>
+                            <Col span={24}>
+                                <Form.Item
+                                    name="email"
+                                    label="Email Address"
+                                    rules={[
+                                        { required: true, message: 'Please enter email' },
+                                        { type: 'email', message: 'Invalid email' }
+                                    ]}
+                                >
+                                    <Input prefix={<MailOutlined style={{ color: colors.primary }} />} type="email" placeholder="example@pathlab.com" size="large" />
+                                </Form.Item>
+                            </Col>
+                        </Row>
+                    </Col>
+                </Row>
 
                 {!editingAgent && (
                     <Form.Item
@@ -137,41 +149,44 @@ const AgentFormModal: React.FC<AgentFormModalProps> = ({
                         label="Login Password"
                         rules={[{ required: true, message: 'Please enter a password' }]}
                     >
-                        <Input.Password prefix={<LockOutlined style={{ color: '#bfbfbf' }} />} placeholder="Default password for login" />
+                        <Input.Password prefix={<LockOutlined style={{ color: colors.primary }} />} placeholder="Default password for login" size="large" />
                     </Form.Item>
                 )}
 
-                <div style={{ display: 'flex', gap: 16 }}>
-                    <Form.Item
-                        name="vehicle_type"
-                        label="Vehicle Type"
-                        style={{ flex: 1 }}
-                    >
-                        <Select placeholder="Select type" prefix={<CarOutlined style={{ color: '#bfbfbf' }} />}>
-                            {VEHICLE_TYPES.map(vt => (
-                                <Option key={vt.value} value={vt.value}>{vt.label}</Option>
-                            ))}
-                        </Select>
-                    </Form.Item>
-                    <Form.Item
-                        name="vehicle_no"
-                        label="Vehicle No."
-                        style={{ flex: 1 }}
-                    >
-                        <Input placeholder="e.g. DL-1234" />
-                    </Form.Item>
-                    <Form.Item
-                        name="status"
-                        label="Account Status"
-                        style={{ flex: 1 }}
-                    >
-                        <Select>
-                            {ACCOUNT_STATUSES.map(as => (
-                                <Option key={as.value} value={as.value}>{as.label}</Option>
-                            ))}
-                        </Select>
-                    </Form.Item>
-                </div>
+                <Row gutter={16}>
+                    <Col span={8}>
+                        <Form.Item
+                            name="vehicle_type"
+                            label="Vehicle Type"
+                        >
+                            <Select placeholder="Select type" prefix={<CarOutlined style={{ color: colors.primary }} />} size="large">
+                                {VEHICLE_TYPES.map(vt => (
+                                    <Option key={vt.value} value={vt.value}>{vt.label}</Option>
+                                ))}
+                            </Select>
+                        </Form.Item>
+                    </Col>
+                    <Col span={8}>
+                        <Form.Item
+                            name="vehicle_no"
+                            label="Vehicle No."
+                        >
+                            <Input placeholder="e.g. DL-1234" size="large" />
+                        </Form.Item>
+                    </Col>
+                    <Col span={8}>
+                        <Form.Item
+                            name="status"
+                            label="Account Status"
+                        >
+                            <Select size="large">
+                                {ACCOUNT_STATUSES.map(as => (
+                                    <Option key={as.value} value={as.value}>{as.label}</Option>
+                                ))}
+                            </Select>
+                        </Form.Item>
+                    </Col>
+                </Row>
 
                 <Divider style={{ margin: '8px 0 16px 0' }} orientation={"left" as any} orientationMargin={0}>
                     <Space><EnvironmentTwoTone twoToneColor="#eb2f96" /> Location & Address</Space>

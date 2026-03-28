@@ -144,6 +144,14 @@ const DoctorFormModal: React.FC<DoctorFormModalProps> = ({
                     >
                         <Input type="number" placeholder="e.g. 10" />
                     </Form.Item>
+
+                    <Form.Item
+                        name="consultation_fee"
+                        label="Consultation Fee (₹)"
+                        rules={[{ required: true, message: 'Please enter fee' }]}
+                    >
+                        <Input type="number" prefix="₹" placeholder="500" />
+                    </Form.Item>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: editingDoctor ? '1fr' : '2fr 1fr', gap: '0 16px' }}>

@@ -65,6 +65,7 @@ const DoctorDashboard: React.FC = () => {
             title: 'Status',
             dataIndex: 'status',
             key: 'status',
+            width: 150,
             render: (status: string) => {
                 const color = status === 'scheduled' ? 'blue' : status === 'completed' ? 'green' : 'red';
                 return <Tag color={color}>{status.toUpperCase()}</Tag>;
@@ -73,6 +74,8 @@ const DoctorDashboard: React.FC = () => {
         {
             title: 'Actions',
             key: 'actions',
+            width: 120,
+            align: 'right' as const,
             render: () => (
                 <Button type="link" size="small" onClick={() => navigate('/doctor/patients')}>View Details</Button>
             ),

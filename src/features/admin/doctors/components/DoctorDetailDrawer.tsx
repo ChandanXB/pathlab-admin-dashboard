@@ -1,9 +1,10 @@
 import React from 'react';
 import { Drawer, Descriptions, Tag, Typography, Space, Divider } from 'antd';
-import { MedicineBoxOutlined, PhoneOutlined, MailOutlined, HomeOutlined, ClockCircleOutlined, UserOutlined } from '@ant-design/icons';
+import { MedicineBoxOutlined, PhoneOutlined, MailOutlined, HomeOutlined, ClockCircleOutlined, UserOutlined, CreditCardOutlined } from '@ant-design/icons';
 import type { Doctor } from '../types/doctor.types';
 import colors from '@/styles/colors';
 import { format } from 'date-fns';
+import { formatDoctorName, formatName } from '@/shared/utils/nameUtils';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -41,14 +42,16 @@ const DoctorDetailDrawer: React.FC<DoctorDetailDrawerProps> = ({ visible, doctor
                     )}
                 </div>
                 <div>
-                    <Title level={4} style={{ margin: 0, color: colors.textDark }}>{doctor.name}</Title>
-                    <Tag color="blue" style={{ marginTop: 8, fontSize: '14px', padding: '4px 12px', borderRadius: '4px' }}>
-                        {doctor.specialty || 'General'}
+                    <Title level={4} style={{ margin: 0, color: colors.textDark }}>
+                        {formatDoctorName(doctor.name)}
+                    </Title>
+                    <Tag color="blue" style={{ marginTop: 8, fontSize: '13px', padding: '2px 10px', borderRadius: '4px' }}>
+                        {doctor.specialty ? formatName(doctor.specialty) : 'General Practitioner'}
                     </Tag>
                 </div>
                 <div style={{ marginLeft: 'auto' }}>
                     <Tag color={doctor.status === 'active' ? 'green' : 'red'}>
-                        {doctor.status.toUpperCase()}
+                        {formatName(doctor.status)}
                     </Tag>
                 </div>
             </div>
@@ -65,6 +68,9 @@ const DoctorDetailDrawer: React.FC<DoctorDetailDrawerProps> = ({ visible, doctor
                 <Descriptions.Item label={<span><ClockCircleOutlined /> Experience</span>}>
                     {doctor.experience_years ? `${doctor.experience_years} Years` : 'Not specified'}
                 </Descriptions.Item>
+                <Descriptions.Item label={<span><CreditCardOutlined /> Consultation Fee</span>}>
+                    <Text strong style={{ color: colors.primary }}>₹{doctor.consultation_fee || 500}</Text>
+                </Descriptions.Item>
                 <Descriptions.Item label="Joined On">
                     {doctor.user?.createdAt ? format(new Date(doctor.user.createdAt), 'dd MMM yyyy') : (doctor.createdAt ? format(new Date(doctor.createdAt), 'dd MMM yyyy') : 'N/A')}
                 </Descriptions.Item>
@@ -77,7 +83,7 @@ const DoctorDetailDrawer: React.FC<DoctorDetailDrawerProps> = ({ visible, doctor
                 Address
             </Title>
             <Paragraph style={{ color: colors.textDark }}>
-                {doctor.address || 'No address provided.'}
+                {doctor.address ? formatName(doctor.address) : 'No address provided.'}
             </Paragraph>
 
             <Divider style={{ margin: '16px 0' }} />
