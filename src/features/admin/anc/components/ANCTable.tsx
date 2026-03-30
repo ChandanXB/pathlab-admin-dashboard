@@ -1,0 +1,136 @@
+import React from 'react';
+import { Tag, Space, Button, Tooltip } from 'antd';
+import { EyeOutlined, UserOutlined, CalendarOutlined } from '@ant-design/icons';
+import InfiniteScrollTable from '@/shared/components/InfiniteScrollTable';
+import type { Pregnancy } from '../services/ancService';
+import dayjs from 'dayjs';
+import { formatName } from '@/shared/utils/nameUtils';
+
+interface ANCTableProps {
+    data: Pregnancy[];
+    loading: boolean;
+    onView: (record: Pregnancy) => void;
+    scroll?: { x?: number | string; y?: number | string };
+}
+
+const ANCTable: React.FC<ANCTableProps> = ({
+    data,
+    loading,
+    onView,
+    scroll,
+}) => {
+    const calculateWeeks = (lmp: string): number => {
+        const totalDays = dayjs().diff(dayjs(lmp), 'day');
+        return Math.max(1, Math.floor(totalDays / 7) + 1);
+    };
+
+    const getTrimester = (weeks: number): number => {
+        if (weeks <= 12) return 1;
+        if (weeks <= 26) return 2;
+        return 3;
+    };
+
+    const columns = [
+        {
+            title: 'Patient',
+            dataIndex: ['mother', 'full_name'],
+            key: 'patient_name',
+            width: 250,
+            render: (text: string, record: Pregnancy) => (
+                <Space>
+                    <UserOutlined />
+                    <div style={{ minWidth: '180px' }}>
+                        <div style={{ fontWeight: 600 }}>{formatName(text)}</div>
+                        <div style={{ fontSize: '11px', color: '#8c8c8c' }}>{record.mother.patient_code}</div>
+                    </div>
+                </Space>
+            ),
+        },
+        {
+            title: <span style={{ whiteSpace: 'nowrap' }}>LMP Date</span>,
+            dataIndex: 'lmp_date',
+            key: 'lmp_date',
+            width: 130,
+            render: (date: string) => dayjs(date).format('DD MMM YYYY'),
+        },
+        {
+            title: <span style={{ whiteSpace: 'nowrap' }}>EDD Date</span>,
+            dataIndex: 'edd_date',
+            key: 'edd_date',
+            width: 140,
+            render: (date: string) => (
+                <Space>
+                    <CalendarOutlined style={{ color: '#ff4d4f' }} />
+                    <span style={{ fontWeight: 600, color: '#ff4d4f' }}>{dayjs(date).format('DD MMM YYYY')}</span>
+                </Space>
+            ),
+        },
+        {
+            title: <span style={{ whiteSpace: 'nowrap' }}>Status</span>,
+            key: 'status',
+            width: 160,
+            render: (_: any, record: Pregnancy) => {
+                const weeks = calculateWeeks(record.lmp_date);
+                const trimester = getTrimester(weeks);
+                return (
+                    <Space direction="vertical" size={2}>
+                        <Tag color="processing">Week {weeks}</Tag>
+                        <Tag color="cyan">Trimester {trimester}</Tag>
+                    </Space>
+                );
+            },
+        },
+        {
+            title: <span style={{ whiteSpace: 'nowrap' }}>Risk Level</span>,
+            dataIndex: 'risk_level',
+            key: 'risk_level',
+            width: 140,
+            render: (risk: string) => (
+                <Tag color={risk === 'High' ? 'red' : risk === 'Medium' ? 'orange' : 'green'}>
+                    {risk || 'Low'}
+                </Tag>
+            ),
+        },
+        {
+            title: <span style={{ whiteSpace: 'nowrap' }}>History (G/P/A/L)</span>,
+            key: 'history',
+            width: 150,
+            render: (_: any, record: Pregnancy) => (
+                <Tooltip title="Gravida / Para / Abortions / Living">
+                    <span style={{ fontFamily: 'monospace', fontWeight: 600 }}>
+                        {record.gravida || 0}/{record.para || 0}/{record.abortions || 0}/{record.living_children || 0}
+                    </span>
+                </Tooltip>
+            ),
+        },
+        {
+            title: <span style={{ whiteSpace: 'nowrap' }}>Actions</span>,
+            key: 'actions',
+            width: 100,
+            fixed: 'right' as const,
+            align: 'center' as const,
+            render: (_: any, record: Pregnancy) => (
+                <Button
+                    type="text"
+                    icon={<EyeOutlined style={{ color: '#1890ff' }} />}
+                    onClick={() => onView(record)}
+                />
+            ),
+        },
+    ];
+
+    return (
+        <InfiniteScrollTable
+            columns={columns}
+            dataSource={data}
+            loading={loading}
+            loadingMore={false}
+            hasMore={false}
+            next={() => {}}
+            scroll={scroll}
+            rowKey="id"
+        />
+    );
+};
+
+export default ANCTable;

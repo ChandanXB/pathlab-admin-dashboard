@@ -211,11 +211,22 @@ const AgentPickups: React.FC = () => {
                             <Button
                                 type="primary"
                                 size="small"
+                                icon={<EnvironmentOutlined />}
+                                onClick={(e) => { e.stopPropagation(); markReached(record.id); }}
+                                style={{ background: '#faad14', borderColor: '#faad14', borderRadius: '6px' }}
+                            >
+                                Reached
+                            </Button>
+                        )}
+                        {status === 'reached' && (
+                            <Button
+                                type="primary"
+                                size="small"
                                 icon={<SendOutlined />}
                                 onClick={(e) => { e.stopPropagation(); openDrawer(record); }}
                                 style={{ background: '#722ed1', borderColor: '#722ed1', borderRadius: '6px' }}
                             >
-                                Collected
+                                Collect
                             </Button>
                         )}
                         {(status === 'collected') && (
