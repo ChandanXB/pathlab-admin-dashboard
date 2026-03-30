@@ -53,3 +53,17 @@
 .infinite-scroll-table-wrapper .ant-table-row:last-child td {
     border-bottom: none !important;
 }
+
+/* Ensure fixed columns have a solid background to prevent overlapping content transparency */
+.infinite-scroll-table-wrapper .ant-table-cell-fix-right,
+.infinite-scroll-table-wrapper .ant-table-cell-fix-left {
+    background-color: #ffffff !important;
+    z-index: 2;
+}
+
+/* Ensure sticky headers in fixed columns are also solid */
+.infinite-scroll-table-wrapper .ant-table-thead th.ant-table-cell-fix-right,
+.infinite-scroll-table-wrapper .ant-table-thead th.ant-table-cell-fix-left {
+    background-color: #fafafa !important;
+    z-index: 3 !important;
+}

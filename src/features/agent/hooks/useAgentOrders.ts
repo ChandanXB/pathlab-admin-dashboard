@@ -101,7 +101,7 @@ export const useAgentOrders = () => {
             if (proofData) {
                 await agentOrderService.uploadCollectionProof(orderId, proofData);
             } else {
-                await agentOrderService.updateOrderStatus(orderId, 'collected');
+                await agentOrderService.updateOrderStatus(orderId, 'completed');
                 await agentOrderService.updateAssignmentStatus(orderId, 'collected');
             }
             message.success('Sample marked as collected!');
