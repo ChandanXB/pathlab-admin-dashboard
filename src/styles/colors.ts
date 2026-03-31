@@ -59,6 +59,24 @@ export const colors = {
         scrollbarThumb: 'rgba(255, 255, 255, 0.2)',
     },
 
+    // ANC Specific Colors
+    anc: {
+        primary: '#eb2f96',     // Pink
+        light: '#fff0f6',       // Light Pink
+        gradient: ['#eb2f96', '#ff85c0'],
+        trimester: '#722ed1',   // Purple
+        trimesterLight: '#f9f0ff',
+    },
+
+    // UI/Borders and Accents
+    ui: {
+        bgLight: '#f8fafc',
+        border: '#f0f0f0',
+        label: '#8c8c8c',
+        text: '#262626',
+        cardShadow: '0 4px 15px rgba(0,0,0,0.05)',
+    },
+
     // Chart specific colors
     charts: {
         revenue: ['#52c41a', '#95de64'], // Green gradient

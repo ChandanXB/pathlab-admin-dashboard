@@ -5,6 +5,7 @@ import InfiniteScrollTable from '@/shared/components/InfiniteScrollTable';
 import type { Pregnancy } from '../services/ancService';
 import dayjs from 'dayjs';
 import { formatName } from '@/shared/utils/nameUtils';
+import { colors } from '@/styles/colors';
 
 interface ANCTableProps {
     data: Pregnancy[];
@@ -72,10 +73,20 @@ const ANCTable: React.FC<ANCTableProps> = ({
             render: (_: any, record: Pregnancy) => {
                 const weeks = calculateWeeks(record.lmp_date);
                 const trimester = getTrimester(weeks);
+                const daysToEDD = dayjs(record.edd_date).diff(dayjs(), 'day');
+                const isDueSoon = daysToEDD >= 0 && daysToEDD <= 30;
+
                 return (
                     <Space direction="vertical" size={2}>
-                        <Tag color="processing">Week {weeks}</Tag>
-                        <Tag color="cyan">Trimester {trimester}</Tag>
+                        <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                            <Tag color="processing" style={{ margin: 0 }}>Week {weeks}</Tag>
+                            <Tag color="cyan" style={{ margin: 0 }}>Trimester {trimester}</Tag>
+                        </div>
+                        {isDueSoon && (
+                            <Tag color="error" style={{ margin: 0, fontWeight: 600, animation: 'pulse 2s infinite' }}>
+                                DUE SOON ({daysToEDD}d)
+                            </Tag>
+                        )}
                     </Space>
                 );
             },
@@ -112,7 +123,7 @@ const ANCTable: React.FC<ANCTableProps> = ({
             render: (_: any, record: Pregnancy) => (
                 <Button
                     type="text"
-                    icon={<EyeOutlined style={{ color: '#1890ff' }} />}
+                    icon={<EyeOutlined style={{ color: colors.primary }} />}
                     onClick={() => onView(record)}
                 />
             ),

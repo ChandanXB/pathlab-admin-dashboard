@@ -370,7 +370,7 @@ const AdminLayout: React.FC = () => {
                         <Badge count={5} size="small" style={{ boxShadow: 'none' }}>
                             <Button type="text" icon={<BellOutlined style={{ fontSize: 18, color: '#64748b' }} />} />
                         </Badge>
-                        <Divider type="vertical" style={{ height: 24 }} />
+                        <Divider vertical style={{ height: 24 }} />
                         <Dropdown menu={userMenu} placement="bottomRight" arrow>
                             <Space style={{ cursor: 'pointer', padding: '4px 8px', borderRadius: '8px', transition: 'all 0.2s' }} className="user-dropdown-trigger">
                                 <Avatar

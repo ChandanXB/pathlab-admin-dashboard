@@ -250,7 +250,7 @@ const LabOrderDetailDrawer: React.FC<LabOrderDetailDrawerProps> = ({ visible, or
                                     <Text type="secondary" style={{ fontSize: '12px' }}>DATE</Text>
                                     <Text strong>{dayjs(order.appointment.appointment_date).format('DD MMM YYYY')}</Text>
                                 </Space>
-                                <Divider type="vertical" style={{ height: '40px' }} />
+                                <Divider vertical style={{ height: '40px' }} />
                                 <Space direction="vertical" size={0}>
                                     <Text type="secondary" style={{ fontSize: '12px' }}>TIME</Text>
                                     <Text strong>{dayjs(`2000-01-01 ${order.appointment.appointment_time}`).format('hh:mm A')}</Text>

@@ -172,7 +172,7 @@ const AgentProfilePage: React.FC = () => {
                     <Col xs={24} sm={20} md={13} lg={14}>
                         <Space direction="vertical" size={0}>
                             <Title level={2} style={{ margin: 0 }}>{formatName(agent.name)}</Title>
-                            <Space split={<Divider type="vertical" />} wrap>
+                            <Space split={<Divider vertical />} wrap>
                                 <Text type="secondary"><BarcodeOutlined /> ID: AG-{agent.id.toString().padStart(4, '0')}</Text>
                                 <Tag color={agent.status === 'active' ? 'green' : 'red'}>
                                     {agent.status.toUpperCase()}
