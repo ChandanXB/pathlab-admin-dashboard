@@ -129,7 +129,7 @@ const PatientDetailDrawer: React.FC<PatientDetailDrawerProps> = ({ visible, pati
                         </div>
                         <div>
                             <Title level={3} style={{ margin: 0, color: '#fff' }}>{patient.full_name}</Title>
-                            <Space split={<Divider type="vertical" style={{ borderColor: 'rgba(255,255,255,0.3)' }} />}>
+                            <Space split={<Divider vertical style={{ borderColor: 'rgba(255,255,255,0.3)' }} />}>
                                 <Text style={{ color: 'rgba(255,255,255,0.85)' }}>{patient.gender}</Text>
                                 <Text style={{ color: 'rgba(255,255,255,0.85)' }}>{calculateAge(patient.dob)} Years</Text>
                                 <Text style={{ color: 'rgba(255,255,255,0.85)', fontWeight: 600 }}>ID: {patient.patient_code}</Text>
@@ -337,7 +337,7 @@ const PatientDetailDrawer: React.FC<PatientDetailDrawerProps> = ({ visible, pati
                                                             View Attached Document
                                                         </Button>
                                                     )}
-                                                    <Space style={{ marginTop: 8 }} split={<Divider type="vertical" />}>
+                                                    <Space style={{ marginTop: 8 }} split={<Divider vertical />}>
                                                         <Text type="secondary" style={{ fontSize: 12 }}>Consult Submit: {dayjs(appointment.createdAt).format('DD MMM YYYY')}</Text>
                                                         <Text type="secondary" style={{ fontSize: 12 }}>Precaution Uploaded: {dayjs(appointment.updatedAt).format('DD MMM YYYY')}</Text>
                                                     </Space>

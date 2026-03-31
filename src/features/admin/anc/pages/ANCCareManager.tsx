@@ -1,19 +1,27 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Card, Input, Select, Row, Col, Typography } from 'antd';
+import { Card, Input, Select, Row, Col, Typography, Button } from 'antd';
 import { MedicineBoxOutlined, SearchOutlined, HeartOutlined, AlertOutlined, CalendarOutlined } from '@ant-design/icons';
 import { useANC } from '../hooks/useANC';
 import ANCTable from '../components/ANCTable';
+import PregnancyDetailDrawer from '../components/PregnancyDetailDrawer';
+import RegisterPregnancyModal from '../components/RegisterPregnancyModal';
 import StatCard from '@/shared/components/StatCard';
 import dayjs from 'dayjs';
 import type { Pregnancy } from '../services/ancService';
+import { PlusOutlined } from '@ant-design/icons';
+
+import { colors } from '@/styles/colors';
 
 const { Title, Text } = Typography;
 
 const ANCCareManager: React.FC = () => {
-    const { pregnancies, loading } = useANC();
+    const { pregnancies, loading, fetchPregnancyById, logVisit, updatePregnancy, createPregnancy, logRiskAssessment } = useANC();
     const [searchTerm, setSearchTerm] = useState('');
     const [riskFilter, setRiskFilter] = useState<string | null>(null);
     const [filteredData, setFilteredData] = useState<Pregnancy[]>([]);
+    const [selectedId, setSelectedId] = useState<number | null>(null);
+    const [drawerVisible, setDrawerVisible] = useState(false);
+    const [registerModalVisible, setRegisterModalVisible] = useState(false);
 
     useEffect(() => {
         let data = pregnancies;
@@ -30,8 +38,8 @@ const ANCCareManager: React.FC = () => {
     }, [searchTerm, riskFilter, pregnancies]);
 
     const handleView = (record: Pregnancy) => {
-        console.log('Viewing pregnancy detail:', record);
-        // Could open a drawer with more details
+        setSelectedId(record.id);
+        setDrawerVisible(true);
     };
 
     const [screenSize, setScreenSize] = useState(window.innerWidth);
@@ -80,8 +88,8 @@ const ANCCareManager: React.FC = () => {
             trend: 'Live',
             isUp: true,
             icon: <span style={{ fontSize: 24 }}>🤰</span>,
-            color: '#fff0f6',
-            iconColor: '#eb2f96'
+            color: colors.stats.patients,
+            iconColor: colors.primary
         },
         {
             title: 'High Risk cases',
@@ -89,8 +97,8 @@ const ANCCareManager: React.FC = () => {
             trend: stats.highRisk > 0 ? 'Urgent' : 'None',
             isUp: false,
             icon: <AlertOutlined style={{ fontSize: 24 }} />,
-            color: '#fff1f0',
-            iconColor: '#ff4d4f'
+            color: colors.stats.reports,
+            iconColor: colors.danger
         },
         {
             title: 'Due within 30 days',
@@ -98,8 +106,8 @@ const ANCCareManager: React.FC = () => {
             trend: 'Soon',
             isUp: true,
             icon: <CalendarOutlined style={{ fontSize: 24 }} />,
-            color: '#e6f7ff',
-            iconColor: '#1890ff'
+            color: colors.stats.patients,
+            iconColor: colors.info
         },
         {
             title: '3rd Trimester',
@@ -107,8 +115,8 @@ const ANCCareManager: React.FC = () => {
             trend: 'Final',
             isUp: true,
             icon: <HeartOutlined style={{ fontSize: 24 }} />,
-            color: '#f9f0ff',
-            iconColor: '#722ed1'
+            color: colors.stats.patients,
+            iconColor: colors.info
         }
     ];
 
@@ -125,12 +133,12 @@ const ANCCareManager: React.FC = () => {
                     <div style={{ 
                         width: 48, 
                         height: 48, 
-                        background: 'linear-gradient(135deg, #eb2f96 0%, #ff85c0 100%)',
+                        background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.info} 100%)`,
                         borderRadius: '12px',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        boxShadow: '0 4px 12px rgba(235, 47, 150, 0.3)'
+                        boxShadow: `0 4px 12px ${colors.primary}4D` // 4D = 30% alpha
                     }}>
                         <MedicineBoxOutlined style={{ color: '#fff', fontSize: 24 }} />
                     </div>
@@ -138,6 +146,26 @@ const ANCCareManager: React.FC = () => {
                         <Title level={2} style={{ margin: 0 }}>ANC Care Center</Title>
                         <Text type="secondary">Monitor and manage maternal health journeys</Text>
                     </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '12px' }}>
+                    <Button 
+                        type="primary" 
+                        size="large" 
+                        icon={<PlusOutlined />} 
+                        onClick={() => setRegisterModalVisible(true)}
+                        style={{ 
+                            borderRadius: '10px', 
+                            height: '48px', 
+                            background: colors.primary, 
+                            borderColor: colors.primary,
+                            padding: '0 24px',
+                            fontWeight: 600,
+                            boxShadow: '0 4px 12px rgba(0, 74, 173, 0.2)'
+                        }}
+                    >
+                        Enroll New Patient
+                    </Button>
                 </div>
             </div>
 
@@ -194,6 +222,23 @@ const ANCCareManager: React.FC = () => {
                     />
                 </div>
             </Card>
+
+            <PregnancyDetailDrawer
+                id={selectedId}
+                open={drawerVisible}
+                onClose={() => setDrawerVisible(false)}
+                fetchDetail={fetchPregnancyById}
+                onLogVisit={logVisit}
+                onUpdate={updatePregnancy}
+                onLogRisk={logRiskAssessment}
+                onSwitchJourney={(newId) => setSelectedId(newId)}
+            />
+
+            <RegisterPregnancyModal
+                open={registerModalVisible}
+                onCancel={() => setRegisterModalVisible(false)}
+                onFinish={createPregnancy}
+            />
         </div>
     );
 };
