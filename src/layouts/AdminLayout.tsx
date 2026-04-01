@@ -87,16 +87,7 @@ const AdminLayout: React.FC = () => {
 
     const menuItems = [
         { key: '/', icon: <DashboardOutlined />, label: 'Dashboard' },
-        {
-            key: '/medical-network',
-            icon: <MedicineBoxOutlined />,
-            label: 'Medical Network',
-            children: [
-                { key: '/patients', label: 'Patients Directory' },
-                { key: '/doctors', label: 'Doctors Directory' },
-                { key: '/anc-care', label: 'ANC Care' },
-            ]
-        },
+        { key: '/tests-packages', icon: <ExperimentOutlined />, label: 'Tests & Packages' },
         {
             key: '/lab-orders-parent',
             icon: <ExperimentOutlined />,
@@ -153,6 +144,16 @@ const AdminLayout: React.FC = () => {
             ]
         },
         {
+            key: '/medical-network',
+            icon: <MedicineBoxOutlined />,
+            label: 'Medical Network',
+            children: [
+                { key: '/patients', label: 'Patients Directory' },
+                { key: '/doctors', label: 'Doctors Directory' },
+                { key: '/anc-care', label: 'ANC Care' },
+            ]
+        },
+        {
             key: '/collection-agents-parent',
             icon: <UserOutlined />,
             label: 'Collection Agents',
@@ -164,7 +165,6 @@ const AdminLayout: React.FC = () => {
                 }))
             ]
         },
-        { key: '/tests-packages', icon: <ExperimentOutlined />, label: 'Tests & Packages' },
         { key: '/service-cities', icon: <GlobalOutlined />, label: 'Service Cities' },
     ];
 

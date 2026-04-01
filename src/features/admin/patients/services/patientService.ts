@@ -26,9 +26,9 @@ export const patientService = {
     /**
      * Search patients by name, phone, or patient code
      */
-    searchPatients: async (query: string): Promise<Patient[]> => {
+    searchPatients: async (query: string, gender?: string): Promise<Patient[]> => {
         const response = await apiClient.get('/patients/search', {
-            params: { q: query },
+            params: { q: query, gender },
         });
         return response.data.data;
     },
