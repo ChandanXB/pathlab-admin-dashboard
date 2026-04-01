@@ -54,7 +54,7 @@ const InfiniteScrollTable = <T extends object>({
     return (
         <div
             className="infinite-scroll-table-wrapper"
-            style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
+            style={{ flex: 1, display: 'flex', flexDirection: 'column' }}
         >
             <Table
                 {...props}

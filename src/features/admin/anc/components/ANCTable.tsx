@@ -1,7 +1,8 @@
 import React from 'react';
-import { Tag, Space, Button, Tooltip } from 'antd';
-import { EyeOutlined, UserOutlined, CalendarOutlined } from '@ant-design/icons';
+import { Tag, Space, Button, Tooltip, Modal } from 'antd';
+import { EyeOutlined, UserOutlined, CalendarOutlined, FilePdfOutlined } from '@ant-design/icons';
 import InfiniteScrollTable from '@/shared/components/InfiniteScrollTable';
+import { generateAncPdf } from '../utils/ancPdfGenerator';
 import type { Pregnancy } from '../services/ancService';
 import dayjs from 'dayjs';
 import { formatName } from '@/shared/utils/nameUtils';
@@ -33,14 +34,31 @@ const ANCTable: React.FC<ANCTableProps> = ({
 
     const columns = [
         {
+            title: <span style={{ whiteSpace: 'nowrap' }}>Reg. ID</span>,
+            key: 'anc_reg_id',
+            width: 80,
+            render: (_: any, record: Pregnancy) => (
+                <Tag color="blue" style={{ fontWeight: 600, margin: 0 }}>
+                    ANC-{record.id.toString().padStart(4, '0')}
+                </Tag>
+            ),
+        },
+        {
+            title: <span style={{ whiteSpace: 'nowrap' }}>LMP Date</span>,
+            dataIndex: 'lmp_date',
+            key: 'lmp_date',
+            width: 110,
+            render: (date: string) => dayjs(date).format('DD MMM YYYY'),
+        },
+        {
             title: 'Patient',
             dataIndex: ['mother', 'full_name'],
             key: 'patient_name',
-            width: 250,
+            width: 200,
             render: (text: string, record: Pregnancy) => (
                 <Space>
                     <UserOutlined />
-                    <div style={{ minWidth: '180px' }}>
+                    <div style={{ minWidth: '130px' }}>
                         <div style={{ fontWeight: 600 }}>{formatName(text)}</div>
                         <div style={{ fontSize: '11px', color: '#8c8c8c' }}>{record.mother.patient_code}</div>
                     </div>
@@ -48,17 +66,10 @@ const ANCTable: React.FC<ANCTableProps> = ({
             ),
         },
         {
-            title: <span style={{ whiteSpace: 'nowrap' }}>LMP Date</span>,
-            dataIndex: 'lmp_date',
-            key: 'lmp_date',
-            width: 130,
-            render: (date: string) => dayjs(date).format('DD MMM YYYY'),
-        },
-        {
             title: <span style={{ whiteSpace: 'nowrap' }}>EDD Date</span>,
             dataIndex: 'edd_date',
             key: 'edd_date',
-            width: 140,
+            width: 120,
             render: (date: string) => (
                 <Space>
                     <CalendarOutlined style={{ color: '#ff4d4f' }} />
@@ -69,7 +80,7 @@ const ANCTable: React.FC<ANCTableProps> = ({
         {
             title: <span style={{ whiteSpace: 'nowrap' }}>Status</span>,
             key: 'status',
-            width: 160,
+            width: 130,
             render: (_: any, record: Pregnancy) => {
                 const weeks = calculateWeeks(record.lmp_date);
                 const trimester = getTrimester(weeks);
@@ -79,11 +90,11 @@ const ANCTable: React.FC<ANCTableProps> = ({
                 return (
                     <Space direction="vertical" size={2}>
                         <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-                            <Tag color="processing" style={{ margin: 0 }}>Week {weeks}</Tag>
-                            <Tag color="cyan" style={{ margin: 0 }}>Trimester {trimester}</Tag>
+                            <Tag color="processing" style={{ margin: 0 }}>W{weeks}</Tag>
+                            <Tag color="cyan" style={{ margin: 0 }}>Tri {trimester}</Tag>
                         </div>
                         {isDueSoon && (
-                            <Tag color="error" style={{ margin: 0, fontWeight: 600, animation: 'pulse 2s infinite' }}>
+                            <Tag color="error" style={{ margin: 0, fontWeight: 600, animation: 'pulse 2s infinite', fontSize: '10px' }}>
                                 DUE SOON ({daysToEDD}d)
                             </Tag>
                         )}
@@ -95,9 +106,9 @@ const ANCTable: React.FC<ANCTableProps> = ({
             title: <span style={{ whiteSpace: 'nowrap' }}>Risk Level</span>,
             dataIndex: 'risk_level',
             key: 'risk_level',
-            width: 140,
+            width: 100,
             render: (risk: string) => (
-                <Tag color={risk === 'High' ? 'red' : risk === 'Medium' ? 'orange' : 'green'}>
+                <Tag color={risk === 'High' ? 'red' : risk === 'Medium' ? 'orange' : 'green'} style={{ margin: 0 }}>
                     {risk || 'Low'}
                 </Tag>
             ),
@@ -105,7 +116,8 @@ const ANCTable: React.FC<ANCTableProps> = ({
         {
             title: <span style={{ whiteSpace: 'nowrap' }}>History (G/P/A/L)</span>,
             key: 'history',
-            width: 150,
+            width: 120,
+            align: 'center' as const,
             render: (_: any, record: Pregnancy) => (
                 <Tooltip title="Gravida / Para / Abortions / Living">
                     <span style={{ fontFamily: 'monospace', fontWeight: 600 }}>
@@ -117,15 +129,35 @@ const ANCTable: React.FC<ANCTableProps> = ({
         {
             title: <span style={{ whiteSpace: 'nowrap' }}>Actions</span>,
             key: 'actions',
-            width: 100,
+            width: 90,
             fixed: 'right' as const,
             align: 'center' as const,
             render: (_: any, record: Pregnancy) => (
-                <Button
-                    type="text"
-                    icon={<EyeOutlined style={{ color: colors.primary }} />}
-                    onClick={() => onView(record)}
-                />
+                <Space size={0}>
+                    <Tooltip title="View Details">
+                        <Button
+                            type="text"
+                            icon={<EyeOutlined style={{ color: colors.primary }} />}
+                            onClick={() => onView(record)}
+                        />
+                    </Tooltip>
+                    <Tooltip title="Download ANC Card">
+                        <Button
+                            type="text"
+                            icon={<FilePdfOutlined style={{ color: '#ff4d4f' }} />}
+                            onClick={() => {
+                                Modal.confirm({
+                                    title: 'Download ANC Registration Card?',
+                                    content: `Are you sure you want to generate and download the ANC card for ${formatName(record.mother.full_name)}?`,
+                                    okText: 'Generate PDF',
+                                    cancelText: 'Cancel',
+                                    centered: true,
+                                    onOk: () => generateAncPdf(record),
+                                });
+                            }}
+                        />
+                    </Tooltip>
+                </Space>
             ),
         },
     ];
@@ -137,7 +169,7 @@ const ANCTable: React.FC<ANCTableProps> = ({
             loading={loading}
             loadingMore={false}
             hasMore={false}
-            next={() => {}}
+            next={() => { }}
             scroll={scroll}
             rowKey="id"
         />

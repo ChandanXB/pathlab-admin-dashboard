@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Tag, Space, Typography, Card, Row, Col, Progress, Timeline, Button, Empty } from 'antd';
+import { Tag, Space, Typography, Card, Row, Col, Progress, Timeline, Button, Empty, Modal } from 'antd';
 import { 
     HistoryOutlined, 
     PhoneOutlined,
-    MedicineBoxOutlined
+    MedicineBoxOutlined,
+    FilePdfOutlined
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import type { Pregnancy } from '../services/ancService';
@@ -14,6 +15,7 @@ import LogVisitModal from './LogVisitModal';
 import EditPregnancyModal from './EditPregnancyModal';
 import LogRiskModal from './LogRiskModal';
 import VitalsTrendChart from './VitalsTrendChart';
+import { generateAncPdf } from '../utils/ancPdfGenerator';
 import { PlusOutlined, EditOutlined, AlertOutlined, LineChartOutlined, FileTextOutlined } from '@ant-design/icons';
 
 const { Title, Text } = Typography;
@@ -114,6 +116,24 @@ const PregnancyDetailDrawer: React.FC<PregnancyDetailDrawerProps> = ({
 
     const footer = (
         <Space direction="horizontal" style={{ width: '100%', justifyContent: 'flex-end' }}>
+            <Button 
+                icon={<FilePdfOutlined />} 
+                onClick={() => {
+                    if (data) {
+                        Modal.confirm({
+                            title: 'Generate ANC Card?',
+                            content: `Confirm to generate and download the clinical record for ${formatName(data.mother.full_name)}.`,
+                            okText: 'Generate',
+                            cancelText: 'Cancel',
+                            centered: true,
+                            onOk: () => generateAncPdf(data),
+                        });
+                    }
+                }}
+                disabled={!data}
+            >
+                Download ANC Card
+            </Button>
             <Button icon={<MedicineBoxOutlined />} ghost type="primary">
                 View Lab Reports
             </Button>
@@ -129,7 +149,7 @@ const PregnancyDetailDrawer: React.FC<PregnancyDetailDrawerProps> = ({
             onClose={onClose}
             loading={loading}
             title={data ? formatName(data.mother.full_name) : 'Patient Details'}
-            subtitle={data ? data.mother.patient_code : 'ANC Patient Profile'}
+            subtitle={data ? `ANC Reg: ANC-${data.id.toString().padStart(4, '0')} | Patient: ${data.mother.patient_code}` : 'ANC Patient Profile'}
             headerGradient={`linear-gradient(135deg, ${colors.primary} 0%, ${colors.info} 100%)`}
             headerStats={headerStats}
             footer={footer}

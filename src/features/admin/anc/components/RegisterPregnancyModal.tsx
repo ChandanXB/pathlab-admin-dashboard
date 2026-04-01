@@ -3,8 +3,9 @@ import { Form, DatePicker, InputNumber, Row, Col, Divider, Select, Spin, Empty, 
 import { colors } from '@/styles/colors';
 import { patientService } from '../../patients/services/patientService';
 import type { Patient } from '../../patients/types/patient.types';
-import { SearchOutlined, UploadOutlined, FileTextOutlined } from '@ant-design/icons';
+import { SearchOutlined, UploadOutlined, FileTextOutlined, PlusOutlined } from '@ant-design/icons';
 import SharedModal from '@/shared/components/SharedModal';
+import PatientFormModal from '../../patients/components/PatientFormModal';
 
 
 interface RegisterPregnancyModalProps {
@@ -23,6 +24,11 @@ const RegisterPregnancyModal: React.FC<RegisterPregnancyModalProps> = ({
     const [searching, setSearching] = useState(false);
     const [patients, setPatients] = useState<Patient[]>([]);
     const [fileList, setFileList] = useState<any[]>([]);
+    const [searchQuery, setSearchQuery] = useState('');
+
+    // New patient modal states
+    const [quickAddVisible, setQuickAddVisible] = useState(false);
+    const [quickAddForm] = Form.useForm();
 
     const gravida = Form.useWatch('gravida', form);
 
@@ -53,15 +59,36 @@ const RegisterPregnancyModal: React.FC<RegisterPregnancyModalProps> = ({
     };
 
     const handleSearch = async (value: string) => {
-        if (value.length < 3) return;
+        setSearchQuery(value);
+        if (value.length < 2) {
+            setPatients([]);
+            return;
+        }
         try {
             setSearching(true);
-            const data = await patientService.searchPatients(value);
+            // Specifically search for Female patients for ANC Care
+            const data = await patientService.searchPatients(value, 'Female');
             setPatients(data);
         } catch (error) {
             console.error('Failed to search patients', error);
         } finally {
             setSearching(false);
+        }
+    };
+
+    const handleQuickAddPatient = async (values: any) => {
+        try {
+            const response = await patientService.createPatient(values);
+            if (response.success) {
+                message.success('Patient registered successfully');
+                const newPatient = response.data;
+                setPatients(prev => [newPatient, ...prev]);
+                form.setFieldsValue({ mother_patient_id: newPatient.id });
+                setQuickAddVisible(false);
+                quickAddForm.resetFields();
+            }
+        } catch (error: any) {
+            message.error(error.message || 'Failed to register patient');
         }
     };
 
@@ -113,17 +140,43 @@ const RegisterPregnancyModal: React.FC<RegisterPregnancyModalProps> = ({
                 >
                     <Select
                         showSearch
-                        placeholder="Search for an existing patient..."
+                        placeholder="Search for a female patient..."
                         defaultActiveFirstOption={false}
                         suffixIcon={<SearchOutlined />}
                         filterOption={false}
                         onSearch={handleSearch}
                         loading={searching}
-                        notFoundContent={searching ? <Spin size="small" /> : <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No patients found" />}
-                        style={{ width: '100%' }}
+                        optionLabelProp="label"
+                        notFoundContent={
+                            searching ? (
+                                <Spin size="small" />
+                            ) : searchQuery ? (
+                                <div style={{ padding: '12px', textAlign: 'center' }}>
+                                    <div style={{ marginBottom: '8px', color: '#888' }}>
+                                        No patient found for "{searchQuery}"
+                                    </div>
+                                    <Button
+                                        type="primary"
+                                        size="small"
+                                        icon={<PlusOutlined />}
+                                        onClick={() => {
+                                            quickAddForm.setFieldsValue({ 
+                                                full_name: searchQuery,
+                                                gender: 'Female' 
+                                            });
+                                            setQuickAddVisible(true);
+                                        }}
+                                        style={{ borderRadius: '6px' }}
+                                    >
+                                        Add New Patient
+                                    </Button>
+                                </div>
+                            ) : <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Type to search patients" />
+                        }
+                        style={{ width: '100%', borderRadius: '8px' }}
                     >
                         {patients.map(p => (
-                            <Select.Option key={p.id} value={p.id}>
+                            <Select.Option key={p.id} value={p.id} label={`${p.full_name} (${p.patient_code})`}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                     <span>{p.full_name} ({p.patient_code})</span>
                                     <span style={{ color: colors.ui.label, fontSize: '12px' }}>{p.phone}</span>
@@ -223,6 +276,15 @@ const RegisterPregnancyModal: React.FC<RegisterPregnancyModalProps> = ({
                 </Form.Item>
                 <Form.Item name="report_name" hidden><Input /></Form.Item>
             </Form>
+
+            {/* Quick Add Patient Modal */}
+            <PatientFormModal
+                visible={quickAddVisible}
+                editingPatient={null}
+                form={quickAddForm}
+                onSubmit={handleQuickAddPatient}
+                onCancel={() => setQuickAddVisible(false)}
+            />
         </SharedModal>
     );
 };

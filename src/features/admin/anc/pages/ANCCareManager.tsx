@@ -122,17 +122,17 @@ const ANCCareManager: React.FC = () => {
 
     return (
         <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: '20px', animation: 'fadeIn 0.5s ease' }}>
-            <div style={{ 
-                display: 'flex', 
+            <div style={{
+                display: 'flex',
                 flexDirection: isMobile ? 'column' : 'row',
-                justifyContent: 'space-between', 
+                justifyContent: 'space-between',
                 alignItems: isMobile ? 'stretch' : 'center',
                 gap: isMobile ? '16px' : '0'
             }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                    <div style={{ 
-                        width: 48, 
-                        height: 48, 
+                    <div style={{
+                        width: 48,
+                        height: 48,
                         background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.info} 100%)`,
                         borderRadius: '12px',
                         display: 'flex',
@@ -149,15 +149,15 @@ const ANCCareManager: React.FC = () => {
                 </div>
 
                 <div style={{ display: 'flex', gap: '12px' }}>
-                    <Button 
-                        type="primary" 
-                        size="large" 
-                        icon={<PlusOutlined />} 
+                    <Button
+                        type="primary"
+                        size="large"
+                        icon={<PlusOutlined />}
                         onClick={() => setRegisterModalVisible(true)}
-                        style={{ 
-                            borderRadius: '10px', 
-                            height: '48px', 
-                            background: colors.primary, 
+                        style={{
+                            borderRadius: '10px',
+                            height: '48px',
+                            background: colors.primary,
                             borderColor: colors.primary,
                             padding: '0 24px',
                             fontWeight: 600,
@@ -213,7 +213,7 @@ const ANCCareManager: React.FC = () => {
                 styles={{ body: { flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: 0 } }}
                 style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
             >
-                <div ref={containerRef} style={{ flex: 1, overflow: 'hidden' }}>
+                <div ref={containerRef} style={{ flex: 1, overflow: 'auto' }}>
                     <ANCTable
                         data={filteredData}
                         loading={loading}
