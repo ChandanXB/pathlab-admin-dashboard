@@ -8,7 +8,7 @@ const { Title, Text } = Typography;
 interface SharedDetailDrawerProps {
     open: boolean;
     onClose: () => void;
-    title: string;
+    title: string | ReactNode;
     subtitle?: string;
     loading?: boolean;
     headerGradient?: string; // e.g. 'linear-gradient(135deg, #1890ff 0%, #096dd9 100%)'

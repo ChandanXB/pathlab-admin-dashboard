@@ -6,8 +6,9 @@ import { formatName } from '@/shared/utils/nameUtils';
 
 /**
  * Generates a professional ANC Card PDF for a patient
+ * Supports both direct download and dataURI return for previews
  */
-export const generateAncPdf = (data: Pregnancy) => {
+export const generateAncPdf = (data: Pregnancy, outputType: 'save' | 'datauri' = 'save'): string | void => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
@@ -173,7 +174,9 @@ export const generateAncPdf = (data: Pregnancy) => {
     });
 
     // Final Footer
-    const finalY = (doc as any).lastAutoTable.finalY + 20;
+    const lastTable = (doc as any).lastAutoTable;
+    const finalY = lastTable ? lastTable.finalY + 20 : y + 20;
+
     if (finalY < pageHeight - 40) {
         doc.setFontSize(8);
         doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
@@ -192,6 +195,11 @@ export const generateAncPdf = (data: Pregnancy) => {
         doc.text('PATHLAB ANC', pageWidth - 30, pageHeight - 6, { align: 'center' });
     }
 
-    // Save PDF
-    doc.save(`ANC_Card_${data.mother.patient_code}_${dayjs().format('YYYYMMDD')}.pdf`);
+    // Handle Output
+    if (outputType === 'save') {
+        doc.save(`ANC_Card_${data.mother.patient_code}_${dayjs().format('YYYYMMDD')}.pdf`);
+    } else {
+        return doc.output('datauristring');
+    }
 };
+

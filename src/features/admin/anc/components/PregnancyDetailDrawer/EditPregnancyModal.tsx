@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Form, DatePicker, InputNumber, Row, Col, Divider, Select, Upload, Button, message, Input } from 'antd';
 import dayjs from 'dayjs';
 import { colors } from '@/styles/colors';
-import type { Pregnancy } from '../services/ancService';
+import type { Pregnancy } from '../../services/ancService';
 import SharedModal from '@/shared/components/SharedModal';
 import { UploadOutlined } from '@ant-design/icons';
 
