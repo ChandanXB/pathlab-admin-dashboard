@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { Form, Select, Input, Alert } from 'antd';
-import { colors } from '@/styles/colors';
-import SharedModal from '@/shared/components/SharedModal';
 import { AlertOutlined } from '@ant-design/icons';
+import SharedModal from '@/shared/components/SharedModal';
 
 interface LogRiskModalProps {
     open: boolean;

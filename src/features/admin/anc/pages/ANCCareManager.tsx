@@ -3,7 +3,8 @@ import { Card, Input, Select, Row, Col, Typography, Button } from 'antd';
 import { MedicineBoxOutlined, SearchOutlined, HeartOutlined, AlertOutlined, CalendarOutlined } from '@ant-design/icons';
 import { useANC } from '../hooks/useANC';
 import ANCTable from '../components/ANCTable';
-import PregnancyDetailDrawer from '../components/PregnancyDetailDrawer';
+import PregnancyDetailDrawer from '../components/PregnancyDetailDrawer/index';
+import AncCardPreviewModal from '../components/PregnancyDetailDrawer/AncCardPreviewModal';
 import RegisterPregnancyModal from '../components/RegisterPregnancyModal';
 import StatCard from '@/shared/components/StatCard';
 import dayjs from 'dayjs';
@@ -22,6 +23,8 @@ const ANCCareManager: React.FC = () => {
     const [selectedId, setSelectedId] = useState<number | null>(null);
     const [drawerVisible, setDrawerVisible] = useState(false);
     const [registerModalVisible, setRegisterModalVisible] = useState(false);
+    const [cardPreviewVisible, setCardPreviewVisible] = useState(false);
+    const [previewData, setPreviewData] = useState<Pregnancy | null>(null);
 
     useEffect(() => {
         let data = pregnancies;
@@ -42,6 +45,11 @@ const ANCCareManager: React.FC = () => {
         setDrawerVisible(true);
     };
 
+    const handlePreview = (record: Pregnancy) => {
+        setPreviewData(record);
+        setCardPreviewVisible(true);
+    };
+
     const [screenSize, setScreenSize] = useState(window.innerWidth);
     const isMobile = screenSize < 768;
 
@@ -52,18 +60,16 @@ const ANCCareManager: React.FC = () => {
     }, []);
 
     const [tableHeight, setTableHeight] = useState(400);
-    const containerRef = useRef<HTMLDivElement>(null);
+    const tableCardBodyRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const observer = new ResizeObserver((entries) => {
             for (const entry of entries) {
-                if (entry.target === containerRef.current) {
-                    setTableHeight(Math.max(200, entry.contentRect.height - 20));
-                }
+                // Subtract thead height (~47px) so header stays fixed
+                setTableHeight(Math.max(200, entry.contentRect.height - 47));
             }
         });
-
-        if (containerRef.current) observer.observe(containerRef.current);
+        if (tableCardBodyRef.current) observer.observe(tableCardBodyRef.current);
         return () => observer.disconnect();
     }, []);
 
@@ -121,7 +127,7 @@ const ANCCareManager: React.FC = () => {
     ];
 
     return (
-        <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: '20px', animation: 'fadeIn 0.5s ease' }}>
+        <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: '12px', overflow: 'hidden' }}>
             <div style={{
                 display: 'flex',
                 flexDirection: isMobile ? 'column' : 'row',
@@ -169,7 +175,7 @@ const ANCCareManager: React.FC = () => {
                 </div>
             </div>
 
-            <Row gutter={[20, 20]}>
+            <Row gutter={[12, 12]}>
                 {statsCards.map((stat, index) => (
                     <Col xs={24} sm={12} lg={6} key={index}>
                         <StatCard data={stat} />
@@ -211,13 +217,14 @@ const ANCCareManager: React.FC = () => {
 
             <Card
                 styles={{ body: { flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: 0 } }}
-                style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
+                style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
             >
-                <div ref={containerRef} style={{ flex: 1, overflow: 'auto' }}>
+                <div ref={tableCardBodyRef} style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
                     <ANCTable
                         data={filteredData}
                         loading={loading}
                         onView={handleView}
+                        onPreview={handlePreview}
                         scroll={{ x: 1100, y: tableHeight }}
                     />
                 </div>
@@ -232,6 +239,12 @@ const ANCCareManager: React.FC = () => {
                 onUpdate={updatePregnancy}
                 onLogRisk={logRiskAssessment}
                 onSwitchJourney={(newId) => setSelectedId(newId)}
+            />
+
+            <AncCardPreviewModal
+                open={cardPreviewVisible}
+                data={previewData}
+                onCancel={() => setCardPreviewVisible(false)}
             />
 
             <RegisterPregnancyModal

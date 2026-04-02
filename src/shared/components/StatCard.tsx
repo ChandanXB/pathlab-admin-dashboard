@@ -14,31 +14,33 @@ const StatCard: React.FC<StatCardProps> = ({ data }) => {
         <Card
             bordered={false}
             className="stat-card"
+            styles={{ body: { padding: '10px 14px' } }}
             style={{
-                borderRadius: 16,
-                boxShadow: '0 4px 12px rgba(0,0,0,0.02)',
+                borderRadius: 12,
+                boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
                 overflow: 'hidden'
             }}
         >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
-                    <Text type="secondary" style={{ fontSize: 14 }}>{data.title}</Text>
-                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 4 }}>
-                        <Title level={3} style={{ margin: 0 }}>{data.value}</Title>
-                        <Tag color={data.isUp ? 'success' : 'error'} bordered={false} style={{ margin: 0 }}>
+                    <Text type="secondary" style={{ fontSize: 12 }}>{data.title}</Text>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginTop: 2 }}>
+                        <Title level={4} style={{ margin: 0 }}>{data.value}</Title>
+                        <Tag color={data.isUp ? 'success' : 'error'} bordered={false} style={{ margin: 0, fontSize: 11 }}>
                             {data.isUp ? <ArrowUpOutlined /> : <ArrowDownOutlined />} {data.trend}
                         </Tag>
                     </div>
                 </div>
                 <div style={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: 12,
+                    width: 40,
+                    height: 40,
+                    borderRadius: 10,
                     background: data.color,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: data.iconColor
+                    color: data.iconColor,
+                    flexShrink: 0
                 }}>
                     {data.icon}
                 </div>

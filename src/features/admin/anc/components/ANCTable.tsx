@@ -1,8 +1,7 @@
 import React from 'react';
-import { Tag, Space, Button, Tooltip, Modal } from 'antd';
+import { Tag, Space, Button, Tooltip } from 'antd';
 import { EyeOutlined, UserOutlined, CalendarOutlined, FilePdfOutlined } from '@ant-design/icons';
 import InfiniteScrollTable from '@/shared/components/InfiniteScrollTable';
-import { generateAncPdf } from '../utils/ancPdfGenerator';
 import type { Pregnancy } from '../services/ancService';
 import dayjs from 'dayjs';
 import { formatName } from '@/shared/utils/nameUtils';
@@ -12,6 +11,7 @@ interface ANCTableProps {
     data: Pregnancy[];
     loading: boolean;
     onView: (record: Pregnancy) => void;
+    onPreview: (record: Pregnancy) => void;
     scroll?: { x?: number | string; y?: number | string };
 }
 
@@ -19,6 +19,7 @@ const ANCTable: React.FC<ANCTableProps> = ({
     data,
     loading,
     onView,
+    onPreview,
     scroll,
 }) => {
     const calculateWeeks = (lmp: string): number => {
@@ -141,20 +142,11 @@ const ANCTable: React.FC<ANCTableProps> = ({
                             onClick={() => onView(record)}
                         />
                     </Tooltip>
-                    <Tooltip title="Download ANC Card">
+                    <Tooltip title="Preview & Export ANC Card">
                         <Button
                             type="text"
                             icon={<FilePdfOutlined style={{ color: '#ff4d4f' }} />}
-                            onClick={() => {
-                                Modal.confirm({
-                                    title: 'Download ANC Registration Card?',
-                                    content: `Are you sure you want to generate and download the ANC card for ${formatName(record.mother.full_name)}?`,
-                                    okText: 'Generate PDF',
-                                    cancelText: 'Cancel',
-                                    centered: true,
-                                    onOk: () => generateAncPdf(record),
-                                });
-                            }}
+                            onClick={() => onPreview(record)}
                         />
                     </Tooltip>
                 </Space>

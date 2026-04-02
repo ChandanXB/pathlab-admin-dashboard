@@ -1,24 +1,27 @@
-import React, { useState, useEffect } from 'react';
-import { Tag, Space, Typography, Card, Row, Col, Progress, Timeline, Button, Empty, Modal } from 'antd';
+import { Card, Typography, Space, Timeline, Tag, Button, Image, Row, Col, Progress } from 'antd';
 import { 
     HistoryOutlined, 
     PhoneOutlined,
     MedicineBoxOutlined,
-    FilePdfOutlined
+    FilePdfOutlined,
+    AlertOutlined, 
+    FileTextOutlined,
+    EyeOutlined
 } from '@ant-design/icons';
+import React, { useState, useEffect } from 'react';
 import dayjs from 'dayjs';
-import type { Pregnancy } from '../services/ancService';
+import type { Pregnancy } from '../../services/ancService';
 import { formatName } from '@/shared/utils/nameUtils';
 import SharedDetailDrawer from '@/shared/components/SharedDetailDrawer';
 import { colors } from '@/styles/colors';
 import LogVisitModal from './LogVisitModal';
 import EditPregnancyModal from './EditPregnancyModal';
 import LogRiskModal from './LogRiskModal';
-import VitalsTrendChart from './VitalsTrendChart';
-import { generateAncPdf } from '../utils/ancPdfGenerator';
-import { PlusOutlined, EditOutlined, AlertOutlined, LineChartOutlined, FileTextOutlined } from '@ant-design/icons';
+import VitalsTrendSection from './VitalsTrendSection';
+import VisitLogSection from './VisitLogSection';
+import AncCardPreviewModal from './AncCardPreviewModal';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 interface PregnancyDetailDrawerProps {
     id: number | null;
@@ -46,6 +49,8 @@ const PregnancyDetailDrawer: React.FC<PregnancyDetailDrawerProps> = ({
     const [logModalVisible, setLogModalVisible] = useState(false);
     const [editModalVisible, setEditModalVisible] = useState(false);
     const [riskModalVisible, setRiskModalVisible] = useState(false);
+    const [imagePreviewOpen, setImagePreviewOpen] = useState(false);
+    const [ancCardPreviewVisible, setAncCardPreviewVisible] = useState(false);
 
     useEffect(() => {
         if (open && id) {
@@ -117,22 +122,12 @@ const PregnancyDetailDrawer: React.FC<PregnancyDetailDrawerProps> = ({
     const footer = (
         <Space direction="horizontal" style={{ width: '100%', justifyContent: 'flex-end' }}>
             <Button 
+                ghost
+                type="primary" 
                 icon={<FilePdfOutlined />} 
-                onClick={() => {
-                    if (data) {
-                        Modal.confirm({
-                            title: 'Generate ANC Card?',
-                            content: `Confirm to generate and download the clinical record for ${formatName(data.mother.full_name)}.`,
-                            okText: 'Generate',
-                            cancelText: 'Cancel',
-                            centered: true,
-                            onOk: () => generateAncPdf(data),
-                        });
-                    }
-                }}
-                disabled={!data}
+                onClick={() => setAncCardPreviewVisible(true)}
             >
-                Download ANC Card
+                ANC CARD
             </Button>
             <Button icon={<MedicineBoxOutlined />} ghost type="primary">
                 View Lab Reports
@@ -190,20 +185,7 @@ const PregnancyDetailDrawer: React.FC<PregnancyDetailDrawerProps> = ({
                         <Col span={12}>
                             <Card 
                                 size="small" 
-                                title={
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <span style={{ fontSize: 13, color: colors.ui.label }}>CLINICAL HISTORY</span>
-                                        <Button 
-                                            type="text" 
-                                            size="small" 
-                                            icon={<EditOutlined style={{ fontSize: '12px' }} />} 
-                                            onClick={() => setEditModalVisible(true)}
-                                            style={{ height: 'auto', padding: '0 4px', color: colors.primary }}
-                                        >
-                                            <span style={{ fontSize: '10px' }}>Manage</span>
-                                        </Button>
-                                    </div>
-                                } 
+                                title={<span style={{ fontSize: 13, color: colors.ui.label }}>CLINICAL HISTORY</span>} 
                                 style={{ borderRadius: '12px', border: 'none' }}
                             >
                                 <div style={{ textAlign: 'center', padding: '8px 0' }}>
@@ -268,33 +250,54 @@ const PregnancyDetailDrawer: React.FC<PregnancyDetailDrawerProps> = ({
                         </Card>
                     )}
 
-                    {/* Medical Documents */}
+                    {/* Compact Medical Documents Section */}
                     {data.report_url && (
                         <Card 
                             size="small" 
-                            title={<span style={{ fontSize: 13, color: colors.ui.label, display: 'flex', alignItems: 'center', gap: '6px' }}><FileTextOutlined /> MEDICAL DOCUMENTS</span>} 
-                            style={{ borderRadius: '12px', border: 'none', marginBottom: '20px' }}
+                            style={{ borderRadius: '16px', border: 'none', marginBottom: '20px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}
                         >
-                            <div 
-                                style={{ 
-                                    display: 'flex', 
-                                    alignItems: 'center', 
-                                    gap: '12px', 
-                                    padding: '12px', 
-                                    background: colors.white, 
-                                    borderRadius: '10px',
-                                    border: `1px solid ${colors.ui.border}`,
-                                    cursor: 'pointer'
-                                }}
-                                onClick={() => window.open(data.report_url, '_blank')}
-                            >
-                                <div style={{ width: 40, height: 40, background: `${colors.primary}1A`, borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                    <FileTextOutlined style={{ color: colors.primary, fontSize: '20px' }} />
-                                </div>
-                                <div style={{ flex: 1 }}>
-                                    <div style={{ fontSize: '13px', fontWeight: 600, color: colors.ui.text }}>{data.report_name || 'Clinical Report'}</div>
-                                    <div style={{ fontSize: '11px', color: colors.ui.label }}>Click to view document</div>
-                                </div>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 4px' }}>
+                                <Space>
+                                    <div style={{ width: 36, height: 36, background: `${colors.primary}1A`, borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                        <FileTextOutlined style={{ color: colors.primary, fontSize: '18px' }} />
+                                    </div>
+                                    <div>
+                                        <div style={{ fontSize: '13px', fontWeight: 600, color: colors.ui.text }}>{data.report_name || 'Clinical Document'}</div>
+                                        <div style={{ fontSize: '10px', color: colors.ui.label }}>Medical Report</div>
+                                    </div>
+                                </Space>
+                                <Space>
+                                    {data.report_url.includes('application/pdf') || data.report_url.startsWith('data:application/pdf') ? (
+                                        <Button 
+                                            icon={<EyeOutlined />} 
+                                            size="small" 
+                                            onClick={() => window.open(data.report_url, '_blank')}
+                                            style={{ borderRadius: '8px' }}
+                                        >
+                                            View
+                                        </Button>
+                                    ) : (
+                                        <>
+                                            <Button 
+                                                icon={<EyeOutlined />} 
+                                                size="small" 
+                                                onClick={() => setImagePreviewOpen(true)}
+                                                style={{ borderRadius: '8px' }}
+                                            >
+                                                View
+                                            </Button>
+                                            <div style={{ display: 'none' }}>
+                                                <Image
+                                                    preview={{
+                                                        visible: imagePreviewOpen,
+                                                        onVisibleChange: (vis) => setImagePreviewOpen(vis),
+                                                    }}
+                                                    src={data.report_url}
+                                                />
+                                            </div>
+                                        </>
+                                    )}
+                                </Space>
                             </div>
                         </Card>
                     )}
@@ -319,79 +322,16 @@ const PregnancyDetailDrawer: React.FC<PregnancyDetailDrawerProps> = ({
                         </Card>
                     )}
 
-                    {/* Vitals Chart */}
-                    {data.antenatal_visits && data.antenatal_visits.length > 1 && (
-                        <Card 
-                            size="small" 
-                            title={<span style={{ fontSize: 13, color: colors.ui.label, display: 'flex', alignItems: 'center', gap: '6px' }}><LineChartOutlined /> VITALS TRENDS</span>} 
-                            style={{ borderRadius: '12px', border: 'none', marginBottom: '20px' }}
-                            styles={{ body: { padding: '8px 12px 16px' } }}
-                        >
-                            <VitalsTrendChart data={data.antenatal_visits} />
-                        </Card>
+                    {/* Vitals Chart Section */}
+                    {data.antenatal_visits && (
+                        <VitalsTrendSection visits={data.antenatal_visits} />
                     )}
-
-                    {/* Antenatal Visits History */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                        <Title level={5} style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <HistoryOutlined /> Antenatal Visit Log
-                        </Title>
-                        <Button 
-                            type="primary" 
-                            size="small" 
-                            icon={<PlusOutlined />} 
-                            onClick={() => setLogModalVisible(true)}
-                            style={{ borderRadius: '6px', background: colors.primary, borderColor: colors.primary }}
-                        >
-                            Log Check-up
-                        </Button>
-                    </div>
-
-                    {data.antenatal_visits && data.antenatal_visits.length > 0 ? (
-                        <Timeline
-                            mode="left"
-                            items={data.antenatal_visits.map((visit: any, index: number) => ({
-                                color: index === 0 ? colors.primary : 'gray',
-                                label: dayjs(visit.visit_date).format('DD MMM YYYY'),
-                                children: (
-                                    <div style={{ 
-                                        background: colors.white, 
-                                        padding: '12px', 
-                                        borderRadius: '12px', 
-                                        marginTop: '-10px',
-                                        border: index === 0 ? `1px solid ${colors.primary}4D` : `1px solid ${colors.ui.border}`
-                                    }}>
-                                        <Row gutter={8}>
-                                            <Col span={8}>
-                                                <div style={{ color: colors.ui.label, fontSize: '10px' }}>WEIGHT</div>
-                                                <div style={{ fontWeight: 600 }}>{visit.weight_kg || '-'} kg</div>
-                                            </Col>
-                                            <Col span={10}>
-                                                <div style={{ color: colors.ui.label, fontSize: '10px' }}>BP</div>
-                                                <div style={{ fontWeight: 600, color: (visit.bp_systolic > 140) ? colors.danger : colors.ui.text }}>
-                                                    {visit.bp_systolic}/{visit.bp_diastolic}
-                                                </div>
-                                            </Col>
-                                            <Col span={6}>
-                                                <div style={{ color: colors.ui.label, fontSize: '10px' }}>WEEK</div>
-                                                <div style={{ fontWeight: 600 }}>W{visit.gestational_age_weeks}</div>
-                                            </Col>
-                                        </Row>
-                                        {visit.notes && (
-                                            <div style={{ marginTop: '8px', padding: '6px', background: '#f9f9f9', borderRadius: '4px', fontSize: '12px', fontStyle: 'italic', color: '#595959' }}>
-                                                "{visit.notes}"
-                                            </div>
-                                        )}
-                                    </div>
-                                )
-                            }))}
-                        />
-                    ) : (
-                        <Empty 
-                            image={Empty.PRESENTED_IMAGE_SIMPLE} 
-                            description={<Text type="secondary">No visit logs recorded yet</Text>} 
-                        />
-                    )}
+                    
+                    {/* Antenatal Visit Log Section */}
+                    <VisitLogSection 
+                        visits={data.antenatal_visits || []} 
+                        onLogClick={() => setLogModalVisible(true)} 
+                    />
                 </>
             )}
 
@@ -399,7 +339,7 @@ const PregnancyDetailDrawer: React.FC<PregnancyDetailDrawerProps> = ({
                 open={logModalVisible}
                 onCancel={() => setLogModalVisible(false)}
                 currentWeeks={weeks}
-                onFinish={async (values) => {
+                onFinish={async (values: any) => {
                     if (id) {
                         const success = await onLogVisit(id, values);
                         if (success) refreshData();
@@ -413,7 +353,7 @@ const PregnancyDetailDrawer: React.FC<PregnancyDetailDrawerProps> = ({
                 open={editModalVisible}
                 onCancel={() => setEditModalVisible(false)}
                 data={data}
-                onFinish={async (pid, values) => {
+                onFinish={async (pid: number, values: any) => {
                     const success = await onUpdate(pid, values);
                     if (success) refreshData();
                     return success;
@@ -424,7 +364,7 @@ const PregnancyDetailDrawer: React.FC<PregnancyDetailDrawerProps> = ({
                 open={riskModalVisible}
                 onCancel={() => setRiskModalVisible(false)}
                 currentRisk={data?.risk_level}
-                onFinish={async (values) => {
+                onFinish={async (values: any) => {
                     if (id) {
                         const success = await onLogRisk(id, values);
                         if (success) refreshData();
@@ -432,6 +372,11 @@ const PregnancyDetailDrawer: React.FC<PregnancyDetailDrawerProps> = ({
                     }
                     return false;
                 }}
+            />
+            <AncCardPreviewModal
+                open={ancCardPreviewVisible}
+                data={data}
+                onCancel={() => setAncCardPreviewVisible(false)}
             />
         </SharedDetailDrawer>
     );
