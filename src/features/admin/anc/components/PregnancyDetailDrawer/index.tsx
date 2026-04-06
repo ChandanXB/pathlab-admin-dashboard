@@ -2,11 +2,11 @@ import { Card, Typography, Space, Timeline, Tag, Button, Image, Row, Col, Progre
 import { 
     HistoryOutlined, 
     PhoneOutlined,
-    MedicineBoxOutlined,
     FilePdfOutlined,
     AlertOutlined, 
     FileTextOutlined,
-    EyeOutlined
+    EyeOutlined,
+    EditOutlined
 } from '@ant-design/icons';
 import React, { useState, useEffect } from 'react';
 import dayjs from 'dayjs';
@@ -129,10 +129,11 @@ const PregnancyDetailDrawer: React.FC<PregnancyDetailDrawerProps> = ({
             >
                 ANC CARD
             </Button>
-            <Button icon={<MedicineBoxOutlined />} ghost type="primary">
-                View Lab Reports
-            </Button>
-            <Button icon={<PhoneOutlined />} type="default">
+            <Button 
+                icon={<PhoneOutlined />} 
+                type="default"
+                onClick={() => data?.mother?.phone && window.open(`tel:${data.mother.phone}`)}
+            >
                 Call Mother
             </Button>
         </Space>
@@ -156,7 +157,18 @@ const PregnancyDetailDrawer: React.FC<PregnancyDetailDrawerProps> = ({
                     <Card style={{ borderRadius: '16px', border: 'none', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', marginBottom: '20px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                             <Text style={{ fontWeight: 600, fontSize: '15px' }}>Pregnancy Progress</Text>
-                            <Tag color="processing" style={{ margin: 0, borderRadius: '4px' }}>Trimester {trimester}</Tag>
+                            <Space>
+                                <Button 
+                                    size="small" 
+                                    type="text" 
+                                    icon={<EditOutlined style={{ color: colors.primary }} />} 
+                                    onClick={() => setEditModalVisible(true)}
+                                    style={{ borderRadius: '6px' }}
+                                >
+                                    Edit Details
+                                </Button>
+                                <Tag color="processing" style={{ margin: 0, borderRadius: '4px' }}>Trimester {trimester}</Tag>
+                            </Space>
                         </div>
 
                         <Progress 
@@ -178,37 +190,39 @@ const PregnancyDetailDrawer: React.FC<PregnancyDetailDrawerProps> = ({
                                 </div>
                             </Col>
                         </Row>
+
+                        {/* Divider */}
+                        <div style={{ height: '1px', background: '#f0f0f0', margin: '14px 0' }} />
+
+                        {/* LMP / EDD + Clinical History in one row */}
+                        <Row gutter={16}>
+                            {/* LMP / EDD */}
+                            <Col span={12}>
+                                <Text type="secondary" style={{ fontSize: '11px', display: 'block', marginBottom: '6px', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>LMP / EDD</Text>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                                    <Text type="secondary" style={{ fontSize: '12px' }}>LMP</Text>
+                                    <Text style={{ fontSize: '12px', fontWeight: 600 }}>{dayjs(data.lmp_date).format('DD MMM YY')}</Text>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                    <Text type="secondary" style={{ fontSize: '12px' }}>EDD</Text>
+                                    <Text style={{ fontSize: '12px', fontWeight: 600, color: colors.danger }}>{dayjs(data.edd_date).format('DD MMM YY')}</Text>
+                                </div>
+                            </Col>
+
+                            {/* Vertical separator */}
+                            <Col span={1} style={{ display: 'flex', justifyContent: 'center' }}>
+                                <div style={{ width: '1px', background: '#f0f0f0', height: '100%' }} />
+                            </Col>
+
+                            {/* Clinical History G/P/A/L */}
+                            <Col span={11} style={{ textAlign: 'center' }}>
+                                <Text type="secondary" style={{ fontSize: '11px', display: 'block', marginBottom: '6px', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>Clinical History</Text>
+                                <div style={{ fontSize: '20px', fontWeight: 700, color: colors.ui.text }}>{data.gravida}/{data.para}/{data.abortions}/{data.living_children}</div>
+                                <Text style={{ fontSize: '11px', color: colors.ui.label }}>G / P / A / L</Text>
+                            </Col>
+                        </Row>
                     </Card>
 
-                    {/* Clinical Details */}
-                    <Row gutter={16} style={{ marginBottom: '20px' }}>
-                        <Col span={12}>
-                            <Card 
-                                size="small" 
-                                title={<span style={{ fontSize: 13, color: colors.ui.label }}>CLINICAL HISTORY</span>} 
-                                style={{ borderRadius: '12px', border: 'none' }}
-                            >
-                                <div style={{ textAlign: 'center', padding: '8px 0' }}>
-                                    <div style={{ fontSize: '20px', fontWeight: 700, color: colors.ui.text }}>{data.gravida}/{data.para}/{data.abortions}/{data.living_children}</div>
-                                    <Text style={{ fontSize: '11px', color: colors.ui.label }}>G / P / A / L</Text>
-                                </div>
-                            </Card>
-                        </Col>
-                        <Col span={12}>
-                            <Card size="small" title={<span style={{ fontSize: 13, color: colors.ui.label }}>LMP / EDD</span>} style={{ borderRadius: '12px', border: 'none' }}>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                        <Text type="secondary" style={{ fontSize: '11px' }}>LMP:</Text>
-                                        <Text style={{ fontSize: '11px', fontWeight: 600 }}>{dayjs(data.lmp_date).format('DD MMM YY')}</Text>
-                                    </div>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                        <Text type="secondary" style={{ fontSize: '11px' }}>EDD:</Text>
-                                        <Text style={{ fontSize: '11px', fontWeight: 600, color: colors.danger }}>{dayjs(data.edd_date).format('DD MMM YY')}</Text>
-                                    </div>
-                                </div>
-                            </Card>
-                        </Col>
-                    </Row>
 
                     {/* Pregnancy History */}
                     {data.mother.pregnancies && data.mother.pregnancies.length > 1 && (

@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Layout, Menu, Typography, Avatar, Badge, Dropdown, Divider, theme, Button, Space } from 'antd';
+import { Layout, Menu, Typography, Avatar, Dropdown, Divider, theme, Button, Space } from 'antd';
 import {
     DashboardOutlined,
     UserOutlined,
     ExperimentOutlined,
-    BellOutlined,
     LogoutOutlined,
     MenuUnfoldOutlined,
     MenuFoldOutlined,
@@ -170,9 +169,9 @@ const AdminLayout: React.FC = () => {
 
     const userMenu = {
         items: [
-            { 
-                key: 'profile', 
-                label: 'Profile Settings', 
+            {
+                key: 'profile',
+                label: 'Profile Settings',
                 icon: <UserOutlined />,
                 onClick: () => navigate('/profile')
             },
@@ -221,9 +220,9 @@ const AdminLayout: React.FC = () => {
                     {(!collapsed || isMobile) && <Text strong style={{ color: colors.white, fontSize: 18, whiteSpace: 'nowrap' }}>PathLab</Text>}
                 </div>
                 {isMobile && (
-                    <Button 
-                        type="text" 
-                        icon={<MenuFoldOutlined style={{ color: colors.white }} />} 
+                    <Button
+                        type="text"
+                        icon={<MenuFoldOutlined style={{ color: colors.white }} />}
                         onClick={() => setCollapsed(true)}
                     />
                 )}
@@ -289,14 +288,14 @@ const AdminLayout: React.FC = () => {
     return (
         <Layout style={{ minHeight: '100vh', background: colors.background }}>
             {isMobile ? (
-                <div 
-                    style={{ 
-                        position: 'fixed', 
-                        top: 0, 
-                        left: 0, 
-                        right: 0, 
-                        bottom: 0, 
-                        background: 'rgba(0,0,0,0.45)', 
+                <div
+                    style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: 'rgba(0,0,0,0.45)',
                         zIndex: 1000,
                         visibility: !collapsed ? 'visible' : 'hidden',
                         opacity: !collapsed ? 1 : 0,
@@ -304,10 +303,10 @@ const AdminLayout: React.FC = () => {
                     }}
                     onClick={() => setCollapsed(true)}
                 >
-                    <div 
-                        style={{ 
-                            width: 260, 
-                            height: '100%', 
+                    <div
+                        style={{
+                            width: 260,
+                            height: '100%',
                             transform: !collapsed ? 'translateX(0)' : 'translateX(-100%)',
                             transition: 'transform 0.3s ease',
                             boxShadow: '4px 0 16px rgba(0,0,0,0.2)'
@@ -367,9 +366,9 @@ const AdminLayout: React.FC = () => {
                     />
 
                     <Space size="middle">
-                        <Badge count={5} size="small" style={{ boxShadow: 'none' }}>
+                        {/* <Badge count={5} size="small" style={{ boxShadow: 'none' }}>
                             <Button type="text" icon={<BellOutlined style={{ fontSize: 18, color: '#64748b' }} />} />
-                        </Badge>
+                        </Badge> */}
                         <Divider vertical style={{ height: 24 }} />
                         <Dropdown menu={userMenu} placement="bottomRight" arrow>
                             <Space style={{ cursor: 'pointer', padding: '4px 8px', borderRadius: '8px', transition: 'all 0.2s' }} className="user-dropdown-trigger">
