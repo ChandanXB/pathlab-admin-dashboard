@@ -21,6 +21,7 @@ export interface Pregnancy {
         full_name: string;
         patient_code: string;
         phone: string;
+        email?: string;
         pregnancies?: Array<{
             id: number;
             lmp_date: string;
@@ -55,6 +56,10 @@ export const ancService = {
     },
     logRiskAssessment: async (id: number, data: any) => {
         const response = await apiClient.post(`/pregnancies/${id}/risks`, data);
+        return response.data;
+    },
+    shareAncCard: async (id: number, payload: { file_base64: string; mother_name: string; email: string }) => {
+        const response = await apiClient.post(`/pregnancies/${id}/share`, payload);
         return response.data;
     }
 };

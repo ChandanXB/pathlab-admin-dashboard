@@ -3,6 +3,7 @@ import autoTable from 'jspdf-autotable';
 import dayjs from 'dayjs';
 import type { Pregnancy } from '../services/ancService';
 import { formatName } from '@/shared/utils/nameUtils';
+import { PATHLAB_STAMP_BASE64 } from '@/shared/constants/assets';
 
 /**
  * Generates a professional ANC Card PDF for a patient
@@ -177,14 +178,22 @@ export const generateAncPdf = (data: Pregnancy, outputType: 'save' | 'datauri' =
     const lastTable = (doc as any).lastAutoTable;
     const finalY = lastTable ? lastTable.finalY + 20 : y + 20;
 
-    if (finalY < pageHeight - 40) {
+    if (finalY < pageHeight - 50) {
+        // Official Stamp
+        try {
+            // Using the embedded Base64 stamp for higher reliability
+            doc.addImage(PATHLAB_STAMP_BASE64, 'PNG', pageWidth - margin - 35, finalY - 10, 30, 30);
+        } catch (e) {
+            console.warn('Failed to render official stamp:', e);
+        }
+
         doc.setFontSize(8);
         doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
         doc.setFont('helvetica', 'italic');
-        doc.text('This is a computer-generated clinical record and does not require a physical signature.', margin, finalY);
+        doc.text('This clinical record is officially certified and digitally validated by Pathlab Diagnostics.', margin, finalY + 15);
         
         doc.setFont('helvetica', 'normal');
-        doc.text('Reported by Pathlab Admin Services', margin, finalY + 5);
+        doc.text('Reported by Pathlab Maternal Health Services', margin, finalY + 20);
         
         // Branding tag at bottom
         doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
