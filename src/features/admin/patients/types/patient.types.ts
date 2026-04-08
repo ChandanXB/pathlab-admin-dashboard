@@ -21,6 +21,14 @@ export interface Patient {
         email: string;
         phone?: string;
     };
+    added_by?: {
+        id: number;
+        name: string;
+        email: string;
+        phone?: string;
+    };
+    growth_records?: any[];
+    immunizations?: any[];
 }
 
 export interface PatientQueryParams {

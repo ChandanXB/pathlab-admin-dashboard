@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Card, Button, Form } from 'antd';
-import { PlusOutlined, UnorderedListOutlined, MedicineBoxOutlined } from '@ant-design/icons';
+import { PlusOutlined, UnorderedListOutlined, MedicineBoxOutlined, LineChartOutlined } from '@ant-design/icons';
 import { usePatients } from '../hooks/usePatients';
 import { PatientTable, PatientFilters, PatientFormModal, PatientDetailDrawer } from '../components';
 import type { Patient } from '../types/patient.types';
 import ConsultationManager from '../../consultations/pages/ConsultationManager';
+import PNCManager from './PNCManager';
 import { Tabs } from 'antd';
 
 const PatientManager: React.FC = () => {
@@ -220,6 +221,15 @@ const PatientManager: React.FC = () => {
                 onClose={() => setIsDrawerVisible(false)}
             />
         </div>
+                    )
+                },
+                {
+                    key: 'pnc',
+                    label: <span><LineChartOutlined /> PNC Care</span>,
+                    children: (
+                        <div style={{ height: '100%' }}>
+                            <PNCManager />
+                        </div>
                     )
                 },
                 {
