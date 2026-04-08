@@ -47,7 +47,7 @@ const AdminLayout: React.FC = () => {
             setOpenKeys(['/lab-orders-parent']);
         } else if (location.pathname.startsWith('/collection-agents')) {
             setOpenKeys(['/collection-agents-parent']);
-        } else if (['/patients', '/doctors', '/consultations'].includes(location.pathname)) {
+        } else if (['/patients', '/doctors', '/consultations', '/anc-care', '/pnc-care'].includes(location.pathname)) {
             setOpenKeys(['/medical-network']);
         }
     }, [location.pathname]);
@@ -150,6 +150,7 @@ const AdminLayout: React.FC = () => {
                 { key: '/patients', label: 'Patients Directory' },
                 { key: '/doctors', label: 'Doctors Directory' },
                 { key: '/anc-care', label: 'ANC Care' },
+                { key: '/pnc-care', label: 'PNC Care' },
             ]
         },
         {
