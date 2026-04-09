@@ -59,4 +59,20 @@ export const patientService = {
         const response = await apiClient.delete(`/patients/${id}`);
         return response.data;
     },
+
+    /**
+     * Delete a growth record
+     */
+    deleteGrowthRecord: async (recordId: number): Promise<{ success: boolean; message: string }> => {
+        const response = await apiClient.delete(`/patients/growth-records/${recordId}`);
+        return response.data;
+    },
+
+    /**
+     * Delete an immunization record
+     */
+    deleteImmunization: async (id: number): Promise<{ success: boolean; message: string }> => {
+        const response = await apiClient.delete(`/child-vaccination/immunization/${id}`);
+        return response.data;
+    },
 };
