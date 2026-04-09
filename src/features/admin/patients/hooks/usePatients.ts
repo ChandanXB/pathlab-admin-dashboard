@@ -92,6 +92,28 @@ export const usePatients = (enabled: boolean = true) => {
         }
     };
 
+    const deleteGrowthRecord = async (recordId: number) => {
+        try {
+            await patientService.deleteGrowthRecord(recordId);
+            message.success('Growth record deleted');
+            fetchPatients(true);
+            return true;
+        } catch (error: any) {
+            return false;
+        }
+    };
+
+    const deleteImmunization = async (id: number) => {
+        try {
+            await patientService.deleteImmunization(id);
+            message.success('Immunization record deleted');
+            fetchPatients(true);
+            return true;
+        } catch (error: any) {
+            return false;
+        }
+    };
+
     const resetFilters = () => {
         setPatientFilters({
             page: 1,
@@ -126,6 +148,8 @@ export const usePatients = (enabled: boolean = true) => {
         createPatient,
         updatePatient,
         deletePatient,
+        deleteGrowthRecord,
+        deleteImmunization,
         resetFilters,
         loadMore,
     };

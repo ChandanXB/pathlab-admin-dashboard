@@ -1,27 +1,76 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
-    Card, Table, Tag, Space, Typography, Empty, Avatar, List, Divider,
-    Button, Drawer, Row, Col, Badge, Descriptions, Timeline, Input, message
+    Card, Tag, Space, Typography, Empty, Avatar, List, Divider,
+    Button, Drawer, Row, Col, Badge, Descriptions, Timeline, Input, message, Popconfirm
 } from 'antd';
 import {
-    LineChartOutlined, CheckCircleOutlined, UserOutlined,
-    SafetyOutlined, HeartOutlined, CalendarOutlined, FilePdfOutlined
+    UserOutlined,
+    SafetyOutlined, CalendarOutlined, FilePdfOutlined,
+    DeleteOutlined, EyeOutlined, LineChartOutlined, CheckCircleOutlined,
+    SendOutlined, MessageOutlined
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { usePatients } from '../hooks/usePatients';
+import InfiniteScrollTable from '@/shared/components/InfiniteScrollTable';
 import type { Patient } from '../types/patient.types';
 import { CHILD_IMMUNIZATION_SCHEDULE, type ImmunizationPeriod, type Vaccine } from '../constants/vaccination.constants';
-import { MedicineBoxOutlined as Syringe, SendOutlined, MessageOutlined } from '@ant-design/icons';
+import { MedicineBoxOutlined as Syringe } from '@ant-design/icons';
 
 const { Text, Title } = Typography;
 const { TextArea } = Input;
 
 const PNCManager: React.FC = () => {
-    const { patients, loadingPatients } = usePatients();
+    const { 
+        patients, 
+        loadingPatients, 
+        loadingMorePatients,
+        patientPagination,
+        loadMore,
+        deletePatient, 
+        deleteGrowthRecord, 
+        deleteImmunization 
+    } = usePatients();
     const [selectedChild, setSelectedChild] = useState<Patient | null>(null);
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [clinicalNote, setClinicalNote] = useState('');
     const [sendingSchedule, setSendingSchedule] = useState(false);
+    const [tableHeight, setTableHeight] = useState(400);
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    const [screenSize, setScreenSize] = useState(window.innerWidth);
+    const isMobile = screenSize < 768;
+
+    useEffect(() => {
+        const handleResize = () => setScreenSize(window.innerWidth);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    useEffect(() => {
+        const observer = new ResizeObserver((entries) => {
+            for (const entry of entries) {
+                if (entry.target === containerRef.current) {
+                    setTableHeight(Math.max(200, entry.contentRect.height - 40));
+                }
+            }
+        });
+
+        if (containerRef.current) observer.observe(containerRef.current);
+        return () => observer.disconnect();
+    }, []);
+
+    // Keep selectedChild in sync with updated patients list (e.g., after deletion)
+    useEffect(() => {
+        if (selectedChild) {
+            const updated = patients.find(p => p.id === selectedChild.id);
+            if (updated) {
+                setSelectedChild(updated);
+            } else {
+                setSelectedChild(null);
+                setDrawerOpen(false);
+            }
+        }
+    }, [patients, selectedChild?.id]);
 
     // Filter patients who are children (added by someone else, or age < 12)
     const childPatients = patients.filter(p =>
@@ -34,8 +83,11 @@ const PNCManager: React.FC = () => {
 
     const getAge = (dob?: string) => {
         if (!dob) return 'N/A';
-        const diffMonths = dayjs().diff(dayjs(dob), 'month');
-        if (diffMonths < 1) return `${dayjs().diff(dayjs(dob), 'day')} Days`;
+        const dobDate = dayjs(dob);
+        const diffDays = dayjs().diff(dobDate, 'day');
+        const diffMonths = dayjs().diff(dobDate, 'month');
+        
+        if (diffDays < 30) return `${diffDays} Days`;
         if (diffMonths < 12) return `${diffMonths} Months`;
         return `${Math.floor(diffMonths / 12)} Years`;
     };
@@ -58,7 +110,6 @@ const PNCManager: React.FC = () => {
         }
         setSendingSchedule(true);
         try {
-            // Mock API call to send schedule
             await new Promise(res => setTimeout(res, 1500));
             message.success('Vaccination schedule sent to parent email!');
         } catch (err) {
@@ -72,8 +123,6 @@ const PNCManager: React.FC = () => {
         if (!clinicalNote.trim()) return;
         message.loading('Saving clinical note...');
         try {
-            // Logic to save the note as a growth record with remarks
-            // This would call your addGrowthRecordToPatient API
             await new Promise(res => setTimeout(res, 1000));
             message.success('Clinical feedback saved and shared with user!');
             setClinicalNote('');
@@ -86,6 +135,7 @@ const PNCManager: React.FC = () => {
         {
             title: 'Parent/Guardian',
             key: 'parent_name',
+            width: 250,
             render: (record: Patient) => {
                 const parentName = getParentName(record);
                 return (
@@ -98,7 +148,7 @@ const PNCManager: React.FC = () => {
                             <Text strong style={{ color: '#1890ff' }}>
                                 {parentName || <Text type="secondary" italic>No Parent Linked</Text>}
                             </Text>
-                            <Text type="secondary" style={{ fontSize: '12px' }}>
+                            <Text type="secondary" style={{ fontSize: '12px', textTransform: 'capitalize' }}>
                                 Child: {record.full_name} ({record.patient_code})
                             </Text>
                         </Space>
@@ -110,6 +160,7 @@ const PNCManager: React.FC = () => {
             title: 'Gender',
             dataIndex: 'gender',
             key: 'gender',
+            width: 100,
             render: (gender: string) => (
                 <Tag color={gender?.toLowerCase() === 'male' ? 'blue' : 'magenta'}>
                     {gender?.toUpperCase()}
@@ -119,11 +170,13 @@ const PNCManager: React.FC = () => {
         {
             title: 'Age',
             key: 'age',
+            width: 100,
             render: (record: Patient) => getAge(record.dob),
         },
         {
             title: 'Last Growth Record',
             key: 'last_growth',
+            width: 180,
             render: (record: Patient) => {
                 const records = record.growth_records || [];
                 if (records.length === 0) return <Text type="secondary">No records</Text>;
@@ -139,6 +192,7 @@ const PNCManager: React.FC = () => {
         {
             title: 'Vaccinations',
             key: 'vaccinations',
+            width: 150,
             render: (record: Patient) => {
                 const immunRes = record.immunizations || [];
                 return (
@@ -151,14 +205,40 @@ const PNCManager: React.FC = () => {
         {
             title: 'Action',
             key: 'action',
+            width: 100,
+            fixed: isMobile ? false : 'right' as any,
             render: (record: Patient) => (
-                <Button
-                    type="link"
-                    size="small"
-                    onClick={() => openDrawer(record)}
-                >
-                    View Details
-                </Button>
+                <Space size="middle">
+                    <Button
+                        type="link"
+                        size="small"
+                        icon={<EyeOutlined />}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            openDrawer(record);
+                        }}
+                    />
+                    <Popconfirm
+                        title="Delete Child Profile"
+                        description="Are you sure you want to delete this child's profile and all their records?"
+                        onConfirm={(e) => {
+                            e?.stopPropagation();
+                            deletePatient(record.id);
+                        }}
+                        onCancel={(e) => e?.stopPropagation()}
+                        okText="Yes"
+                        cancelText="No"
+                        okButtonProps={{ danger: true }}
+                    >
+                        <Button
+                            type="text"
+                            danger
+                            size="small"
+                            icon={<DeleteOutlined />}
+                            onClick={(e) => e.stopPropagation()}
+                        />
+                    </Popconfirm>
+                </Space>
             ),
         },
     ];
@@ -166,26 +246,40 @@ const PNCManager: React.FC = () => {
     const latestGrowth = selectedChild?.growth_records?.[0];
 
     return (
-        <div style={{ padding: '20px', height: '100%', overflowY: 'auto' }}>
-            <div style={{ marginBottom: 24 }}>
-                <Title level={3}>Postnatal Care (PNC) Management</Title>
-                <Text type="secondary">
-                    Monitor child growth standards and immunization schedules across all registered children.
+        <div style={{ 
+            padding: isMobile ? '12px' : '20px', 
+            height: '100%', 
+            display: 'flex', 
+            flexDirection: 'column', 
+            overflow: 'hidden' 
+        }}>
+            <div style={{ marginBottom: isMobile ? 16 : 24, flexShrink: 0 }}>
+                <Title level={isMobile ? 4 : 3}>{isMobile ? "PNC Management" : "Postnatal Care (PNC) Management"}</Title>
+                <Text type="secondary" style={{ fontSize: isMobile ? '13px' : '14px' }}>
+                    {isMobile ? "Monitor growth and vaccine schedules." : "Monitor child growth standards and immunization schedules across all registered children."}
                 </Text>
             </div>
 
-            <Card styles={{ body: { padding: 0 } }}>
-                <Table
-                    dataSource={childPatients}
-                    columns={columns}
-                    loading={loadingPatients}
-                    rowKey="id"
-                    onRow={(record) => ({
-                        onClick: () => openDrawer(record),
-                        style: { cursor: 'pointer' },
-                    })}
-                    pagination={{ pageSize: 10, showTotal: (total) => `${total} children registered` }}
-                />
+            <Card 
+                styles={{ body: { flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: 0 } }} 
+                style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
+            >
+                <div ref={containerRef} style={{ flex: 1, overflow: 'hidden' }}>
+                    <InfiniteScrollTable
+                        dataSource={childPatients}
+                        columns={columns}
+                        loading={loadingPatients}
+                        loadingMore={loadingMorePatients}
+                        hasMore={patientPagination.hasMore}
+                        next={loadMore}
+                        rowKey="id"
+                        onRow={(record) => ({
+                            onClick: () => openDrawer(record),
+                            style: { cursor: 'pointer' },
+                        })}
+                        scroll={{ x: 'max-content', y: tableHeight }}
+                    />
+                </div>
             </Card>
 
             {/* Detail Drawer */}
@@ -196,10 +290,10 @@ const PNCManager: React.FC = () => {
                     </Space>
                 }
                 placement="right"
-                width={680}
+                width={isMobile ? '100%' : 680}
                 open={drawerOpen}
                 onClose={closeDrawer}
-                styles={{ body: { padding: 20 } }}
+                styles={{ body: { padding: isMobile ? 12 : 20 } }}
             >
                 {selectedChild && (
                     <Space direction="vertical" size={24} style={{ width: '100%' }}>
@@ -212,19 +306,19 @@ const PNCManager: React.FC = () => {
                             <Row gutter={16} align="middle">
                                 <Col>
                                     <Avatar
-                                        size={64}
+                                        size={isMobile ? 48 : 64}
                                         icon={<UserOutlined />}
-                                        style={{ backgroundColor: '#3b82f6', fontSize: 28 }}
+                                        style={{ backgroundColor: '#3b82f6', fontSize: isMobile ? 20 : 28 }}
                                     />
                                 </Col>
                                 <Col flex={1}>
-                                    <Title level={4} style={{ margin: 0 }}>{selectedChild.full_name}</Title>
-                                    <Space size="small">
+                                    <Title level={4} style={{ margin: 0, fontSize: isMobile ? 16 : 20, textTransform: 'capitalize' }}>{selectedChild.full_name}</Title>
+                                    <Space size="small" wrap>
                                         <Tag color={selectedChild.gender?.toLowerCase() === 'male' ? 'blue' : 'magenta'}>
                                             {selectedChild.gender?.toUpperCase()}
                                         </Tag>
-                                        <Text type="secondary">{getAge(selectedChild.dob)}</Text>
-                                        <Text type="secondary">• {selectedChild.patient_code}</Text>
+                                        <Text type="secondary" style={{ fontSize: isMobile ? 12 : 14 }}>{getAge(selectedChild.dob)}</Text>
+                                        <Text type="secondary" style={{ fontSize: isMobile ? 12 : 14 }}>• {selectedChild.patient_code}</Text>
                                     </Space>
                                 </Col>
                             </Row>
@@ -237,7 +331,7 @@ const PNCManager: React.FC = () => {
                             style={{ borderRadius: 12 }}
                         >
                             {getParentName(selectedChild) ? (
-                                <Descriptions column={2} size="small">
+                                <Descriptions column={isMobile ? 1 : 2} size="small">
                                     <Descriptions.Item label="Name">
                                         <Text strong>{getParentName(selectedChild)}</Text>
                                     </Descriptions.Item>
@@ -264,28 +358,28 @@ const PNCManager: React.FC = () => {
                                 extra={<Text type="secondary" style={{ fontSize: 12 }}>{dayjs(latestGrowth.record_date).format('DD MMM YYYY')}</Text>}
                                 style={{ borderRadius: 12 }}
                             >
-                                <Row gutter={16}>
+                                <Row gutter={isMobile ? 8 : 16}>
                                     {latestGrowth.weight && (
                                         <Col span={8}>
-                                            <div style={{ textAlign: 'center', padding: '12px', background: '#eff6ff', borderRadius: 10 }}>
-                                                <Title level={3} style={{ margin: 0, color: '#3b82f6' }}>{latestGrowth.weight}</Title>
-                                                <Text type="secondary">kg • Weight</Text>
+                                            <div style={{ textAlign: 'center', padding: isMobile ? '8px' : '12px', background: '#eff6ff', borderRadius: 10 }}>
+                                                <Title level={3} style={{ margin: 0, color: '#3b82f6', fontSize: isMobile ? 18 : 24 }}>{latestGrowth.weight}</Title>
+                                                <Text type="secondary" style={{ fontSize: isMobile ? 10 : 12 }}>kg • Weight</Text>
                                             </div>
                                         </Col>
                                     )}
                                     {latestGrowth.height && (
                                         <Col span={8}>
-                                            <div style={{ textAlign: 'center', padding: '12px', background: '#f0fdf4', borderRadius: 10 }}>
-                                                <Title level={3} style={{ margin: 0, color: '#22c55e' }}>{latestGrowth.height}</Title>
-                                                <Text type="secondary">cm • Height</Text>
+                                            <div style={{ textAlign: 'center', padding: isMobile ? '8px' : '12px', background: '#f0fdf4', borderRadius: 10 }}>
+                                                <Title level={3} style={{ margin: 0, color: '#22c55e', fontSize: isMobile ? 18 : 24 }}>{latestGrowth.height}</Title>
+                                                <Text type="secondary" style={{ fontSize: isMobile ? 10 : 12 }}>cm • Height</Text>
                                             </div>
                                         </Col>
                                     )}
                                     {latestGrowth.head_circumference && (
                                         <Col span={8}>
-                                            <div style={{ textAlign: 'center', padding: '12px', background: '#fdf4ff', borderRadius: 10 }}>
-                                                <Title level={3} style={{ margin: 0, color: '#a855f7' }}>{latestGrowth.head_circumference}</Title>
-                                                <Text type="secondary">cm • Head</Text>
+                                            <div style={{ textAlign: 'center', padding: isMobile ? '8px' : '12px', background: '#fdf4ff', borderRadius: 10 }}>
+                                                <Title level={3} style={{ margin: 0, color: '#a855f7', fontSize: isMobile ? 18 : 24 }}>{latestGrowth.head_circumference}</Title>
+                                                <Text type="secondary" style={{ fontSize: isMobile ? 10 : 12 }}>cm • Head</Text>
                                             </div>
                                         </Col>
                                     )}
@@ -306,16 +400,32 @@ const PNCManager: React.FC = () => {
                                     items={(selectedChild.growth_records || []).map((item: any) => ({
                                         color: 'blue',
                                         children: (
-                                            <div>
-                                                <Text strong style={{ fontSize: 13 }}>
-                                                    {dayjs(item.record_date).format('DD MMM YYYY')}
-                                                </Text>
-                                                <br />
-                                                <Space size="small" style={{ marginTop: 4 }}>
-                                                    {item.weight && <Tag>{item.weight} kg</Tag>}
-                                                    {item.height && <Tag color="green">{item.height} cm</Tag>}
-                                                    {item.head_circumference && <Tag color="purple">{item.head_circumference} cm head</Tag>}
-                                                </Space>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                                <div>
+                                                    <Text strong style={{ fontSize: 13 }}>
+                                                        {dayjs(item.record_date).format('DD MMM YYYY')}
+                                                    </Text>
+                                                    <br />
+                                                    <Space size="small" style={{ marginTop: 4 }} wrap>
+                                                        {item.weight && <Tag>{item.weight} kg</Tag>}
+                                                        {item.height && <Tag color="green">{item.height} cm</Tag>}
+                                                        {item.head_circumference && <Tag color="purple">{item.head_circumference} cm head</Tag>}
+                                                    </Space>
+                                                </div>
+                                                <Popconfirm
+                                                    title="Delete growth record?"
+                                                    onConfirm={() => deleteGrowthRecord(item.id)}
+                                                    okText="Yes"
+                                                    cancelText="No"
+                                                    okButtonProps={{ danger: true }}
+                                                >
+                                                    <Button 
+                                                        type="text" 
+                                                        danger 
+                                                        size="small" 
+                                                        icon={<DeleteOutlined style={{ fontSize: 12 }} />} 
+                                                    />
+                                                </Popconfirm>
                                             </div>
                                         ),
                                     }))}
@@ -352,9 +462,23 @@ const PNCManager: React.FC = () => {
                                                         href={imm.document_url}
                                                         target="_blank"
                                                     >
-                                                        View Cert
+                                                        {isMobile ? "" : "View Cert"}
                                                     </Button>
-                                                )
+                                                ),
+                                                <Popconfirm
+                                                    title="Delete immunization record?"
+                                                    onConfirm={() => deleteImmunization(imm.id)}
+                                                    okText="Yes"
+                                                    cancelText="No"
+                                                    okButtonProps={{ danger: true }}
+                                                >
+                                                    <Button 
+                                                        type="text" 
+                                                        danger 
+                                                        size="small" 
+                                                        icon={<DeleteOutlined />} 
+                                                    />
+                                                </Popconfirm>
                                             ].filter(Boolean)}
                                         >
                                             <List.Item.Meta
@@ -365,14 +489,14 @@ const PNCManager: React.FC = () => {
                                                         size="small"
                                                     />
                                                 }
-                                                title={<Text strong>{imm.vaccine?.vaccine_name || 'Vaccine'}</Text>}
+                                                title={<Text strong style={{ fontSize: isMobile ? 13 : 14 }}>{imm.vaccine?.vaccine_name || 'Vaccine'}</Text>}
                                                 description={
-                                                    <Space size="small">
+                                                    <Space size="small" direction={isMobile ? "vertical" : "horizontal"}>
                                                         <Tag color="green" style={{ fontSize: '10px' }}>Dose {imm.dose_number}</Tag>
                                                         <Text type="secondary" style={{ fontSize: '11px' }}>
                                                             {dayjs(imm.date_administered).format('DD MMM YYYY')}
                                                         </Text>
-                                                        {imm.facility_name && (
+                                                        {imm.facility_name && !isMobile && (
                                                             <Text type="secondary" style={{ fontSize: '11px' }}>
                                                                 @ {imm.facility_name}
                                                             </Text>
@@ -389,7 +513,7 @@ const PNCManager: React.FC = () => {
                         {/* Recommended Next Vaccines */}
                         <Card
                             size="small"
-                            title={<Space><SafetyOutlined style={{ color: '#1890ff' }} /><span>Recommended Next Vaccines</span></Space>}
+                            title={<Space><SafetyOutlined style={{ color: '#1890ff' }} /><span>Recommendations</span></Space>}
                             extra={
                                 <Button 
                                     type="primary" 
@@ -398,7 +522,7 @@ const PNCManager: React.FC = () => {
                                     onClick={handleSendSchedule}
                                     loading={sendingSchedule}
                                 >
-                                    Send Schedule
+                                    {isMobile ? "Email" : "Send Schedule"}
                                 </Button>
                             }
                             style={{ borderRadius: 12, border: '1px solid #d9d9d9', backgroundColor: '#fdfdfd' }}
@@ -410,22 +534,20 @@ const PNCManager: React.FC = () => {
                                 const recordedVaccines = (selectedChild.immunizations || []).map((i: any) => i.vaccine?.vaccine_name.toLowerCase());
 
                                 const nextVaccines = CHILD_IMMUNIZATION_SCHEDULE.filter((period: ImmunizationPeriod) => {
-                                    // Logic to find pending vaccines for current or next age periods
                                     const ageMatch = period.age.match(/(\d+)/);
-                                    if (!ageMatch) return false; // Skip 'Birth' for simplified demo or handle separately
+                                    if (!ageMatch) return false;
                                     
                                     const periodAgeMonths = period.age.includes('Weeks') 
                                         ? parseInt(ageMatch[1]) / 4.34 
                                         : (period.age.includes('Years') ? parseInt(ageMatch[1]) * 12 : parseInt(ageMatch[1]));
                                     
-                                    // Only show periods relevant to current age or slightly ahead
                                     return periodAgeMonths >= currentAgeMonths - 1;
                                 }).flatMap((period: ImmunizationPeriod) => 
                                     period.vaccines
                                         .filter((v: Vaccine) => !recordedVaccines.includes(v.name.toLowerCase()))
                                         .map((v: Vaccine) => ({ ...v, period: period.age, color: period.color }))
                                 )
-                                .slice(0, 5); // Show top 5 pending
+                                .slice(0, 5);
 
                                 if (nextVaccines.length === 0) return <Empty description="All scheduled vaccines recorded!" />;
 
@@ -443,9 +565,9 @@ const PNCManager: React.FC = () => {
                                                             icon={<Syringe style={{ fontSize: 10 }} />}
                                                         />
                                                     }
-                                                    title={<Text strong>{v.name}</Text>}
+                                                    title={<Text strong style={{ fontSize: isMobile ? 12 : 14 }}>{v.name}</Text>}
                                                     description={
-                                                        <Space>
+                                                        <Space wrap>
                                                             <Tag color="orange" style={{ fontSize: 10 }}>Due: {v.period}</Tag>
                                                             <Text type="secondary" style={{ fontSize: 11 }}>{v.dosage}</Text>
                                                         </Space>
@@ -478,7 +600,7 @@ const PNCManager: React.FC = () => {
                                 onClick={handleSaveClinicalNote}
                                 icon={<CheckCircleOutlined />}
                             >
-                                Share Feedback with User
+                                {isMobile ? "Share Feedback" : "Share Feedback with User"}
                             </Button>
                         </Card>
 
