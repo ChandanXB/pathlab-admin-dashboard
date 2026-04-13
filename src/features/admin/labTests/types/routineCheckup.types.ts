@@ -6,6 +6,7 @@ export interface RoutineCheckup {
     tags: string[];
     gender: 'male' | 'female' | 'general';
     status: string;
+    image_url?: string;
     createdAt: string;
     updatedAt: string;
     category: {
@@ -21,6 +22,7 @@ export interface RoutineCheckupCreateDTO {
     tags: string[];
     gender: 'male' | 'female' | 'general';
     status?: string;
+    image_url?: string;
 }
 
 export interface RoutineCheckupUpdateDTO extends Partial<RoutineCheckupCreateDTO> { }

@@ -72,6 +72,7 @@ const LabTestManager: React.FC = () => {
     const {
         routineCheckups,
         loadingRoutineCheckups,
+        isSubmitting: isRoutineSubmitting,
         createRoutineCheckup,
         updateRoutineCheckup,
         deleteRoutineCheckup,
@@ -418,6 +419,7 @@ const LabTestManager: React.FC = () => {
                 categories={allCategories}
                 form={routineForm}
                 onSubmit={handleRoutineSubmit}
+                loading={isRoutineSubmitting}
                 onCancel={() => {
                     setIsRoutineModalVisible(false);
                     routineForm.resetFields();

@@ -1,6 +1,5 @@
 import apiClient from '@/config/apiClient';
 import type {
-    RoutineCheckup,
     RoutineCheckupCreateDTO,
     RoutineCheckupUpdateDTO,
     RoutineCheckupFilters

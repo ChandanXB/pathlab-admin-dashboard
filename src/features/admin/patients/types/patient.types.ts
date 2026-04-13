@@ -14,18 +14,31 @@ export interface Patient {
     updatedAt: string;
     added_by_id?: number;
     relation?: string;
+    email?: string;
     children?: Patient[];
     user?: {
         id: number;
         name: string;
         email: string;
         phone?: string;
+        patient?: {
+            full_name: string;
+            email?: string;
+            phone?: string;
+            relation?: string;
+        };
     };
     added_by?: {
         id: number;
         name: string;
         email: string;
         phone?: string;
+        patient?: {
+            full_name: string;
+            email?: string;
+            phone?: string;
+            relation?: string;
+        };
     };
     growth_records?: any[];
     immunizations?: any[];
