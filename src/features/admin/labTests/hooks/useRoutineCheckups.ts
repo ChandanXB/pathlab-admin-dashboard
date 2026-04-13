@@ -6,6 +6,7 @@ import type { RoutineCheckupFilters } from '../types/routineCheckup.types';
 export const useRoutineCheckups = (enabled: boolean = true) => {
     const [routineCheckups, setRoutineCheckups] = useState<any[]>([]);
     const [loadingRoutineCheckups, setLoadingRoutineCheckups] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [routineCheckupFilters, setRoutineCheckupFilters] = useState<RoutineCheckupFilters>({
         page: 1,
         limit: 100, // No pagination needed for routine checkups usually as they are few
@@ -28,6 +29,7 @@ export const useRoutineCheckups = (enabled: boolean = true) => {
     };
 
     const createRoutineCheckup = async (values: any) => {
+        setIsSubmitting(true);
         try {
             await routineCheckupService.createRoutineCheckup(values);
             message.success('Routine checkup created successfully');
@@ -36,10 +38,13 @@ export const useRoutineCheckups = (enabled: boolean = true) => {
         } catch (error: any) {
             message.error('Operation failed: ' + error.message);
             return false;
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
     const updateRoutineCheckup = async (id: number, values: any) => {
+        setIsSubmitting(true);
         try {
             await routineCheckupService.updateRoutineCheckup(id, values);
             message.success('Routine checkup updated successfully');
@@ -48,6 +53,8 @@ export const useRoutineCheckups = (enabled: boolean = true) => {
         } catch (error: any) {
             message.error('Operation failed: ' + error.message);
             return false;
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -71,6 +78,7 @@ export const useRoutineCheckups = (enabled: boolean = true) => {
     return {
         routineCheckups,
         loadingRoutineCheckups,
+        isSubmitting,
         routineCheckupFilters,
         setRoutineCheckupFilters,
         createRoutineCheckup,

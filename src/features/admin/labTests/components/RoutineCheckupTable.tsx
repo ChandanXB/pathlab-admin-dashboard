@@ -20,6 +20,17 @@ const RoutineCheckupTable: React.FC<RoutineCheckupTableProps> = ({
 }) => {
     const columns = [
         {
+            title: 'Icon/Img',
+            dataIndex: 'image_url',
+            key: 'image_url',
+            width: 80,
+            render: (url: string) => url ? (
+                <img src={url} alt="icon" style={{ width: 40, height: 40, objectFit: 'contain', borderRadius: '4px' }} />
+            ) : (
+                <div style={{ width: 40, height: 40, background: '#f5f5f5', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', color: '#999' }}>No Img</div>
+            )
+        },
+        {
             title: 'Title',
             dataIndex: 'title',
             key: 'title',

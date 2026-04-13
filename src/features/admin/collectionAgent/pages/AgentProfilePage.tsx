@@ -183,7 +183,7 @@ const AgentProfilePage: React.FC = () => {
                     <Col xs={24} md={8} lg={8}>
                         <Row gutter={32} justify="end">
                             <Col>
-                                <Statistic title="Total Tasks" value={stats.total} />
+                                <Statistic title="Total Collections" value={stats.total} />
                             </Col>
                             <Col>
                                 <Statistic title="Pending" value={stats.pending} valueStyle={{ color: '#faad14' }} />
@@ -249,7 +249,7 @@ const AgentProfilePage: React.FC = () => {
                     },
                     {
                         key: 'tasks',
-                        label: <span><CheckCircleOutlined /> Assigned Tasks</span>,
+                        label: <span><CheckCircleOutlined /> Assigned Collections</span>,
                         children: (
                             <Card bordered={false} style={{ borderRadius: '12px' }}>
                                 <List

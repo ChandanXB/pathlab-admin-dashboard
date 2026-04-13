@@ -83,7 +83,7 @@ const AgentDetailDrawer: React.FC<AgentDetailDrawerProps> = ({ visible, agent, o
                 <Row gutter={16}>
                     <Col span={6}>
                         <Statistic
-                            title="Total Tasks"
+                            title="Total Collections"
                             value={stats.total}
                             valueStyle={{ fontSize: '18px', fontWeight: 600 }}
                         />
@@ -170,16 +170,16 @@ const AgentDetailDrawer: React.FC<AgentDetailDrawerProps> = ({ visible, agent, o
                         label: (
                             <span>
                                 <CheckCircleOutlined />
-                                Assigned Tasks
+                                Assigned Collections
                             </span>
                         ),
                         children: (
                             <div style={{ paddingTop: '16px', paddingBottom: '24px' }}>
-                                <Title level={5}>Assigned Lab Orders</Title>
+                                <Title level={5}>Assigned Collections</Title>
                                 <List
                                     itemLayout="horizontal"
                                     dataSource={agent.lab_orders || []}
-                                    locale={{ emptyText: <Empty description="No tasks assigned yet" /> }}
+                                    locale={{ emptyText: <Empty description="No collections assigned yet" /> }}
                                     renderItem={(order: any) => (
                                         <Card
                                             size="small"

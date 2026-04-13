@@ -78,7 +78,18 @@ const PNCManager: React.FC = () => {
     );
 
     const getParentName = (record: Patient) => {
-        return record.added_by?.name || record.user?.name || null;
+        const directParentName = record.added_by?.patient?.full_name || record.added_by?.name || record.user?.patient?.full_name || record.user?.name;
+        
+        // If we still have a generic "User XXXX" name, try to find a patient record with the same phone number in our local list
+        if (!directParentName || directParentName.startsWith('User ')) {
+            const parentPhone = record.added_by?.phone || record.user?.phone || record.phone;
+            if (parentPhone) {
+                const parentInList = patients.find(p => p.phone === parentPhone && (p.id !== record.id));
+                if (parentInList) return parentInList.full_name;
+            }
+        }
+        
+        return directParentName || null;
     };
 
     const getAge = (dob?: string) => {
@@ -104,7 +115,7 @@ const PNCManager: React.FC = () => {
     };
 
     const handleSendSchedule = async () => {
-        if (!selectedChild?.added_by?.email && !selectedChild?.user?.email) {
+        if (!selectedChild?.added_by?.patient?.email && !selectedChild?.added_by?.email && !selectedChild?.user?.patient?.email && !selectedChild?.user?.email) {
             message.error('No parent email found to send schedule.');
             return;
         }
@@ -336,10 +347,17 @@ const PNCManager: React.FC = () => {
                                         <Text strong>{getParentName(selectedChild)}</Text>
                                     </Descriptions.Item>
                                     <Descriptions.Item label="Email">
-                                        {selectedChild.added_by?.email || selectedChild.user?.email || '—'}
+                                        {(() => {
+                                            const email = selectedChild.added_by?.patient?.email || selectedChild.added_by?.email || selectedChild.user?.patient?.email || selectedChild.user?.email;
+                                            if (email && !email.includes('pathlab.com')) return email; // Prefer non-generated emails
+                                            
+                                            const parentPhone = selectedChild.added_by?.phone || selectedChild.user?.phone || selectedChild.phone;
+                                            const parentInList = patients.find(p => p.phone === parentPhone && p.id !== selectedChild.id && p.email && !p.email.includes('pathlab.com'));
+                                            return parentInList?.email || email || '—';
+                                        })()}
                                     </Descriptions.Item>
                                     <Descriptions.Item label="Phone">
-                                        {selectedChild.added_by?.phone || selectedChild.user?.phone || '—'}
+                                        {selectedChild.added_by?.patient?.phone || selectedChild.added_by?.phone || selectedChild.user?.patient?.phone || selectedChild.user?.phone || selectedChild.phone || '—'}
                                     </Descriptions.Item>
                                     <Descriptions.Item label="Relation">
                                         {selectedChild.relation || 'Guardian'}
