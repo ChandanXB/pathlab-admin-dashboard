@@ -18,6 +18,7 @@ import { useCategories } from '../hooks/useCategories';
 // Routine Checkup Components
 import RoutineCheckupTable from '../components/RoutineCheckupTable';
 import RoutineCheckupFormModal from '../components/RoutineCheckupFormModal';
+import RoutineFilters from '../components/RoutineFilters';
 import { useRoutineCheckups } from '../hooks/useRoutineCheckups';
 
 const LabTestManager: React.FC = () => {
@@ -47,6 +48,7 @@ const LabTestManager: React.FC = () => {
     // Custom Hooks
     const {
         tests,
+        allTests,
         loadingTests,
         loadingMoreTests,
         testPagination,
@@ -55,7 +57,8 @@ const LabTestManager: React.FC = () => {
         createTest,
         updateTest,
         deleteTest,
-    } = useTests(activeTab === 'tests');
+        searchAllTests
+    } = useTests(activeTab === 'tests' || activeTab === 'routine');
 
     const {
         categories,
@@ -67,11 +70,14 @@ const LabTestManager: React.FC = () => {
         createCategory,
         updateCategory,
         deleteCategory,
+        searchAllCategories
     } = useCategories(activeTab === 'categories' || activeTab === 'routine');
 
     const {
         routineCheckups,
         loadingRoutineCheckups,
+        routineCheckupFilters,
+        setRoutineCheckupFilters,
         isSubmitting: isRoutineSubmitting,
         createRoutineCheckup,
         updateRoutineCheckup,
@@ -137,6 +143,13 @@ const LabTestManager: React.FC = () => {
     const debouncedSearchCategories = useMemo(
         () => debounce((value: string) => {
             setCategoryFilters(prev => ({ ...prev, search: value, page: 1 }));
+        }, 500),
+        []
+    );
+
+    const debouncedSearchRoutine = useMemo(
+        () => debounce((value: string) => {
+            setRoutineCheckupFilters(prev => ({ ...prev, search: value, page: 1 }));
         }, 500),
         []
     );
@@ -326,10 +339,17 @@ const LabTestManager: React.FC = () => {
                                             </Button>
                                         </div>
                                     )}
+                                    <div style={{ flexShrink: 0 }}>
+                                        <RoutineFilters
+                                            filters={routineCheckupFilters}
+                                            onFilterChange={(filters) => setRoutineCheckupFilters(prev => ({ ...prev, ...filters }))}
+                                            onSearch={debouncedSearchRoutine}
+                                        />
+                                    </div>
                                     
                                     <div
                                         ref={routineContainerRef}
-                                        style={{ flex: 1, overflow: 'hidden', marginTop: 16 }}
+                                        style={{ flex: 1, overflow: 'hidden' }}
                                     >
                                         <RoutineCheckupTable
                                             data={routineCheckups}
@@ -417,6 +437,10 @@ const LabTestManager: React.FC = () => {
                 visible={isRoutineModalVisible}
                 editingPackage={editingRoutine}
                 categories={allCategories}
+                tests={allTests}
+                packages={routineCheckups}
+                onSearchTests={searchAllTests}
+                onSearchCategories={searchAllCategories}
                 form={routineForm}
                 onSubmit={handleRoutineSubmit}
                 loading={isRoutineSubmitting}
@@ -425,6 +449,7 @@ const LabTestManager: React.FC = () => {
                     routineForm.resetFields();
                 }}
             />
+
 
             <style>{`
                 .ant-tabs {

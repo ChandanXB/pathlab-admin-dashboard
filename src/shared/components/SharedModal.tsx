@@ -32,7 +32,7 @@ const SharedModal: React.FC<SharedModalProps> = ({
     maskClosable = true,
     style,
     confirmLoading = false,
-    centered = false,
+    centered = true,
 }) => {
     return (
         <Modal
