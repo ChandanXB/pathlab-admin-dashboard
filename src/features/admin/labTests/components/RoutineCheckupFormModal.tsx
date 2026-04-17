@@ -1,41 +1,68 @@
-import React, { useEffect } from 'react';
-import { Modal, Form, Input, Select, Switch, Space, Button, Upload, message } from 'antd';
-import { PlusOutlined, MinusCircleOutlined, UploadOutlined } from '@ant-design/icons';
+import React, { useEffect, useState } from 'react';
+import { Modal, Form, Input, Select, Space, Button, Upload, message, InputNumber } from 'antd';
+import { PlusOutlined, MinusCircleOutlined } from '@ant-design/icons';
+import { API_BASE_URL } from '@/config/apiClient';
 import type { RoutineCheckup } from '../types/routineCheckup.types';
 
 interface RoutineCheckupFormModalProps {
     visible: boolean;
     editingPackage: RoutineCheckup | null;
     categories: any[];
+    tests: any[];
+    packages?: RoutineCheckup[];
+    onSearchTests?: (query: string) => void;
+    onSearchCategories?: (query: string) => void;
     form: any;
     onSubmit: (values: any) => void;
     onCancel: () => void;
     loading?: boolean;
 }
 
+
 const { Option } = Select;
 const { TextArea } = Input;
 
-const RoutineCheckupFormModal: React.FC<RoutineCheckupFormModalProps> = ({
-    visible,
-    editingPackage,
-    categories,
-    form,
-    onSubmit,
-    onCancel,
-    loading = false
-}) => {
-    const imageUrl = Form.useWatch('image_url', form);
+const RoutineCheckupFormModal: React.FC<RoutineCheckupFormModalProps> = (props) => {
+    const {
+        visible,
+        editingPackage,
+        categories,
+        tests,
+        packages = [],
+        onSearchTests,
+        onSearchCategories,
+        form,
+        onSubmit,
+        onCancel,
+        loading = false
+    } = props;
+
+    const [previewImage, setPreviewImage] = useState<string | null>(null);
+
+    const getFullImageUrl = (url: string) => {
+        if (!url) return '';
+        if (url.startsWith('data:') || url.startsWith('http')) return url;
+        const baseUrl = API_BASE_URL.replace('/api/v1', '');
+        return `${baseUrl}/${url.startsWith('/') ? url.slice(1) : url}`;
+    };
 
     useEffect(() => {
-        if (visible && editingPackage) {
-            form.setFieldsValue({
-                ...editingPackage,
-                category_id: editingPackage.category_id,
-            });
-        } else if (visible) {
-            form.resetFields();
-            form.setFieldsValue({ status: 'active', tags: [] });
+        if (visible) {
+            if (editingPackage) {
+                form.setFieldsValue({
+                    ...editingPackage,
+                    parent_id: editingPackage.parent_id,
+                    category_ids: editingPackage.categories?.map(c => c.id) || [],
+                    test_ids: editingPackage.tests?.map(t => t.id) || [],
+                });
+                if (editingPackage.image_url) {
+                    setPreviewImage(getFullImageUrl(editingPackage.image_url));
+                }
+            } else {
+                form.resetFields();
+                form.setFieldsValue({ status: 'active', tags: [], category_ids: [], test_ids: [] });
+                setPreviewImage(null);
+            }
         }
     }, [visible, editingPackage, form]);
 
@@ -51,6 +78,7 @@ const RoutineCheckupFormModal: React.FC<RoutineCheckupFormModalProps> = ({
     const handleFileUpload = async (file: File) => {
         try {
             const base64 = await fileToBase64(file);
+            setPreviewImage(base64);
             form.setFieldsValue({ image_url: base64 });
             return false;
         } catch (error) {
@@ -61,8 +89,13 @@ const RoutineCheckupFormModal: React.FC<RoutineCheckupFormModalProps> = ({
 
     const handleRemoveImage = (e: React.MouseEvent) => {
         e.stopPropagation();
+        setPreviewImage(null);
         form.setFieldsValue({ image_url: null });
     };
+
+    // Filter packages to show only top-level packages (or any package that is not the current one)
+    const parentOptions = packages.filter(p => !p.parent_id);
+
 
     return (
         <Modal
@@ -71,7 +104,8 @@ const RoutineCheckupFormModal: React.FC<RoutineCheckupFormModalProps> = ({
             onCancel={onCancel}
             onOk={() => form.submit()}
             confirmLoading={loading}
-            width={650}
+            width={700}
+            centered
             destroyOnClose
         >
             <Form
@@ -84,7 +118,7 @@ const RoutineCheckupFormModal: React.FC<RoutineCheckupFormModalProps> = ({
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '130px' }}>
                         <Form.Item 
                             name="image_url" 
-                            label="Package Image (Optional)" 
+                            label="Package Image" 
                             style={{ margin: 0 }}
                         >
                             <Upload
@@ -95,14 +129,14 @@ const RoutineCheckupFormModal: React.FC<RoutineCheckupFormModalProps> = ({
                                 listType="picture-card"
                                 className="routine-image-upload"
                             >
-                                {imageUrl ? (
-                                    <img src={imageUrl} alt="package" style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: '8px' }} />
+                                {previewImage ? (
+                                    <img src={previewImage} alt="package" style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: '8px' }} />
                                 ) : (
-                                    <div><UploadOutlined /><div style={{ marginTop: 8 }}>Upload</div></div>
+                                    <div><PlusOutlined /><div style={{ marginTop: 8 }}>Upload Icon</div></div>
                                 )}
                             </Upload>
                         </Form.Item>
-                        {imageUrl && (
+                        {previewImage && (
                             <Button 
                                 type="text" 
                                 danger 
@@ -117,12 +151,61 @@ const RoutineCheckupFormModal: React.FC<RoutineCheckupFormModalProps> = ({
                     
                     <div style={{ flex: 1 }}>
                         <Form.Item
+                            name="parent_id"
+                            label="Parent Package (Optional)"
+                            extra="Select if this is a plan under an existing package (e.g. Silver Plan under Smart Full Body Checkup)"
+                        >
+                            <Select placeholder="Select main package" allowClear showSearch filterOption={(input, option) => (option?.label as string || '').toLowerCase().includes(input.toLowerCase())}>
+                                {parentOptions.map(pkg => (
+                                    <Option key={pkg.id} value={pkg.id} label={pkg.title}>{pkg.title}</Option>
+                                ))}
+                            </Select>
+                        </Form.Item>
+
+                        <Form.Item
                             name="title"
                             label="Package Title"
                             rules={[{ required: true, message: 'Please enter title' }]}
                         >
-                            <Input placeholder="e.g. Men's Health" />
+                            <Input placeholder="e.g. Smart Full Body Checkup" />
                         </Form.Item>
+
+
+                        <Form.Item
+                            name="sub_title"
+                            label="Package Sub-title"
+                            extra="This will be displayed prominently on the card (e.g., 'Under 30 yrs')"
+                        >
+                            <Input placeholder="e.g. Under 30 yrs" />
+                        </Form.Item>
+
+                        <div style={{ display: 'flex', gap: '16px' }}>
+                            <Form.Item
+                                name="mrp"
+                                label="MRP (Original Price)"
+                                style={{ flex: 1 }}
+                            >
+                                <InputNumber 
+                                    style={{ width: '100%' }} 
+                                    formatter={value => `₹ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                                    parser={value => value?.replace(/\₹\s?|(,*)/g, '') as any}
+                                    placeholder="8566" 
+                                />
+                            </Form.Item>
+
+                            <Form.Item
+                                name="price"
+                                label="Discounted Price"
+                                style={{ flex: 1 }}
+                            >
+                                <InputNumber 
+                                    style={{ width: '100%' }} 
+                                    formatter={value => `₹ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                                    parser={value => value?.replace(/\₹\s?|(,*)/g, '') as any}
+                                    placeholder="1799" 
+                                />
+                            </Form.Item>
+                        </div>
 
                         <div style={{ display: 'flex', gap: '16px' }}>
                             <Form.Item
@@ -139,21 +222,76 @@ const RoutineCheckupFormModal: React.FC<RoutineCheckupFormModalProps> = ({
                             </Form.Item>
 
                             <Form.Item
-                                name="category_id"
-                                label="Target Category"
+                                name="age_group"
+                                label="Age Group"
                                 style={{ flex: 1 }}
-                                rules={[{ required: true, message: 'Select category' }]}
+                                initialValue="all"
                             >
-                                <Select showSearch placeholder="Select a category" filterOption={(input, option) =>
-                                    (option?.children as unknown as string).toLowerCase().includes(input.toLowerCase())
-                                }>
-                                    {categories.map(cat => (
-                                        <Option key={cat.id} value={cat.id}>{cat.category_name}</Option>
-                                    ))}
+                                <Select placeholder="Select age group">
+                                    <Option value="all">All Ages</Option>
+                                    <Option value="kids">Kids (0-12)</Option>
+                                    <Option value="teens">Teens (13-19)</Option>
+                                    <Option value="adults">Adults (20-60)</Option>
+                                    <Option value="seniors">Seniors (60+)</Option>
+                                </Select>
+                            </Form.Item>
+
+                            <Form.Item
+                                name="status"
+                                label="Status"
+                                style={{ flex: 1 }}
+                            >
+                                <Select>
+                                    <Option value="active">Active</Option>
+                                    <Option value="inactive">Inactive</Option>
                                 </Select>
                             </Form.Item>
                         </div>
                     </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '16px' }}>
+                    <Form.Item
+                        name="test_ids"
+                        label="Target Test/Package(s)"
+                        style={{ flex: 1 }}
+                        extra="Link this routine card directly to one or more specific tests or packages."
+                    >
+                        <Select 
+                            mode="multiple"
+                            showSearch 
+                            placeholder="Select specific tests" 
+                            allowClear
+                            filterOption={false}
+                            onSearch={onSearchTests}
+                        >
+                            {tests.map(test => (
+                                <Option key={test.id} value={test.id}>
+                                    [{test.category?.category_name || 'Uncategorized'}] {test.test_name} ({test.test_code})
+                                </Option>
+                            ))}
+                        </Select>
+                    </Form.Item>
+
+                    <Form.Item
+                        name="category_ids"
+                        label="Target Category/Categories"
+                        style={{ flex: 1 }}
+                        extra="Alternatively, link to entire categories."
+                    >
+                        <Select 
+                            mode="multiple"
+                            showSearch 
+                            placeholder="Select categories" 
+                            allowClear
+                            filterOption={false}
+                            onSearch={onSearchCategories}
+                        >
+                            {categories.map(cat => (
+                                <Option key={cat.id} value={cat.id}>{cat.category_name}</Option>
+                            ))}
+                        </Select>
+                    </Form.Item>
                 </div>
 
                 <Form.Item
@@ -190,9 +328,7 @@ const RoutineCheckupFormModal: React.FC<RoutineCheckupFormModalProps> = ({
                     </Form.List>
                 </Form.Item>
 
-                <Form.Item name="status" label="Status" valuePropName="checked" getValueFromEvent={(e) => e ? 'active' : 'inactive'} getValueProps={(value) => ({ checked: value === 'active' })}>
-                    <Switch checkedChildren="Active" unCheckedChildren="Inactive" />
-                </Form.Item>
+
             </Form>
             <style>{`
                 .routine-image-upload.ant-upload-wrapper.ant-upload-picture-card-wrapper .ant-upload.ant-upload-select {

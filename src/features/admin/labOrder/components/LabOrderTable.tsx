@@ -108,16 +108,51 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
             title: <span style={{ whiteSpace: 'nowrap' }}>Tests</span>,
             key: 'tests',
             minWidth: 130,
-            render: (_: any, record: LabOrder) => (
-                <div style={{ maxWidth: '105px' }}>
-                    {record.test_results?.map((tr, idx) => (
-                        <Tag key={idx} icon={<ExperimentOutlined />} style={{ marginBottom: '4px' }}>
-                            {tr.test?.test_name}
-                        </Tag>
-                    ))}
-                    {(!record.test_results || record.test_results.length === 0) && '-'}
-                </div>
-            )
+            render: (_: any, record: LabOrder) => {
+                const results = record.test_results || [];
+                if (results.length === 0) return '-';
+
+                const maxVisible = 1;
+                const visible = results.slice(0, maxVisible);
+                const remaining = results.length - maxVisible;
+
+                return (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxWidth: '120px' }}>
+                        {visible.map((tr, idx) => (
+                            <Tag 
+                                key={idx} 
+                                icon={<ExperimentOutlined />} 
+                                style={{ 
+                                    margin: 0, 
+                                    maxWidth: '100%', 
+                                    overflow: 'hidden', 
+                                    textOverflow: 'ellipsis', 
+                                    whiteSpace: 'nowrap',
+                                    display: 'inline-block',
+                                    verticalAlign: 'bottom'
+                                }}
+                            >
+                                {tr.test?.test_name}
+                            </Tag>
+                        ))}
+                        {remaining > 0 && (
+                            <Tooltip
+                                title={
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                        {results.map((tr, idx) => (
+                                            <Tag key={idx} icon={<ExperimentOutlined />} style={{ border: 'none', color: 'rgba(0, 0, 0, 0.85)' }}>
+                                                {tr.test?.test_name}
+                                            </Tag>
+                                        ))}
+                                    </div>
+                                }
+                            >
+                                <Tag color="blue" style={{ cursor: 'pointer', margin: 0, fontSize: '10px' }}>+{remaining} more</Tag>
+                            </Tooltip>
+                        )}
+                    </div>
+                );
+            }
         },
         {
             title: <span style={{ whiteSpace: 'nowrap' }}>Agent</span>,

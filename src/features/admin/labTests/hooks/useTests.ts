@@ -5,6 +5,7 @@ import type { TestQueryParams } from '../types/labTest.types';
 
 export const useTests = (enabled: boolean = true) => {
     const [tests, setTests] = useState<any[]>([]);
+    const [allTests, setAllTests] = useState<any[]>([]);
     const [loadingTests, setLoadingTests] = useState(false);
     const [loadingMoreTests, setLoadingMoreTests] = useState(false);
     const [testPagination, setTestPagination] = useState({
@@ -25,6 +26,15 @@ export const useTests = (enabled: boolean = true) => {
         minPrice: undefined,
         maxPrice: undefined,
     });
+
+    const fetchAllTests = async () => {
+        try {
+            const response = await labTestService.getTests({ limit: 1000 });
+            setAllTests(response.data);
+        } catch (error: any) {
+            console.error('Failed to fetch all tests:', error);
+        }
+    };
 
     const fetchTests = async (resetData = false) => {
         if (resetData) {
@@ -65,6 +75,7 @@ export const useTests = (enabled: boolean = true) => {
             await labTestService.createTest(values);
             message.success('Test created successfully');
             setTestFilters(prev => ({ ...prev, page: 1 }));
+            await fetchAllTests();
             return true;
         } catch (error: any) {
             message.error('Operation failed: ' + error.message);
@@ -77,6 +88,7 @@ export const useTests = (enabled: boolean = true) => {
             await labTestService.updateTest(id, values);
             message.success('Test updated successfully');
             setTestFilters(prev => ({ ...prev, page: 1 }));
+            await fetchAllTests();
             return true;
         } catch (error: any) {
             message.error('Operation failed: ' + error.message);
@@ -89,6 +101,7 @@ export const useTests = (enabled: boolean = true) => {
             await labTestService.deleteTest(id);
             message.success('Test deleted successfully');
             setTestFilters(prev => ({ ...prev, page: 1 }));
+            await fetchAllTests();
             return true;
         } catch (error: any) {
             message.error('Delete failed: ' + error.message);
@@ -118,8 +131,22 @@ export const useTests = (enabled: boolean = true) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [testFilters]); // enabled is intentionally omitted to prevent auto-fetch on tab switch
 
+    const searchAllTests = async (query: string) => {
+        try {
+            const response = await labTestService.getTests({ search: query, limit: 50 });
+            setAllTests(response.data);
+        } catch (error: any) {
+            console.error('Failed to search tests:', error);
+        }
+    };
+
+    useEffect(() => {
+        fetchAllTests();
+    }, []);
+
     return {
         tests,
+        allTests,
         loadingTests,
         loadingMoreTests,
         testPagination,
@@ -128,6 +155,7 @@ export const useTests = (enabled: boolean = true) => {
         createTest,
         updateTest,
         deleteTest,
-        resetFilters
+        resetFilters,
+        searchAllTests
     };
 };

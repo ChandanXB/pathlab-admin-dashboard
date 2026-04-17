@@ -122,6 +122,15 @@ export const useCategories = (fetchListEnabled: boolean = true) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [categoryFilters, fetchListEnabled]);
 
+    const searchAllCategories = async (query: string) => {
+        try {
+            const response = await labTestService.getCategories({ search: query, limit: 50 });
+            setAllCategories(response.data);
+        } catch (error: any) {
+            console.error('Failed to search categories:', error);
+        }
+    };
+
     useEffect(() => {
         fetchAllCategories();
     }, []);
@@ -137,6 +146,7 @@ export const useCategories = (fetchListEnabled: boolean = true) => {
         createCategory,
         updateCategory,
         deleteCategory,
-        resetFilters
+        resetFilters,
+        searchAllCategories
     };
 };

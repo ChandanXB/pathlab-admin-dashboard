@@ -13,6 +13,7 @@ export const useRoutineCheckups = (enabled: boolean = true) => {
         search: '',
         status: undefined,
         gender: undefined,
+        age_group: undefined,
         categoryId: undefined,
     });
 

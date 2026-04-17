@@ -85,16 +85,6 @@ const AgentPickups: React.FC = () => {
         return <Tag color={info.color} style={{ borderRadius: '6px', fontWeight: 600 }}>{info.label}</Tag>;
     };
 
-    const getOrderStatusTag = (status: string) => {
-        const map: Record<string, string> = {
-            pending: 'gold',
-            collected: 'blue',
-            processing: 'purple',
-            completed: 'green',
-            cancelled: 'red',
-        };
-        return <Tag color={map[status] || 'default'} style={{ borderRadius: '6px' }}>{status.toUpperCase()}</Tag>;
-    };
 
     const columns = [
         {
@@ -160,11 +150,9 @@ const AgentPickups: React.FC = () => {
             key: 'combined_status',
             width: 140,
             render: (_: any, record: AgentOrder) => (
-                <Space direction="vertical" size={4}>
-                    {getOrderStatusTag(record.status)}
-                    {record.assignment_status && record.assignment_status !== record.status &&
-                        record.assignment_status !== 'broadcasted' && getAssignmentTag(record.assignment_status)}
-                </Space>
+                <div>
+                    {getAssignmentTag(record.assignment_status)}
+                </div>
             )
         },
         {
