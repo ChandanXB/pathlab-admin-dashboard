@@ -21,6 +21,9 @@ const DoctorFormModal: React.FC<DoctorFormModalProps> = ({
     onOk,
     onCancel,
 }) => {
+    const fee = Form.useWatch('consultation_fee', form) || 0;
+    const rate = Form.useWatch('commission_rate', form) || 30;
+
     const fileToBase64 = (file: File): Promise<string> => {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
@@ -152,6 +155,44 @@ const DoctorFormModal: React.FC<DoctorFormModalProps> = ({
                     >
                         <Input type="number" prefix="₹" placeholder="500" />
                     </Form.Item>
+
+                    <Form.Item
+                        name="commission_rate"
+                        label="Lab Commission (%)"
+                        initialValue={30}
+                        rules={[{ required: true, message: 'Please enter commission rate' }]}
+                    >
+                        <Input type="number" suffix="%" placeholder="30" />
+                    </Form.Item>
+                </div>
+
+                <div style={{ 
+                    marginBottom: 24, 
+                    padding: '12px 16px', 
+                    background: '#f8fafc', 
+                    borderRadius: '8px', 
+                    border: '1px solid #e2e8f0',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
+                }}>
+                    <div style={{ color: '#64748b', fontSize: '13px' }}>
+                        Revenue Distribution Preview:
+                    </div>
+                    <div style={{ display: 'flex', gap: 24 }}>
+                        <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontSize: '12px', color: '#94a3b8' }}>Doctor Receives</div>
+                            <div style={{ fontWeight: 700, color: '#10b981' }}>
+                                ₹{(fee * (1 - rate / 100)).toFixed(2)}
+                            </div>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontSize: '12px', color: '#94a3b8' }}>Lab Gains</div>
+                            <div style={{ fontWeight: 700, color: '#004aad' }}>
+                                ₹{(fee * (rate / 100)).toFixed(2)}
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: editingDoctor ? '1fr' : '2fr 1fr', gap: '0 16px' }}>

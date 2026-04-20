@@ -9,6 +9,7 @@ export interface Doctor {
     experience_years?: number;
     profile_image?: string;
     consultation_fee?: number;
+    commission_rate?: number;
     status: 'active' | 'inactive';
     createdAt?: string;
     updatedAt?: string;

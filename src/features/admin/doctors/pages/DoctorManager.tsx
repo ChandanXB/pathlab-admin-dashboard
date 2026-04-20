@@ -80,6 +80,12 @@ const DoctorManager: React.FC = () => {
             } else {
                 delete values.consultation_fee;
             }
+
+            if (values.commission_rate !== undefined && values.commission_rate !== null && values.commission_rate !== '') {
+                values.commission_rate = parseFloat(values.commission_rate);
+            } else {
+                delete values.commission_rate;
+            }
             if (editingDoctor) {
                 const success = await updateDoctor(editingDoctor.id, values);
                 if (success) setIsModalOpen(false);
