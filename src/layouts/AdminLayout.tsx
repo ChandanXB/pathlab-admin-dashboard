@@ -19,6 +19,7 @@ import { ORDER_STATUSES } from '@/shared/constants/app.constants';
 import { labOrderService } from '@/features/admin/labOrder/services/labOrderService';
 import { collectionAgentService, type CollectionAgent } from '@/features/admin/collectionAgent/services/collectionAgentService';
 import { formatName } from '@/shared/utils/nameUtils';
+import { useNotifications } from '@/hooks/useNotifications';
 
 const { Header, Content, Sider } = Layout;
 const { Text } = Typography;
@@ -30,6 +31,9 @@ const AdminLayout: React.FC = () => {
     const location = useLocation();
     const { token: themeToken } = theme.useToken();
     const { user, logout } = useAuthStore();
+    
+    // Register FCM notifications
+    useNotifications();
 
     const [orderStats, setOrderStats] = useState<any>(null);
     const [agents, setAgents] = useState<CollectionAgent[]>([]);

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
     Card, Tag, Space, Typography, Empty, Avatar, List, Divider,
-    Button, Drawer, Row, Col, Badge, Descriptions, Timeline, Input, message, Popconfirm
+    Button, Drawer, Row, Col, Badge, Descriptions, Timeline, Input, message, Popconfirm, Image
 } from 'antd';
 import {
     UserOutlined,
@@ -154,7 +154,11 @@ const PNCManager: React.FC = () => {
                         style={{ cursor: 'pointer' }}
                         onClick={() => openDrawer(record)}
                     >
-                        <Avatar icon={<UserOutlined />} style={{ backgroundColor: '#f0f5ff', color: '#1890ff' }} />
+                        <Avatar 
+                            src={record.profile_image || record.profile_image_url}
+                            icon={!(record.profile_image || record.profile_image_url) && <UserOutlined />} 
+                            style={{ backgroundColor: '#f0f5ff', color: '#1890ff' }} 
+                        />
                         <Space direction="vertical" size={0}>
                             <Text strong style={{ color: '#1890ff' }}>
                                 {parentName || <Text type="secondary" italic>No Parent Linked</Text>}
@@ -316,11 +320,31 @@ const PNCManager: React.FC = () => {
                         >
                             <Row gutter={16} align="middle">
                                 <Col>
-                                    <Avatar
-                                        size={isMobile ? 48 : 64}
-                                        icon={<UserOutlined />}
-                                        style={{ backgroundColor: '#3b82f6', fontSize: isMobile ? 20 : 28 }}
-                                    />
+                                    <div style={{ 
+                                        width: isMobile ? 48 : 64, 
+                                        height: isMobile ? 48 : 64, 
+                                        borderRadius: '50%', 
+                                        overflow: 'hidden', 
+                                        border: '2px solid #3b82f6',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        backgroundColor: '#3b82f6'
+                                    }}>
+                                        {selectedChild.profile_image || selectedChild.profile_image_url ? (
+                                            <Image
+                                                width="100%"
+                                                height="100%"
+                                                src={selectedChild.profile_image || selectedChild.profile_image_url}
+                                                style={{ objectFit: 'cover' }}
+                                                preview={{
+                                                    mask: <EyeOutlined style={{ fontSize: 16 }} />
+                                                }}
+                                            />
+                                        ) : (
+                                            <UserOutlined style={{ fontSize: isMobile ? 20 : 28, color: 'white' }} />
+                                        )}
+                                    </div>
                                 </Col>
                                 <Col flex={1}>
                                     <Title level={4} style={{ margin: 0, fontSize: isMobile ? 16 : 20, textTransform: 'capitalize' }}>{selectedChild.full_name}</Title>

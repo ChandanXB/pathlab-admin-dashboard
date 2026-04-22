@@ -15,6 +15,8 @@ export interface Patient {
     added_by_id?: number;
     relation?: string;
     email?: string;
+    profile_image?: string;
+    profile_image_url?: string;
     children?: Patient[];
     user?: {
         id: number;
