@@ -11,8 +11,18 @@ export const useNotifications = () => {
                 if (permission === 'granted') {
                     const vapidKey = import.meta.env.VITE_FIREBASE_VAPID_KEY;
                     
+                    // Register Service Worker explicitly
+                    const swUrl = import.meta.env.DEV 
+                        ? new URL('../service-worker/firebase-messaging-sw.ts', import.meta.url).href
+                        : '/firebase-messaging-sw.js';
+
+                    const registration = await navigator.serviceWorker.register(swUrl, {
+                        type: import.meta.env.DEV ? 'module' : 'classic'
+                    });
+
                     const token = await getToken(messaging, { 
-                        vapidKey: vapidKey 
+                        vapidKey: vapidKey,
+                        serviceWorkerRegistration: registration
                     });
 
                     if (token) {
