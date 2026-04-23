@@ -27,11 +27,16 @@ import DoctorDashboard from '@/features/doctor/dashboard/pages/DoctorDashboard';
 import DoctorPatients from '@/features/doctor/patients/pages/DoctorPatients';
 import DoctorProfile from '@/features/doctor/profile/pages/DoctorProfile';
 
+import { NotificationProvider } from '@/contexts/NotificationContext';
+import { Toaster } from 'react-hot-toast';
+
 function App() {
   return (
     <MuiThemeProvider theme={muiTheme}>
       <AntdConfigProvider theme={antdTheme}>
-        <CssBaseline />
+        <NotificationProvider>
+          <Toaster position="top-right" reverseOrder={false} />
+          <CssBaseline />
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<Login />} />
@@ -87,6 +92,7 @@ function App() {
             </Route>
           </Routes>
         </BrowserRouter>
+        </NotificationProvider>
       </AntdConfigProvider>
     </MuiThemeProvider>
   );

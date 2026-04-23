@@ -20,6 +20,7 @@ import { labOrderService } from '@/features/admin/labOrder/services/labOrderServ
 import { collectionAgentService, type CollectionAgent } from '@/features/admin/collectionAgent/services/collectionAgentService';
 import { formatName } from '@/shared/utils/nameUtils';
 import { useNotifications } from '@/hooks/useNotifications';
+import NotificationBell from '@/shared/components/NotificationBell';
 
 const { Header, Content, Sider } = Layout;
 const { Text } = Typography;
@@ -371,9 +372,7 @@ const AdminLayout: React.FC = () => {
                     />
 
                     <Space size="middle">
-                        {/* <Badge count={5} size="small" style={{ boxShadow: 'none' }}>
-                            <Button type="text" icon={<BellOutlined style={{ fontSize: 18, color: '#64748b' }} />} />
-                        </Badge> */}
+                        <NotificationBell />
                         <Divider vertical style={{ height: 24 }} />
                         <Dropdown menu={userMenu} placement="bottomRight" arrow>
                             <Space style={{ cursor: 'pointer', padding: '4px 8px', borderRadius: '8px', transition: 'all 0.2s' }} className="user-dropdown-trigger">

@@ -19,4 +19,19 @@ export default defineConfig({
       '@/core': path.resolve(__dirname, './src/core'),
     },
   },
+  build: {
+    rollupOptions: {
+      input: {
+        main: path.resolve(__dirname, 'index.html'),
+        'firebase-messaging-sw': path.resolve(__dirname, 'src/service-worker/firebase-messaging-sw.ts'),
+      },
+      output: {
+        entryFileNames: (chunkInfo) => {
+          return chunkInfo.name === 'firebase-messaging-sw' 
+            ? '[name].js' 
+            : 'assets/[name]-[hash].js';
+        },
+      },
+    },
+  },
 })
