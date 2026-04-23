@@ -1,15 +1,16 @@
+/// <reference lib="webworker" />
+// This directive pulls in the TypeScript WebWorker types (ServiceWorkerGlobalScope, etc.)
+
 import { initializeApp } from "firebase/app";
 import { getMessaging, onBackgroundMessage } from "firebase/messaging/sw";
 
-// Declare self as ServiceWorkerGlobalScope for TypeScript
-declare let self: ServiceWorkerGlobalScope;
+declare const self: ServiceWorkerGlobalScope;
 
 // Force immediate activation
 self.addEventListener('install', () => self.skipWaiting());
-self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim()));
+self.addEventListener('activate', (event: ExtendableEvent) => event.waitUntil(self.clients.claim()));
 
 // Initialize Firebase in the service worker
-// Note: import.meta.env will be replaced by Vite during build
 const firebaseConfig = {
     apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
     authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -26,31 +27,49 @@ const messaging = getMessaging(app);
 onBackgroundMessage(messaging, (payload) => {
     console.log('[firebase-messaging-sw.js] Received background message ', payload);
     const title = payload.notification?.title || 'New Notification';
-    const options = {
-        body: payload.notification?.body || '',
+    const body = payload.notification?.body || '';
+    const data = payload.data || {};
+
+    // 1. Show the Chrome notification popup
+    self.registration.showNotification(title, {
+        body,
         icon: '/favicon.ico',
         badge: '/favicon.ico',
         tag: 'new-order',
         requireInteraction: true,
-        data: payload.data || {}
-    };
+        data,
+    });
 
-    self.registration.showNotification(title, options);
+    // 2. Broadcast to all open tabs so the badge updates in real-time
+    self.clients
+        .matchAll({ type: 'window', includeUncontrolled: true })
+        .then((clients: readonly Client[]) => {
+            clients.forEach((client: Client) => {
+                (client as WindowClient).postMessage({
+                    type: 'FCM_BACKGROUND_MESSAGE',
+                    title,
+                    body,
+                    data,
+                });
+            });
+        });
 });
 
-// Handle notification click
-self.addEventListener('notificationclick', (event) => {
+// Handle notification click — focus the app tab or open a new one
+self.addEventListener('notificationclick', (event: NotificationEvent) => {
     event.notification.close();
     event.waitUntil(
-        self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-            for (const client of clientList) {
-                if (client.url.includes(self.location.origin) && 'focus' in client) {
-                    return client.focus();
+        self.clients
+            .matchAll({ type: 'window', includeUncontrolled: true })
+            .then((clientList: readonly Client[]) => {
+                for (const client of clientList) {
+                    if (client.url.includes(self.location.origin) && 'focus' in client) {
+                        return (client as WindowClient).focus();
+                    }
                 }
-            }
-            if (self.clients.openWindow) {
-                return self.clients.openWindow('/');
-            }
-        })
+                if (self.clients.openWindow) {
+                    return self.clients.openWindow('/');
+                }
+            })
     );
 });
