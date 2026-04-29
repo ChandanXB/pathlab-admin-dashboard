@@ -8,7 +8,8 @@ import {
     MenuUnfoldOutlined,
     MenuFoldOutlined,
     GlobalOutlined,
-    MedicineBoxOutlined
+    MedicineBoxOutlined,
+    PercentageOutlined
 } from '@ant-design/icons';
 
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
@@ -166,11 +167,12 @@ const AdminLayout: React.FC = () => {
                 { key: '/collection-agents', label: 'All Agents' },
                 ...agents.map(agent => ({
                     key: `/collection-agents/${agent.id}`,
-                    label: agent.name
+                    label: <span style={{ textTransform: 'capitalize' }}>{agent.name}</span>
                 }))
             ]
         },
         { key: '/service-cities', icon: <GlobalOutlined />, label: 'Service Cities' },
+        { key: '/coupons', icon: <PercentageOutlined />, label: 'Coupon Codes' },
     ];
 
     const userMenu = {

@@ -115,7 +115,7 @@ const AgentPickups: React.FC = () => {
             ellipsis: true,
             render: (_: any, record: AgentOrder) => (
                 <div>
-                    <Text strong>{record.patient?.full_name || 'N/A'}</Text>
+                    <Text strong style={{ textTransform: 'capitalize' }}>{record.patient?.full_name || 'N/A'}</Text>
                     <div style={{ marginTop: '2px' }}>
                         <EnvironmentOutlined style={{ color: '#ff4d4f', marginRight: '4px', fontSize: '11px' }} />
                         <Text type="secondary" style={{ fontSize: '12px' }}>

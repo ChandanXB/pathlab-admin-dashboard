@@ -34,7 +34,9 @@ const handleAuthExpired = () => {
 
     // Small delay so the message renders before navigation
     setTimeout(() => {
-        window.location.href = '/login';
+        if (window.location.pathname !== '/login') {
+            window.location.href = '/login';
+        }
         isHandlingAuthError = false;
     }, 800);
 };

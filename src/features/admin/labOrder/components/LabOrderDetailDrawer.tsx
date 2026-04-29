@@ -183,7 +183,7 @@ const LabOrderDetailDrawer: React.FC<LabOrderDetailDrawerProps> = ({ visible, or
                     <Card size="small" style={{ borderRadius: '8px', background: '#fafafa' }}>
                         <Descriptions column={1} size="small">
                             <Descriptions.Item label="Full Name">
-                                <Text strong>{order.patient?.full_name || 'N/A'}</Text>
+                                <Text strong style={{ textTransform: 'capitalize' }}>{order.patient?.full_name || 'N/A'}</Text>
                             </Descriptions.Item>
                             <Descriptions.Item label="Patient Code">
                                 <Tag color="blue">{order.patient?.patient_code || 'N/A'}</Tag>
@@ -224,7 +224,7 @@ const LabOrderDetailDrawer: React.FC<LabOrderDetailDrawerProps> = ({ visible, or
                         {order.collection_agent ? (
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <div>
-                                    <Text strong>{order.collection_agent.name}</Text>
+                                    <Text strong style={{ textTransform: 'capitalize' }}>{order.collection_agent.name}</Text>
                                     <br />
                                     <Text type="secondary"><PhoneOutlined /> {order.collection_agent.phone}</Text>
                                 </div>

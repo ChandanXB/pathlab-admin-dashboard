@@ -84,6 +84,7 @@ const RescheduleModal: React.FC<RescheduleModalProps> = ({ open, appointment, on
                     <DatePicker 
                         style={{ width: '100%' }} 
                         size="large"
+                        format="DD/MM/YY"
                         disabledDate={(current) => current && current < dayjs().startOf('day')}
                     />
                 </Form.Item>

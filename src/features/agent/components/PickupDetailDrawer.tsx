@@ -302,7 +302,7 @@ const PickupDetailDrawer: React.FC<PickupDetailDrawerProps> = ({
                     </Text>
                     <Descriptions column={1} size="small" labelStyle={{ color: '#8c8c8c', width: 80 }}>
                         <Descriptions.Item label={<><UserOutlined /> Name</>}>
-                            <Text strong>{order.patient?.full_name || 'N/A'}</Text>
+                            <Text strong style={{ textTransform: 'capitalize' }}>{order.patient?.full_name || 'N/A'}</Text>
                         </Descriptions.Item>
                         <Descriptions.Item label={<><PhoneOutlined /> Phone</>}>
                             {order.patient?.phone ? (

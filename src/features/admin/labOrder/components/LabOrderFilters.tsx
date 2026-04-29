@@ -53,6 +53,7 @@ const LabOrderFilters: React.FC<LabOrderFiltersProps> = ({
                 <Col xs={24} sm={12} md={8} lg={7}>
                     <RangePicker
                         style={{ width: '100%' }}
+                        format="DD/MM/YY"
                         onChange={(dates) => {
                             if (dates && dates[0] && dates[1]) {
                                 onFilterChange({

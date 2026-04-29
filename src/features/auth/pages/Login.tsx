@@ -58,7 +58,7 @@ const Login: React.FC = () => {
         <Layout style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: colors.background }}>
             <Card style={{ width: 400, borderRadius: 12, boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
                 <div style={{ textAlign: 'center', marginBottom: 24 }}>
-                    <Title level={2} style={{ color: colors.primary }}>PathLab Admin</Title>
+                    <Title level={2} style={{ color: colors.primary }}>Medoq Admin</Title>
                     <Typography.Text type="secondary">Sign in to manage your laboratory</Typography.Text>
                 </div>
 

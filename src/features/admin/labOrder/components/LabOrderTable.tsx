@@ -75,7 +75,7 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
                 const foundPriority = PRIORITIES.find(p => p.value === record.priority);
                 const tooltipContent = (
                     <div style={{ padding: '2px' }}>
-                        <div><ClockCircleOutlined /> {dayjs(record.createdAt).format('DD MMM, hh:mm A')}</div>
+                        <div><ClockCircleOutlined /> {dayjs(record.createdAt).format('DD/MM/YY hh:mm A')}</div>
                         <div style={{ marginTop: '4px' }}>
                             Priority: <span style={{ color: foundPriority?.color }}>{foundPriority?.label || record.priority}</span>
                         </div>
@@ -84,7 +84,7 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
 
                 return (
                     <Tooltip title={tooltipContent} placement="top">
-                        <Text strong style={{ whiteSpace: 'nowrap', cursor: 'help' }} ellipsis={{ tooltip: record.order_code }}>
+                        <Text strong style={{ whiteSpace: 'nowrap', cursor: 'pointer' }} ellipsis>
                             <BarcodeOutlined /> {record.order_code}
                         </Text>
                     </Tooltip>
@@ -97,7 +97,7 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
             minWidth: 120,
             render: (_: any, record: LabOrder) => (
                 <Space direction="vertical" size={0} style={{ width: '100%' }}>
-                    <Text strong ellipsis={{ tooltip: record.patient?.full_name }}>
+                    <Text strong style={{ textTransform: 'capitalize' }} ellipsis={{ tooltip: record.patient?.full_name }}>
                         <UserOutlined /> {record.patient?.full_name || 'N/A'}
                     </Text>
                     <Text type="secondary" style={{ fontSize: '12px' }}>{record.patient?.patient_code}</Text>
@@ -162,7 +162,7 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
                 if (record.collection_agent) {
                     return (
                         <Space direction="vertical" size={0} style={{ width: '100%' }}>
-                            <Text strong style={{ fontSize: '12px' }} ellipsis={{ tooltip: record.collection_agent.name }}>
+                            <Text strong style={{ fontSize: '12px', textTransform: 'capitalize' }} ellipsis={{ tooltip: record.collection_agent.name }}>
                                 {record.collection_agent.name}
                             </Text>
                             <Text type="secondary" style={{ fontSize: '11px' }}>{record.collection_agent.phone}</Text>

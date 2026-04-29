@@ -234,7 +234,7 @@ const AssignAgentModal: React.FC<AssignAgentModalProps> = ({ visible, order, onC
                         <Text type="secondary" style={{ fontSize: '12px' }}>CURRENT ASSIGNMENT</Text>
                         <div style={{ marginTop: '4px' }}>
                             {order.collection_agent ? (
-                                <Badge status="success" text={order.collection_agent.name} />
+                                <Badge status="success" text={<span style={{ textTransform: 'capitalize' }}>{order.collection_agent.name}</span>} />
                             ) : order.assignment_status === 'broadcasted' ? (
                                 <Badge status="processing" text="Broadcasted (Waiting)" color="blue" />
                             ) : (
@@ -321,7 +321,7 @@ const AssignAgentModal: React.FC<AssignAgentModalProps> = ({ visible, order, onC
                                     return (
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                             <div>
-                                                <Text strong style={{ fontSize: '12px', display: 'block' }}>{recommended.name}</Text>
+                                                <Text strong style={{ fontSize: '12px', display: 'block', textTransform: 'capitalize' }}>{recommended.name}</Text>
                                                 <Text type="secondary" style={{ fontSize: '11px' }}>
                                                     Nearest Available {dist ? `(${dist} km away)` : ''}
                                                 </Text>
@@ -390,7 +390,7 @@ const AssignAgentModal: React.FC<AssignAgentModalProps> = ({ visible, order, onC
                                                 <Option key={agent.id} value={agent.id} disabled={activeOrders > 0}>
                                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                         <Space size={4}>
-                                                            <span style={{ fontSize: '12px' }}>{agent.name}</span>
+                                                            <span style={{ fontSize: '12px', textTransform: 'capitalize' }}>{agent.name}</span>
                                                             {dist && <Text type="secondary" style={{ fontSize: '10px' }}>({dist} km)</Text>}
                                                         </Space>
                                                         <Badge count={activeOrders} color={activeOrders > 0 ? 'orange' : 'green'} style={{ fontSize: '10px' }} />

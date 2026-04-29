@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import apiClient from '@/config/apiClient';
+import { useAuthStore } from '@/store/authStore';
 
 export interface NotificationItem {
     id: string | number;
@@ -56,7 +57,10 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     // Load from API on mount
     useEffect(() => {
-        fetchNotifications();
+        const { isAuthenticated } = useAuthStore.getState();
+        if (isAuthenticated) {
+            fetchNotifications();
+        }
     }, [fetchNotifications]);
 
     const unreadCount = notifications.filter(n => !n.read).length;
