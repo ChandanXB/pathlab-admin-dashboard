@@ -82,10 +82,20 @@ const DoctorDashboard: React.FC = () => {
         },
     ];
 
+    const formatDoctorName = (name: string) => {
+        if (!name) return 'Doctor';
+        let cleanName = name.trim();
+        if (/^dr\.?\s+/i.test(cleanName)) {
+            cleanName = cleanName.replace(/^dr\.?\s+/i, '');
+        }
+        cleanName = cleanName.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+        return `Dr. ${cleanName}`;
+    };
+
     return (
         <div style={{ padding: '0 0 24px 0' }}>
             <div style={{ marginBottom: 24 }}>
-                <Title level={2} style={{ margin: 0 }}>Welcome, Dr. {user?.name}</Title>
+                <Title level={2} style={{ margin: 0 }}>Welcome, {formatDoctorName(user?.name || '')}</Title>
                 <Text type="secondary">Here is an overview of your medical practice.</Text>
             </div>
 

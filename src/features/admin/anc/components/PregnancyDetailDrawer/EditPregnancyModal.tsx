@@ -118,7 +118,7 @@ const EditPregnancyModal: React.FC<EditPregnancyModalProps> = ({
                             label="Last Menstrual Period (LMP)"
                             rules={[{ required: true, message: 'Please select LMP date' }]}
                         >
-                            <DatePicker style={{ width: '100%' }} />
+                            <DatePicker style={{ width: '100%' }} format="DD/MM/YY" />
                         </Form.Item>
                     </Col>
                     <Col span={12}>
@@ -127,7 +127,7 @@ const EditPregnancyModal: React.FC<EditPregnancyModalProps> = ({
                             label="Estimated Date of Delivery (EDD)"
                             rules={[{ required: true, message: 'Please select EDD date' }]}
                         >
-                            <DatePicker style={{ width: '100%' }} />
+                            <DatePicker style={{ width: '100%' }} format="DD/MM/YY" />
                         </Form.Item>
                     </Col>
                 </Row>

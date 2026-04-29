@@ -193,7 +193,7 @@ const RegisterPregnancyModal: React.FC<RegisterPregnancyModalProps> = ({
                             label="Last Menstrual Period (LMP)"
                             rules={[{ required: true, message: 'LMP date is required' }]}
                         >
-                            <DatePicker style={{ width: '100%' }} />
+                            <DatePicker style={{ width: '100%' }} format="DD/MM/YY" />
                         </Form.Item>
                     </Col>
                     <Col span={12}>

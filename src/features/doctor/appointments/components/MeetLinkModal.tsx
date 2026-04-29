@@ -77,7 +77,7 @@ const MeetLinkModal: React.FC<MeetLinkModalProps> = ({ open, appointment, onClos
                             label="Scheduled Date"
                             rules={[{ required: true, message: 'Please select a date' }]}
                         >
-                            <DatePicker style={{ width: '100%' }} size="large" format="YYYY-MM-DD" />
+                            <DatePicker style={{ width: '100%' }} size="large" format="DD/MM/YY" />
                         </Form.Item>
                     </Col>
                     <Col span={12}>

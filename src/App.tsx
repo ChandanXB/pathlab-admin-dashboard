@@ -16,6 +16,7 @@ import CityManager from '@/features/admin/locations/pages/CityManager';
 import AdminProfile from '@/features/admin/profile/pages/AdminProfile';
 import ANCCareManager from '@/features/admin/anc/pages/ANCCareManager';
 import PNCManager from '@/features/admin/patients/pages/PNCManager';
+import CouponManager from '@/features/admin/coupons/pages/CouponManager';
 import ProtectedRoute from '@/shared/components/ProtectedRoute';
 import AdminLayout from '@/layouts/AdminLayout';
 import AgentLayout from '@/layouts/AgentLayout';
@@ -59,6 +60,7 @@ function App() {
               <Route path="anc-care" element={<ANCCareManager />} />
               <Route path="pnc-care" element={<PNCManager />} />
               <Route path="profile" element={<AdminProfile />} />
+              <Route path="coupons" element={<CouponManager />} />
               {/* Fallback for development/typos */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>

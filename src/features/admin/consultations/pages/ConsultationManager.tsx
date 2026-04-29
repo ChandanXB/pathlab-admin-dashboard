@@ -5,6 +5,8 @@ import apiClient from '@/config/apiClient';
 import colors from '@/styles/colors';
 import { formatName, formatDoctorName } from '@/shared/utils/nameUtils';
 
+import dayjs from 'dayjs';
+
 const { Title, Text } = Typography;
 
 interface ConsultationManagerProps {
@@ -91,7 +93,7 @@ const ConsultationManager: React.FC<ConsultationManagerProps> = ({ hideHeader = 
                 <Space direction="vertical" size={0}>
                     <Space>
                         <CalendarOutlined style={{ color: colors.primary }} />
-                        <Text strong style={{ whiteSpace: 'nowrap' }}>{new Date(record.appointment_date).toLocaleDateString()}</Text>
+                        <Text strong style={{ whiteSpace: 'nowrap' }}>{dayjs(record.appointment_date).format('DD/MM/YY')}</Text>
                     </Space>
                     <Text type="secondary" style={{ whiteSpace: 'nowrap' }}>{record.appointment_time}</Text>
                 </Space>

@@ -252,7 +252,7 @@ const LabOrderFormModal: React.FC<LabOrderFormModalProps> = ({
                 <Row gutter={16}>
                     <Col span={12}>
                         <Form.Item name="scheduled_date" label="Scheduled Collection Date">
-                            <DatePicker style={{ width: '100%' }} placeholder="Select date" />
+                            <DatePicker style={{ width: '100%' }} placeholder="Select date" format="DD/MM/YY" />
                         </Form.Item>
                     </Col>
                     <Col span={12}>

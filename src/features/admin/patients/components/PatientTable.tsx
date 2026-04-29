@@ -88,7 +88,7 @@ const PatientTable: React.FC<PatientTableProps> = ({
             dataIndex: 'createdAt',
             key: 'createdAt',
             width: 130,
-            render: (date: string) => <span style={{ whiteSpace: 'nowrap' }}>{dayjs(date).format('DD MMM YYYY')}</span>,
+            render: (date: string) => <span style={{ whiteSpace: 'nowrap' }}>{dayjs(date).format('DD/MM/YY')}</span>,
         },
         {
             title: 'Actions',

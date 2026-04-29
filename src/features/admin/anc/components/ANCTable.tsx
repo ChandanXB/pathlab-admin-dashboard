@@ -49,7 +49,7 @@ const ANCTable: React.FC<ANCTableProps> = ({
             dataIndex: 'lmp_date',
             key: 'lmp_date',
             width: 110,
-            render: (date: string) => dayjs(date).format('DD MMM YYYY'),
+            render: (date: string) => dayjs(date).format('DD/MM/YY'),
         },
         {
             title: 'Patient',
@@ -74,7 +74,7 @@ const ANCTable: React.FC<ANCTableProps> = ({
             render: (date: string) => (
                 <Space>
                     <CalendarOutlined style={{ color: '#ff4d4f' }} />
-                    <span style={{ fontWeight: 600, color: '#ff4d4f' }}>{dayjs(date).format('DD MMM YYYY')}</span>
+                    <span style={{ fontWeight: 600, color: '#ff4d4f' }}>{dayjs(date).format('DD/MM/YY')}</span>
                 </Space>
             ),
         },

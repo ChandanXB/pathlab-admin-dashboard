@@ -25,9 +25,9 @@ const TestTable: React.FC<TestTableProps> = ({
     onScroll
 }) => {
     const columns = [
-        { title: 'Code', dataIndex: 'test_code', width: 100 },
+        { title: 'Test Code', dataIndex: 'test_code', width: 120 },
         {
-            title: 'Name',
+            title: 'Test Name',
             dataIndex: 'test_name',
             key: 'test_name',
             render: (text: string) => <strong>{text}</strong>

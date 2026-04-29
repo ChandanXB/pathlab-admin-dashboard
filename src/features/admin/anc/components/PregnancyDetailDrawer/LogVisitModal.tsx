@@ -62,7 +62,7 @@ const LogVisitModal: React.FC<LogVisitModalProps> = ({
                             label="Visit Date"
                             rules={[{ required: true, message: 'Please select visit date' }]}
                         >
-                            <DatePicker style={{ width: '100%' }} />
+                            <DatePicker style={{ width: '100%' }} format="DD/MM/YY" />
                         </Form.Item>
                     </Col>
                     <Col span={12}>

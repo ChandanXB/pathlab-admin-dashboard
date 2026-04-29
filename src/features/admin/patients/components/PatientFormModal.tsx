@@ -71,7 +71,7 @@ const PatientFormModal: React.FC<PatientFormModalProps> = ({
                         >
                             <DatePicker
                                 style={{ width: '100%' }}
-                                format="DD MMM YYYY"
+                                format="DD/MM/YY"
                                 placeholder="Select DOB"
                                 disabledDate={(current) => current && current > dayjs().endOf('day')}
                             />
