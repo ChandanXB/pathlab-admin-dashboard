@@ -1,6 +1,6 @@
 import React from 'react';
 import { Tag, Space, Button, Popconfirm, Tooltip } from 'antd';
-import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { EditOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import type { Coupon } from '../types/coupon.types';
 import InfiniteScrollTable from '@/shared/components/InfiniteScrollTable';
@@ -11,17 +11,18 @@ interface CouponTableProps {
   loadingMore: boolean;
   hasMore: boolean;
   onEdit: (record: Coupon) => void;
+  onView: (record: Coupon) => void;
   onDelete: (id: number) => void;
   onLoadMore: () => void;
   scroll: { x: number | string; y: number | string };
 }
-
 const CouponTable: React.FC<CouponTableProps> = ({ 
   data, 
   loading, 
   loadingMore,
   hasMore,
   onEdit, 
+  onView,
   onDelete, 
   onLoadMore,
   scroll 
@@ -88,10 +89,17 @@ const CouponTable: React.FC<CouponTableProps> = ({
       width: 100,
       render: (_: any, record: Coupon) => (
         <Space>
+          <Tooltip title="View Details">
+            <Button
+              type="text"
+              icon={<EyeOutlined style={{ color: '#52c41a' }} />}
+              onClick={() => onView(record)}
+            />
+          </Tooltip>
           <Tooltip title="Edit">
             <Button
               type="text"
-              icon={<EditOutlined />}
+              icon={<EditOutlined style={{ color: '#1890ff' }} />}
               onClick={() => onEdit(record)}
             />
           </Tooltip>
