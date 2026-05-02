@@ -26,4 +26,9 @@ export const campaignService = {
     const response = await axiosInstance.delete(`/campaigns/${id}`);
     return response.data;
   },
+
+  sendCampaign: async (id: number, payload: { userIds?: number[]; sendAll: boolean }) => {
+    const response = await axiosInstance.post(`/campaigns/${id}/send`, payload);
+    return response.data;
+  },
 };

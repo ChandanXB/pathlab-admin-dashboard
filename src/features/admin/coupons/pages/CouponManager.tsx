@@ -10,6 +10,7 @@ import CouponTable from '../components/CouponTable';
 import CouponFormModal from '../components/CouponFormModal';
 import CampaignTable from '../components/CampaignTable';
 import CampaignFormModal from '../components/CampaignFormModal';
+import SendCampaignModal from '../components/SendCampaignModal';
 import axiosInstance from '@/config/apiClient';
 import { debounce } from '@/shared/utils/debounce';
 
@@ -36,6 +37,8 @@ const CouponManager: React.FC = () => {
   const [isCampaignModalVisible, setIsCampaignModalVisible] = useState(false);
   const [editingCampaign, setEditingCampaign] = useState<Campaign | null>(null);
   const [campaignForm] = Form.useForm();
+  const [isSendCampaignModalVisible, setIsSendCampaignModalVisible] = useState(false);
+  const [campaignToSend, setCampaignToSend] = useState<Campaign | null>(null);
 
   // Drawer States
   const [isDrawerVisible, setIsDrawerVisible] = useState(false);
@@ -215,6 +218,11 @@ const CouponManager: React.FC = () => {
     }
   };
 
+  const handleSendCampaign = (record: Campaign) => {
+    setCampaignToSend(record);
+    setIsSendCampaignModalVisible(true);
+  };
+
   const handleSubmit = async (values: any) => {
     try {
       if (editingCoupon) {
@@ -314,6 +322,7 @@ const CouponManager: React.FC = () => {
                     onEdit={handleEditCampaign}
                     onView={handleViewCampaign}
                     onDelete={handleDeleteCampaign}
+                    onSend={handleSendCampaign}
                     onLoadMore={handleLoadMoreCampaigns}
                     scroll={{ x: 1000, y: 'calc(100vh - 350px)' }}
                   />
@@ -341,6 +350,15 @@ const CouponManager: React.FC = () => {
         coupons={coupons}
         onSubmit={handleCampaignSubmit}
         onCancel={() => setIsCampaignModalVisible(false)}
+      />
+
+      <SendCampaignModal
+        visible={isSendCampaignModalVisible}
+        campaign={campaignToSend}
+        onClose={() => {
+          setIsSendCampaignModalVisible(false);
+          setCampaignToSend(null);
+        }}
       />
 
       <Drawer
