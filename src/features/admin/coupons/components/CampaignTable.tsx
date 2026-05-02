@@ -1,6 +1,6 @@
 import React from 'react';
 import { Tag, Space, Button, Popconfirm, Tooltip, Image } from 'antd';
-import { EditOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons';
+import { EditOutlined, DeleteOutlined, EyeOutlined, MailOutlined } from '@ant-design/icons';
 import type { Campaign } from '../types/campaign.types';
 import dayjs from 'dayjs';
 import InfiniteScrollTable from '@/shared/components/InfiniteScrollTable';
@@ -13,6 +13,7 @@ interface CampaignTableProps {
   onEdit: (record: Campaign) => void;
   onView: (record: Campaign) => void;
   onDelete: (id: number) => void;
+  onSend: (record: Campaign) => void;
   onLoadMore: () => void;
   scroll?: { x?: number | string; y?: number | string };
 }
@@ -24,7 +25,8 @@ const CampaignTable: React.FC<CampaignTableProps> = ({
   hasMore,
   onEdit, 
   onView,
-  onDelete, 
+  onDelete,
+  onSend,
   onLoadMore,
   scroll 
 }) => {
@@ -76,15 +78,22 @@ const CampaignTable: React.FC<CampaignTableProps> = ({
     {
       title: 'Actions',
       key: 'actions',
-      width: 120,
+      width: 150,
       fixed: 'right' as const,
       render: (_: any, record: Campaign) => (
-        <Space size="middle">
+        <Space size="small">
           <Tooltip title="View Details">
             <Button 
               type="text" 
               icon={<EyeOutlined style={{ color: '#52c41a' }} />} 
               onClick={() => onView(record)} 
+            />
+          </Tooltip>
+          <Tooltip title="Send Campaign (Email)">
+            <Button 
+              type="text" 
+              icon={<MailOutlined style={{ color: '#faad14' }} />} 
+              onClick={() => onSend(record)} 
             />
           </Tooltip>
           <Tooltip title="Edit">
