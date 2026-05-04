@@ -21,8 +21,6 @@ const DoctorFormModal: React.FC<DoctorFormModalProps> = ({
     onOk,
     onCancel,
 }) => {
-    const fee = Form.useWatch('consultation_fee', form) || 0;
-
     const fileToBase64 = (file: File): Promise<string> => {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();

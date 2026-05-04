@@ -190,7 +190,7 @@ const LabOrderDetailDrawer: React.FC<LabOrderDetailDrawerProps> = ({ visible, or
                             </Descriptions.Item>
                             <Descriptions.Item label="Contact">
                                 <Space direction="vertical" size={0}>
-                                    <Text><PhoneOutlined /> {order.patient?.phone || 'N/A'}</Text>
+                                    <Text><PhoneOutlined /> {order.patient?.phone || (order.patient as any)?.user?.phone || (order.patient as any)?.added_by?.phone || 'N/A'}</Text>
                                     {(order.patient as any)?.alternate_phone && (
                                         <Text type="secondary" style={{ fontSize: '12px' }}>Alt: {(order.patient as any).alternate_phone}</Text>
                                     )}
@@ -364,7 +364,7 @@ const LabOrderDetailDrawer: React.FC<LabOrderDetailDrawerProps> = ({ visible, or
                                 <Text strong style={{ color: '#52c41a' }}>₹{order.paid_amount || 0}</Text>
                             </Descriptions.Item>
                             <Descriptions.Item label="Mode">
-                                <Tag color="blue">{order.payment_mode?.toUpperCase() || 'N/A'}</Tag>
+                                <Tag color="blue">{order.payment_mode?.toUpperCase() || 'CASH'}</Tag>
                             </Descriptions.Item>
                         </Descriptions>
                     </Card>

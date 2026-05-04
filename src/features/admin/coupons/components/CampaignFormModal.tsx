@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Modal, Form, Input, Select, DatePicker, Switch, Row, Col } from 'antd';
+import { Modal, Form, Input, Select, DatePicker, Switch, Row, Col, Upload, message } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import type { Campaign } from '../types/campaign.types';
@@ -39,6 +39,28 @@ const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
       });
     }
   }, [visible, editingCampaign, form]);
+
+  const handleFileUpload = (file: File) => {
+    const isImage = file.type.startsWith('image/');
+    if (!isImage) {
+      message.error('You can only upload image files!');
+      return false;
+    }
+    const isLt5M = file.size / 1024 / 1024 < 5;
+    if (!isLt5M) {
+      message.error('Image must be smaller than 5MB!');
+      return false;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      form.setFieldsValue({ bannerImage: reader.result });
+      message.success('Image loaded successfully');
+    };
+    reader.readAsDataURL(file);
+
+    return false; // Prevent default auto-upload
+  };
 
   const handleSubmit = () => {
     form.validateFields().then((values: any) => {
@@ -88,7 +110,19 @@ const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
           </Col>
           <Col span={12}>
             <Form.Item name="bannerImage" label="Banner Image URL">
-              <Input placeholder="https://example.com/banner.jpg" prefix={<UploadOutlined />} />
+              <Input 
+                placeholder="https://example.com/banner.jpg" 
+                prefix={<UploadOutlined />} 
+                addonAfter={
+                  <Upload 
+                    showUploadList={false} 
+                    beforeUpload={handleFileUpload} 
+                    accept="image/*"
+                  >
+                    <span style={{ cursor: 'pointer' }}>Upload</span>
+                  </Upload>
+                }
+              />
             </Form.Item>
           </Col>
         </Row>
