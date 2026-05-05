@@ -15,6 +15,10 @@ export interface Campaign {
   targetUrl?: string;
   createdAt: string;
   updatedAt: string;
+  useAdvancedScheduling?: boolean;
+  scheduledShowTime?: string;
+  displayDuration?: number;
+  durationUnit?: 'minutes' | 'hours';
 }
 
 export interface CampaignFormData {
@@ -28,4 +32,8 @@ export interface CampaignFormData {
   isActive: boolean;
   ctaText?: string;
   targetUrl?: string;
+  useAdvancedScheduling?: boolean;
+  scheduledShowTime?: string;
+  displayDuration?: number;
+  durationUnit?: 'minutes' | 'hours';
 }

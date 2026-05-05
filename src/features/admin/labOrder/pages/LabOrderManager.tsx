@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, Button, Form, Typography, Space, Badge, Checkbox, Divider } from 'antd';
 import { PlusOutlined, ExperimentOutlined } from '@ant-design/icons';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useLabOrders } from '../hooks/useLabOrders';
 import { LabOrderTable, LabOrderFilters, LabOrderFormModal, LabOrderDetailDrawer, AssignAgentModal, ReportUploadModal } from '../components';
 import LabOrderProofModal from '../components/LabOrderProofModal';
@@ -14,6 +14,8 @@ const { Title } = Typography;
 const LabOrderManager: React.FC = () => {
     const [searchParams] = useSearchParams();
     const statusParam = searchParams.get('status');
+    const highlightParam = searchParams.get('highlight');
+    const navigate = useNavigate();
 
     const {
         orders,
@@ -60,6 +62,16 @@ const LabOrderManager: React.FC = () => {
             setFilters(prev => ({ ...prev, status: statusParam || undefined, page: 1 }));
         }
     }, [statusParam, setFilters]);
+
+    // Clear the highlight param from URL after a delay
+    useEffect(() => {
+        if (highlightParam) {
+            const timer = setTimeout(() => {
+                navigate('/lab-orders', { replace: true });
+            }, 3500);
+            return () => clearTimeout(timer);
+        }
+    }, [highlightParam, navigate]);
 
     const handleSearch = (value: string) => {
         setFilters((prev) => ({ ...prev, search: value, page: 1 }));
@@ -281,6 +293,7 @@ const LabOrderManager: React.FC = () => {
                         onUploadReport={handleUploadReport}
                         onUploadProof={handleUploadProof}
                         visibleColumns={visibleColumns}
+                        highlightOrderCode={highlightParam || undefined}
                         scroll={{ x: isMobile ? 'max-content' : undefined, y: tableHeight }}
                     />
                 </div>
@@ -296,7 +309,7 @@ const LabOrderManager: React.FC = () => {
             />
 
             <LabOrderDetailDrawer
-                visible={isDrawerVisible}
+                open={isDrawerVisible}
                 order={selectedOrder}
                 onClose={handleDrawerClose}
                 onUploadReport={handleUploadReport}

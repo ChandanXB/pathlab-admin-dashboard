@@ -11,6 +11,7 @@ import CouponFormModal from '../components/CouponFormModal';
 import CampaignTable from '../components/CampaignTable';
 import CampaignFormModal from '../components/CampaignFormModal';
 import SendCampaignModal from '../components/SendCampaignModal';
+import CampaignPreviewModal from '../components/CampaignPreviewModal';
 import axiosInstance from '@/config/apiClient';
 import { debounce } from '@/shared/utils/debounce';
 
@@ -39,6 +40,8 @@ const CouponManager: React.FC = () => {
   const [campaignForm] = Form.useForm();
   const [isSendCampaignModalVisible, setIsSendCampaignModalVisible] = useState(false);
   const [campaignToSend, setCampaignToSend] = useState<Campaign | null>(null);
+  const [isPreviewModalVisible, setIsPreviewModalVisible] = useState(false);
+  const [previewCampaign, setPreviewCampaign] = useState<Campaign | null>(null);
 
   // Drawer States
   const [isDrawerVisible, setIsDrawerVisible] = useState(false);
@@ -223,6 +226,11 @@ const CouponManager: React.FC = () => {
     setIsSendCampaignModalVisible(true);
   };
 
+  const handlePreviewCampaign = (record: Campaign) => {
+    setPreviewCampaign(record);
+    setIsPreviewModalVisible(true);
+  };
+
   const handleSubmit = async (values: any) => {
     try {
       if (editingCoupon) {
@@ -304,7 +312,7 @@ const CouponManager: React.FC = () => {
                     onView={handleView}
                     onDelete={handleDelete}
                     onLoadMore={handleLoadMore}
-                    scroll={{ x: 1000, y: 'calc(100vh - 350px)' }}
+                    scroll={{ y: 'calc(100vh - 350px)' }}
                   />
                 </div>
               )
@@ -323,8 +331,9 @@ const CouponManager: React.FC = () => {
                     onView={handleViewCampaign}
                     onDelete={handleDeleteCampaign}
                     onSend={handleSendCampaign}
+                    onPreview={handlePreviewCampaign}
                     onLoadMore={handleLoadMoreCampaigns}
-                    scroll={{ x: 1000, y: 'calc(100vh - 350px)' }}
+                    scroll={{ y: 'calc(100vh - 350px)' }}
                   />
                 </div>
               )
@@ -358,6 +367,15 @@ const CouponManager: React.FC = () => {
         onClose={() => {
           setIsSendCampaignModalVisible(false);
           setCampaignToSend(null);
+        }}
+      />
+
+      <CampaignPreviewModal
+        open={isPreviewModalVisible}
+        campaign={previewCampaign}
+        onClose={() => {
+          setIsPreviewModalVisible(false);
+          setPreviewCampaign(null);
         }}
       />
 

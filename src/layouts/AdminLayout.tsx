@@ -172,7 +172,7 @@ const AdminLayout: React.FC = () => {
             ]
         },
         { key: '/service-cities', icon: <GlobalOutlined />, label: 'Service Cities' },
-        { key: '/coupons', icon: <PercentageOutlined />, label: 'Coupon Codes' },
+        { key: '/coupons', icon: <PercentageOutlined />, label: 'Coupon & Campaign' },
     ];
 
     const userMenu = {

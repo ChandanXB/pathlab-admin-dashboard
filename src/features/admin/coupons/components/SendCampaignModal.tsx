@@ -120,11 +120,11 @@ const SendCampaignModal: React.FC<SendCampaignModalProps> = ({ visible, campaign
       ]}
       centered
       width={500}
-      styles={{ body: { padding: '20px' } }}
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+
         <div>
-          <Text strong style={{ display: 'block', marginBottom: '8px' }}>1. Delivery Channels</Text>
+          <Text strong style={{ display: 'block', marginBottom: '4px', fontSize: '13px' }}>1. Delivery Channels</Text>
           <Checkbox.Group 
             options={[
               { label: <Space><MailOutlined /> Email</Space>, value: 'email' },
@@ -138,14 +138,14 @@ const SendCampaignModal: React.FC<SendCampaignModalProps> = ({ visible, campaign
         <Divider style={{ margin: '4px 0' }} />
 
         <div>
-          <Text strong style={{ display: 'block', marginBottom: '8px' }}>2. Recipients</Text>
+          <Text strong style={{ display: 'block', marginBottom: '4px', fontSize: '13px' }}>2. Recipients</Text>
           <Radio.Group 
             value={sendType} 
             onChange={e => setSendType(e.target.value)}
             style={{ width: '100%' }}
           >
-            <Space direction="vertical" style={{ width: '100%' }}>
-              <Radio value="all" style={{ width: '100%', padding: '12px', border: '1px solid #f0f0f0', borderRadius: '8px' }}>
+            <Space direction="vertical" style={{ width: '100%' }} size={4}>
+              <Radio value="all" style={{ width: '100%', padding: '6px 12px', border: '1px solid #f0f0f0', borderRadius: '8px' }}>
                 <Space align="start">
                   <TeamOutlined style={{ marginTop: '4px', color: '#1890ff' }} />
                   <div>
@@ -154,7 +154,7 @@ const SendCampaignModal: React.FC<SendCampaignModalProps> = ({ visible, campaign
                   </div>
                 </Space>
               </Radio>
-              <Radio value="specific" style={{ width: '100%', padding: '12px', border: '1px solid #f0f0f0', borderRadius: '8px' }}>
+              <Radio value="specific" style={{ width: '100%', padding: '6px 12px', border: '1px solid #f0f0f0', borderRadius: '8px' }}>
                 <Space align="start">
                   <UserOutlined style={{ marginTop: '4px', color: '#1890ff' }} />
                   <div>
@@ -168,8 +168,8 @@ const SendCampaignModal: React.FC<SendCampaignModalProps> = ({ visible, campaign
         </div>
 
         {sendType === 'specific' && (
-          <div style={{ marginTop: '8px' }}>
-            <Text strong style={{ display: 'block', marginBottom: '8px', fontSize: '13px' }}>Select Recipients:</Text>
+          <div style={{ marginTop: '0px' }}>
+            <Text strong style={{ display: 'block', marginBottom: '4px', fontSize: '13px' }}>Select Recipients:</Text>
             <Select
               mode="multiple"
               style={{ width: '100%' }}
@@ -198,10 +198,10 @@ const SendCampaignModal: React.FC<SendCampaignModalProps> = ({ visible, campaign
         <Divider style={{ margin: '8px 0' }} />
         
         <Alert
-          message="Review Campaign"
-          description="Campaign messages are sent immediately via selected channels. Please verify content before proceeding."
+          message="Campaign messages are sent immediately. Please verify content."
           type="warning"
           showIcon
+          style={{ padding: '8px 12px' }}
         />
       </div>
     </Modal>

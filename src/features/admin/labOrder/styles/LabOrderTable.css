@@ -1,0 +1,49 @@
+/* Lab Order Table Styles */
+
+@keyframes highlight-glow {
+    0%   { background-color: #fffbe6; outline: 3px solid #faad14; outline-offset: -3px; }
+    100% { background-color: transparent; outline: 3px solid transparent; outline-offset: -3px; }
+}
+
+/* Row Highlight Styles */
+.infinite-scroll-table-wrapper .ant-table-tbody > tr.order-row-highlight > td {
+    animation: highlight-glow 2s ease-out forwards !important;
+    background-color: #fffbe6 !important;
+    position: relative;
+    z-index: 10;
+}
+
+/* Specifically override fixed column white backgrounds for highlights */
+.infinite-scroll-table-wrapper .ant-table-tbody > tr.order-row-highlight > td.ant-table-cell-fix-right,
+.infinite-scroll-table-wrapper .ant-table-tbody > tr.order-row-highlight > td.ant-table-cell-fix-left {
+    background-color: #fffbe6 !important;
+}
+
+/* Table Responsiveness & Layout Overrides */
+.infinite-scroll-table-wrapper {
+    width: 100% !important;
+}
+
+.infinite-scroll-table-wrapper .ant-table-wrapper,
+.infinite-scroll-table-wrapper .ant-table,
+.infinite-scroll-table-wrapper .ant-table-container,
+.infinite-scroll-table-wrapper .ant-table-content,
+.infinite-scroll-table-wrapper .ant-table-header table,
+.infinite-scroll-table-wrapper .ant-table-body table {
+    width: 100% !important;
+    min-width: 100% !important;
+}
+
+.infinite-scroll-table-wrapper .ant-table-thead > tr > th {
+    padding: 12px 12px !important;
+    white-space: nowrap !important;
+    background: #fafafa !important;
+}
+
+.infinite-scroll-table-wrapper .ant-table-tbody > tr > td {
+    padding: 12px 12px !important;
+}
+
+.infinite-scroll-table-wrapper .ant-table-placeholder {
+    width: 100% !important;
+}
