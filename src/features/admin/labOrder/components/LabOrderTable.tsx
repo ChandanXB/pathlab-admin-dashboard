@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Tag, Space, Button, Popconfirm, Tooltip, Typography } from 'antd';
 import {
     EditOutlined,
@@ -18,6 +18,8 @@ import type { LabOrder } from '../types/labOrder.types';
 import { ORDER_STATUSES, PRIORITIES } from '@/shared/constants/app.constants';
 import dayjs from 'dayjs';
 
+import '../styles/LabOrderTable.css';
+
 const { Text } = Typography;
 
 interface LabOrderTableProps {
@@ -33,6 +35,7 @@ interface LabOrderTableProps {
     onUploadReport: (record: LabOrder) => void;
     onUploadProof?: (record: LabOrder) => void;
     visibleColumns?: string[];
+    highlightOrderCode?: string;
     scroll?: { x?: number | string; y?: number | string };
 }
 
@@ -49,8 +52,21 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
     onUploadReport,
     onUploadProof,
     visibleColumns = ['order_info', 'patient', 'tests', 'agent', 'agent_assign', 'amount', 'status', 'actions'],
+    highlightOrderCode,
     scroll,
 }) => {
+    // Delay activating the highlight until data has rendered into rows
+    const [activeHighlight, setActiveHighlight] = useState<string | undefined>(undefined);
+
+    useEffect(() => {
+        if (highlightOrderCode && data.length > 0) {
+            // Small delay ensures the DOM row exists before we apply the animation class
+            const t = setTimeout(() => setActiveHighlight(highlightOrderCode), 300);
+            return () => clearTimeout(t);
+        } else {
+            setActiveHighlight(undefined);
+        }
+    }, [highlightOrderCode, data]);
 
     const getStatusColor = (status: string) => {
         const found = ORDER_STATUSES.find(s => s.value === status);
@@ -70,7 +86,7 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
         {
             title: <span style={{ whiteSpace: 'nowrap' }}>Order Details</span>,
             key: 'order_info',
-            minWidth: 140,
+            width: 130,
             render: (_: any, record: LabOrder) => {
                 const foundPriority = PRIORITIES.find(p => p.value === record.priority);
                 const tooltipContent = (
@@ -94,7 +110,7 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
         {
             title: <span style={{ whiteSpace: 'nowrap' }}>Patient</span>,
             key: 'patient',
-            minWidth: 120,
+            width: 140,
             render: (_: any, record: LabOrder) => (
                 <Space direction="vertical" size={0} style={{ width: '100%' }}>
                     <Text strong style={{ textTransform: 'capitalize' }} ellipsis={{ tooltip: record.patient?.full_name }}>
@@ -107,7 +123,7 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
         {
             title: <span style={{ whiteSpace: 'nowrap' }}>Tests</span>,
             key: 'tests',
-            minWidth: 130,
+            width: 140,
             render: (_: any, record: LabOrder) => {
                 const results = record.test_results || [];
                 if (results.length === 0) return '-';
@@ -157,7 +173,7 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
         {
             title: <span style={{ whiteSpace: 'nowrap' }}>Agent</span>,
             key: 'agent',
-            width: '12%',
+            width: 120,
             render: (_: any, record: LabOrder) => {
                 if (record.collection_agent) {
                     return (
@@ -180,7 +196,7 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
         {
             title: <span style={{ whiteSpace: 'nowrap' }}>Amount</span>,
             key: 'amount',
-            width: '10%',
+            width: 90,
             render: (_: any, record: LabOrder) => (
                 <Space direction="vertical" size={0}>
                     <Text>₹{record.total_amount}</Text>
@@ -194,7 +210,7 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
             title: <span style={{ whiteSpace: 'nowrap' }}>Order Status</span>,
             dataIndex: 'status',
             key: 'status',
-            width: '12%',
+            width: 120,
             render: (status: string, record: LabOrder) => {
                 const isAssigning = status === 'assigned' && record.assignment_status !== 'accepted';
                 const displayLabel = isAssigning ? 'Assigning' : getStatusLabel(status);
@@ -225,7 +241,7 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
         {
             title: <div style={{ textAlign: 'center', width: '100%' }}>Assign</div>,
             key: 'agent_assign',
-            width: '12%',
+            width: 110,
             render: (_: any, record: LabOrder) => {
                 const isLabVisit = record.order_type === 'lab_visit';
                 const button = (
@@ -269,13 +285,14 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
         {
             title: <span style={{ whiteSpace: 'nowrap' }}>Actions</span>,
             key: 'actions',
-            width: '12%',
+            width: 110,
             render: (_: any, record: LabOrder) => (
                 <div onClick={(e) => e.stopPropagation()}>
-                    <Space size={0}>
+                    <Space size={4}>
                         <Tooltip title="Edit Order">
                             <Button
                                 type="text"
+                                size="small"
                                 icon={<EditOutlined />}
                                 onClick={() => onEdit(record)}
                             />
@@ -284,6 +301,7 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
                             <Tooltip title="Upload Payment/Collection Proof">
                                 <Button
                                     type="text"
+                                    size="small"
                                     icon={<CameraOutlined style={{ color: '#52c41a' }} />}
                                     onClick={() => onUploadProof(record)}
                                 />
@@ -293,6 +311,7 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
                             <Tooltip title="Upload Report">
                                 <Button
                                     type="text"
+                                    size="small"
                                     icon={<CloudUploadOutlined style={{ color: '#1890ff' }} />}
                                     onClick={() => onUploadReport(record)}
                                 />
@@ -307,7 +326,7 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
                             okButtonProps={{ danger: true }}
                         >
                             <Tooltip title="Delete">
-                                <Button type="text" danger icon={<DeleteOutlined />} />
+                                <Button type="text" size="small" danger icon={<DeleteOutlined />} />
                             </Tooltip>
                         </Popconfirm>
                     </Space>
@@ -322,31 +341,6 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
 
     return (
         <div className="infinite-scroll-table-wrapper" style={{ width: '100%' }}>
-            <style>{`
-                .infinite-scroll-table-wrapper {
-                    width: 100% !important;
-                }
-                .infinite-scroll-table-wrapper .ant-table-wrapper,
-                .infinite-scroll-table-wrapper .ant-table,
-                .infinite-scroll-table-wrapper .ant-table-container,
-                .infinite-scroll-table-wrapper .ant-table-content,
-                .infinite-scroll-table-wrapper .ant-table-header table,
-                .infinite-scroll-table-wrapper .ant-table-body table {
-                    width: 100% !important;
-                    min-width: 100% !important;
-                }
-                .infinite-scroll-table-wrapper .ant-table-thead > tr > th {
-                    padding: 12px 12px !important;
-                    white-space: nowrap !important;
-                    background: #fafafa !important;
-                }
-                .infinite-scroll-table-wrapper .ant-table-tbody > tr > td {
-                    padding: 12px 12px !important;
-                }
-                .infinite-scroll-table-wrapper .ant-table-placeholder {
-                    width: 100% !important;
-                }
-            `}</style>
             <InfiniteScrollTable
                 columns={filteredColumns}
                 dataSource={data}
@@ -356,9 +350,16 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
                 next={onLoadMore}
                 scroll={scroll}
                 rowKey="id"
+                rowClassName={(record) => {
+                    if (!activeHighlight) return '';
+                    const highlight = activeHighlight.trim().toLowerCase();
+                    const codeMatch = record.order_code?.trim().toLowerCase() === highlight;
+                    const idMatch = String(record.id) === highlight;
+                    
+                    return (codeMatch || idMatch) ? 'ant-table-row-selected order-row-highlight' : '';
+                }}
                 onRow={(record) => ({
                     onClick: (e: any) => {
-                        // Prevent drawer opening if user clicks on dropdown, buttons or icons
                         if (e.target.closest('.ant-dropdown-trigger') || e.target.closest('button') || e.target.closest('.anticon')) {
                             return;
                         }

@@ -84,6 +84,18 @@ export const colors = {
         volumeBg: '#e6f7ff',
         text: '#8c8c8c',
         border: '#f0f0f0',
+    },
+    
+    // Marketing/Campaign specific colors
+    marketing: {
+        bannerGradient: ['#2196F3', '#003366'],
+        title: '#1A365D',
+        subtitle: '#4A5568',
+        description: '#718096',
+        label: '#94A3B8',
+        targetText: '#1E293B',
+        couponBg: '#F8FAFC',
+        couponBorder: '#E2E8F0'
     }
 };
 

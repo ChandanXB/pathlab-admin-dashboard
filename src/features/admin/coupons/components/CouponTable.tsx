@@ -14,7 +14,7 @@ interface CouponTableProps {
   onView: (record: Coupon) => void;
   onDelete: (id: number) => void;
   onLoadMore: () => void;
-  scroll: { x: number | string; y: number | string };
+  scroll: { x?: number | string; y: number | string };
 }
 const CouponTable: React.FC<CouponTableProps> = ({ 
   data, 
@@ -32,11 +32,13 @@ const CouponTable: React.FC<CouponTableProps> = ({
       title: 'Code',
       dataIndex: 'code',
       key: 'code',
+      width: 140,
       render: (text: string) => <strong style={{ color: '#1890ff' }}>{text}</strong>,
     },
     {
       title: 'Discount',
       key: 'discount',
+      width: 100,
       render: (_: any, record: Coupon) => (
         <span>
           {record.discountType === 'percentage' ? `${record.discountValue}%` : `₹${record.discountValue}`}
@@ -47,6 +49,7 @@ const CouponTable: React.FC<CouponTableProps> = ({
       title: 'Applicability',
       dataIndex: 'applicableTo',
       key: 'applicableTo',
+      width: 110,
       render: (text: string) => (
         <Tag color={text === 'all' ? 'gold' : 'blue'}>
           {text.toUpperCase()}
@@ -56,6 +59,7 @@ const CouponTable: React.FC<CouponTableProps> = ({
     {
       title: 'Validity',
       key: 'validity',
+      width: 160,
       render: (_: any, record: Coupon) => (
         <div style={{ fontSize: '12px' }}>
           <div>S: {dayjs(record.startDate).format('DD/MM/YY hh:mm A')}</div>
@@ -66,6 +70,7 @@ const CouponTable: React.FC<CouponTableProps> = ({
     {
       title: 'Usage',
       key: 'usage',
+      width: 80,
       render: (_: any, record: Coupon) => (
         <span>
           {record.usedCount} / {record.usageLimit || '∞'}
@@ -76,6 +81,7 @@ const CouponTable: React.FC<CouponTableProps> = ({
       title: 'Status',
       dataIndex: 'status',
       key: 'status',
+      width: 90,
       render: (status: string) => (
         <Tag color={status === 'active' ? 'success' : 'error'}>
           {status.toUpperCase()}
@@ -85,13 +91,13 @@ const CouponTable: React.FC<CouponTableProps> = ({
     {
       title: 'Actions',
       key: 'actions',
-      fixed: 'right' as const,
-      width: 100,
+      width: 110,
       render: (_: any, record: Coupon) => (
-        <Space>
+        <Space size={4}>
           <Tooltip title="View Details">
             <Button
               type="text"
+              size="small"
               icon={<EyeOutlined style={{ color: '#52c41a' }} />}
               onClick={() => onView(record)}
             />
@@ -99,6 +105,7 @@ const CouponTable: React.FC<CouponTableProps> = ({
           <Tooltip title="Edit">
             <Button
               type="text"
+              size="small"
               icon={<EditOutlined style={{ color: '#1890ff' }} />}
               onClick={() => onEdit(record)}
             />
@@ -111,7 +118,7 @@ const CouponTable: React.FC<CouponTableProps> = ({
               okText="Yes"
               cancelText="No"
             >
-              <Button type="text" danger icon={<DeleteOutlined />} />
+              <Button type="text" size="small" danger icon={<DeleteOutlined />} />
             </Popconfirm>
           </Tooltip>
         </Space>

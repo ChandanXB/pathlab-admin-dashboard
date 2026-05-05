@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Modal, Form, Input, Select, DatePicker, Switch, Row, Col, Upload, message } from 'antd';
+import { Modal, Form, Input, Select, DatePicker, Switch, Row, Col, Upload, message, Divider, InputNumber, Typography } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import type { Campaign } from '../types/campaign.types';
@@ -28,6 +28,7 @@ const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
         ...editingCampaign,
         startDate: dayjs(editingCampaign.startDate),
         endDate: dayjs(editingCampaign.endDate),
+        scheduledShowTime: editingCampaign.scheduledShowTime ? dayjs(editingCampaign.scheduledShowTime) : undefined,
       });
     } else if (visible) {
       form.resetFields();
@@ -36,6 +37,8 @@ const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
         startDate: dayjs(),
         endDate: dayjs().add(1, 'month'),
         ctaText: 'Book Now',
+        useAdvancedScheduling: false,
+        durationUnit: 'minutes',
       });
     }
   }, [visible, editingCampaign, form]);
@@ -68,10 +71,13 @@ const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
         ...values,
         startDate: values.startDate.toISOString(),
         endDate: values.endDate.toISOString(),
+        scheduledShowTime: values.scheduledShowTime ? values.scheduledShowTime.toISOString() : undefined,
       };
       onSubmit(formattedValues);
     });
   };
+
+  const useAdvanced = Form.useWatch('useAdvancedScheduling', form);
 
   return (
     <Modal
@@ -91,12 +97,13 @@ const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
               name="title"
               label="Campaign Title"
               rules={[{ required: true, message: 'Please enter campaign title' }]}
+              style={{ marginBottom: '12px' }}
             >
               <Input placeholder="e.g. Summer Health Fest 2026" />
             </Form.Item>
           </Col>
           <Col span={5}>
-            <Form.Item name="isActive" label="Status" valuePropName="checked">
+            <Form.Item name="isActive" label="Status" valuePropName="checked" style={{ marginBottom: '12px' }}>
               <Switch checkedChildren="Active" unCheckedChildren="Inactive" />
             </Form.Item>
           </Col>
@@ -104,12 +111,12 @@ const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
 
         <Row gutter={16}>
           <Col span={12}>
-            <Form.Item name="subtitle" label="Subtitle / Hook Line">
+            <Form.Item name="subtitle" label="Subtitle / Hook Line" style={{ marginBottom: '12px' }}>
               <Input placeholder="e.g. Get up to 50% off on all routine checkups" />
             </Form.Item>
           </Col>
           <Col span={12}>
-            <Form.Item name="bannerImage" label="Banner Image URL">
+            <Form.Item name="bannerImage" label="Banner Image URL" style={{ marginBottom: '12px' }}>
               <Input 
                 placeholder="https://example.com/banner.jpg" 
                 prefix={<UploadOutlined />} 
@@ -129,7 +136,7 @@ const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
 
         <Row gutter={16}>
           <Col span={8}>
-            <Form.Item name="couponId" label="Link Coupon (Optional)">
+            <Form.Item name="couponId" label="Link Coupon (Optional)" style={{ marginBottom: '12px' }}>
               <Select placeholder="Select a coupon" allowClear>
                 {coupons.map(coupon => (
                   <Select.Option key={coupon.id} value={coupon.id}>
@@ -140,12 +147,12 @@ const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
             </Form.Item>
           </Col>
           <Col span={8}>
-            <Form.Item name="ctaText" label="CTA Button Text">
+            <Form.Item name="ctaText" label="CTA Button Text" style={{ marginBottom: '12px' }}>
               <Input placeholder="e.g. Book Now" />
             </Form.Item>
           </Col>
           <Col span={8}>
-            <Form.Item name="targetUrl" label="Target URL (Optional)">
+            <Form.Item name="targetUrl" label="Target URL (Optional)" style={{ marginBottom: '12px' }}>
               <Input placeholder="e.g. /packages/routine-checkup" />
             </Form.Item>
           </Col>
@@ -157,6 +164,7 @@ const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
               name="startDate"
               label="Start Date"
               rules={[{ required: true }]}
+              style={{ marginBottom: '12px' }}
             >
               <DatePicker style={{ width: '100%' }} showTime format="DD/MM/YY hh:mm A" />
             </Form.Item>
@@ -166,22 +174,81 @@ const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
               name="endDate"
               label="End Date"
               rules={[{ required: true }]}
+              style={{ marginBottom: '12px' }}
             >
               <DatePicker style={{ width: '100%' }} showTime format="DD/MM/YY hh:mm A" />
             </Form.Item>
           </Col>
           <Col span={8}>
-            <Form.Item label="Instructions" style={{ color: '#8c8c8c' }}>
-              <div style={{ fontSize: '11px', lineHeight: '1.2', paddingTop: '4px' }}>
-                Ensure dates are within valid ranges. Target URL is internal by default.
+            <Form.Item label="Instructions" style={{ marginBottom: '12px', color: '#8c8c8c' }}>
+              <div style={{ fontSize: '10px', lineHeight: '1.1', paddingTop: '0px' }}>
+                Dates must be valid. URL is internal.
               </div>
             </Form.Item>
           </Col>
         </Row>
 
-        <Form.Item name="description" label="Description" style={{ marginBottom: 0 }}>
-          <Input.TextArea rows={2} placeholder="Provide details about the campaign..." />
+        <Form.Item name="description" label="Description" style={{ marginBottom: '12px' }}>
+          <Input.TextArea rows={1} placeholder="Provide details about the campaign..." />
         </Form.Item>
+
+        <Divider style={{ marginTop: '8px', marginBottom: '8px' }} />
+        <Typography.Text strong style={{ fontSize: '13px', color: '#1890ff', display: 'block', marginBottom: '8px' }}>
+          Advanced Scheduling Settings
+        </Typography.Text>
+
+        <Row gutter={16} align="middle">
+          <Col span={24}>
+            <Form.Item 
+              name="useAdvancedScheduling" 
+              label="Enable Cron-style Scheduling" 
+              valuePropName="checked"
+              style={{ marginBottom: useAdvanced ? '8px' : '0' }}
+              extra={!useAdvanced && <span style={{ fontSize: '11px' }}>If disabled, modal shows whenever active.</span>}
+            >
+              <Switch size="small" checkedChildren="ON" unCheckedChildren="OFF" />
+            </Form.Item>
+          </Col>
+        </Row>
+
+        {useAdvanced && (
+          <Row gutter={16} style={{ background: '#f9f9f9', padding: '8px 12px', borderRadius: '8px', border: '1px solid #f0f0f0' }}>
+            <Col span={12}>
+              <Form.Item 
+                name="scheduledShowTime" 
+                label={<span style={{ fontSize: '12px' }}>Show Time</span>}
+                rules={[{ required: useAdvanced, message: 'Required' }]}
+                style={{ marginBottom: 0 }}
+              >
+                <DatePicker 
+                  size="small"
+                  style={{ width: '100%' }} 
+                  showTime 
+                  format="DD/MM/YY hh:mm A" 
+                />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item label={<span style={{ fontSize: '12px' }}>Duration</span>} style={{ marginBottom: 0 }}>
+                <Input.Group compact>
+                  <Form.Item
+                    name="displayDuration"
+                    noStyle
+                    rules={[{ required: useAdvanced, message: 'Required' }]}
+                  >
+                    <InputNumber size="small" style={{ width: '60%' }} min={1} />
+                  </Form.Item>
+                  <Form.Item name="durationUnit" noStyle>
+                    <Select size="small" style={{ width: '40%' }}>
+                      <Select.Option value="minutes">Min</Select.Option>
+                      <Select.Option value="hours">Hrs</Select.Option>
+                    </Select>
+                  </Form.Item>
+                </Input.Group>
+              </Form.Item>
+            </Col>
+          </Row>
+        )}
       </Form>
     </Modal>
   );

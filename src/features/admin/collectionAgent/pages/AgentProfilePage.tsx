@@ -299,7 +299,7 @@ const AgentProfilePage: React.FC = () => {
             />
 
             <LabOrderDetailDrawer
-                visible={isDrawerVisible}
+                open={isDrawerVisible}
                 order={selectedOrder}
                 onClose={() => {
                     setIsDrawerVisible(false);

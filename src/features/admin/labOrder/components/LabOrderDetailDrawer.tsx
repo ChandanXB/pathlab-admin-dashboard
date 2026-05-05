@@ -1,5 +1,5 @@
 import React from 'react';
-import { Drawer, Descriptions, Tag, Divider, Typography, Space, List, Badge, Empty, Card, Row, Col, Image } from 'antd';
+import { Descriptions, Tag, Divider, Typography, Space, List, Badge, Empty, Card, Row, Col, Image, Button } from 'antd';
 import {
     UserOutlined,
     EnvironmentOutlined,
@@ -8,7 +8,6 @@ import {
     ClockCircleOutlined,
     FileTextOutlined,
     CreditCardOutlined,
-    BarcodeOutlined,
     PhoneOutlined,
     UserAddOutlined,
     ShopOutlined,
@@ -16,21 +15,22 @@ import {
     FilePdfOutlined,
     CloudUploadOutlined,
 } from '@ant-design/icons';
-import { Button } from 'antd';
+import SharedDetailDrawer from '@/shared/components/SharedDetailDrawer';
 import type { LabOrder } from '../types/labOrder.types';
 import { ORDER_STATUSES, PRIORITIES } from '@/shared/constants/app.constants';
+import colors from '@/styles/colors';
 import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
 
 interface LabOrderDetailDrawerProps {
-    visible: boolean;
+    open: boolean;
     order: LabOrder | null;
     onClose: () => void;
     onUploadReport: (order: LabOrder) => void;
 }
 
-const LabOrderDetailDrawer: React.FC<LabOrderDetailDrawerProps> = ({ visible, order, onClose, onUploadReport }) => {
+const LabOrderDetailDrawer: React.FC<LabOrderDetailDrawerProps> = ({ open, order, onClose, onUploadReport }) => {
 
     if (!order) return null;
 
@@ -81,25 +81,37 @@ const LabOrderDetailDrawer: React.FC<LabOrderDetailDrawerProps> = ({ visible, or
     };
 
     return (
-        <Drawer
-            title={
-                <Space>
-                    <BarcodeOutlined />
-                    <span>Order Details: {order.order_code}</span>
-                </Space>
-            }
-            placement="right"
+        <SharedDetailDrawer
+            title={`Order: ${order.order_code}`}
+            subtitle={`${order.patient?.full_name || 'N/A'} • ${getStatusLabel(order.status).toUpperCase()}`}
+            open={open}
             onClose={onClose}
-            open={visible}
-            width={550}
-            headerStyle={{ borderBottom: '1px solid #f0f0f0' }}
-            bodyStyle={{ padding: '24px' }}
+            width={580}
+            headerGradient={`linear-gradient(135deg, ${colors.primary} 0%, ${colors.layout.agentSidebarEnd} 100%)`}
+            headerStats={
+                (order.status === 'processing' || order.status === 'collected' || (order.order_type === 'lab_visit' && order.status === 'pending')) ? (
+                    <Button
+                        type="primary"
+                        icon={<CloudUploadOutlined />}
+                        onClick={() => onUploadReport(order)}
+                        style={{
+                            borderRadius: '6px',
+                            background: 'rgba(255,255,255,0.2)',
+                            borderColor: 'transparent',
+                            fontWeight: 600,
+                            height: '32px',
+                            fontSize: '12px'
+                        }}
+                    >
+                        Upload Lab Report
+                    </Button>
+                ) : null
+            }
         >
             <Space direction="vertical" size="large" style={{ width: '100%' }}>
                 {/* Header Info */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
                     <div style={{ flex: 1 }}>
-                        <Title level={4} style={{ margin: 0, color: '#262626' }}>{order.order_code}</Title>
                         <Text type="secondary" style={{ fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px', marginTop: 4 }}>
                             <CalendarOutlined /> Created on {dayjs(order.createdAt).format('DD MMM YYYY, hh:mm A')}
                         </Text>
@@ -154,24 +166,6 @@ const LabOrderDetailDrawer: React.FC<LabOrderDetailDrawerProps> = ({ visible, or
                         <div style={{ marginTop: 2 }}>
                             {getPriorityTag(order.priority)}
                         </div>
-
-                        {(order.status === 'processing' || order.status === 'collected' || (order.order_type === 'lab_visit' && order.status === 'pending')) && (
-                            <Button
-                                type="primary"
-                                icon={<CloudUploadOutlined />}
-                                onClick={() => onUploadReport(order)}
-                                style={{
-                                    marginTop: 12,
-                                    width: '100%',
-                                    borderRadius: '8px',
-                                    fontWeight: 600,
-                                    height: '40px',
-                                    boxShadow: '0 4px 10px rgba(24, 144, 255, 0.2)'
-                                }}
-                            >
-                                Upload Lab Report
-                            </Button>
-                        )}
                     </div>
                 </div>
 
@@ -422,7 +416,7 @@ const LabOrderDetailDrawer: React.FC<LabOrderDetailDrawerProps> = ({ visible, or
                     </div>
                 )}
             </Space>
-        </Drawer>
+        </SharedDetailDrawer>
     );
 };
 

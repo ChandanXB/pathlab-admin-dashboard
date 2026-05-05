@@ -1,6 +1,6 @@
 import React from 'react';
 import { Tag, Space, Button, Popconfirm, Tooltip, Image } from 'antd';
-import { EditOutlined, DeleteOutlined, EyeOutlined, MailOutlined } from '@ant-design/icons';
+import { EditOutlined, DeleteOutlined, EyeOutlined, MailOutlined, SearchOutlined } from '@ant-design/icons';
 import type { Campaign } from '../types/campaign.types';
 import dayjs from 'dayjs';
 import InfiniteScrollTable from '@/shared/components/InfiniteScrollTable';
@@ -14,6 +14,7 @@ interface CampaignTableProps {
   onView: (record: Campaign) => void;
   onDelete: (id: number) => void;
   onSend: (record: Campaign) => void;
+  onPreview: (record: Campaign) => void;
   onLoadMore: () => void;
   scroll?: { x?: number | string; y?: number | string };
 }
@@ -27,6 +28,7 @@ const CampaignTable: React.FC<CampaignTableProps> = ({
   onView,
   onDelete,
   onSend,
+  onPreview,
   onLoadMore,
   scroll 
 }) => {
@@ -35,6 +37,7 @@ const CampaignTable: React.FC<CampaignTableProps> = ({
       title: 'Campaign Title',
       dataIndex: 'title',
       key: 'title',
+      width: 200,
       render: (text: string, record: Campaign) => (
         <div>
           <div style={{ fontWeight: 'bold' }}>{text}</div>
@@ -46,18 +49,20 @@ const CampaignTable: React.FC<CampaignTableProps> = ({
       title: 'Banner',
       dataIndex: 'bannerImage',
       key: 'bannerImage',
-      width: 100,
-      render: (url: string) => url ? <Image src={url} width={50} height={30} style={{ objectFit: 'cover', borderRadius: '4px' }} /> : 'No Image',
+      width: 80,
+      render: (url: string) => url ? <Image src={url} width={44} height={28} style={{ objectFit: 'cover', borderRadius: '4px' }} /> : '—',
     },
     {
       title: 'Linked Coupon',
       dataIndex: 'coupon',
       key: 'coupon',
+      width: 130,
       render: (coupon: any) => coupon ? <Tag color="blue">{coupon.code}</Tag> : <Tag>None</Tag>,
     },
     {
       title: 'Validity',
       key: 'validity',
+      width: 160,
       render: (_: any, record: Campaign) => (
         <div style={{ fontSize: '12px' }}>
           <div>S: {dayjs(record.startDate).format('DD/MM/YY hh:mm A')}</div>
@@ -69,6 +74,7 @@ const CampaignTable: React.FC<CampaignTableProps> = ({
       title: 'Status',
       dataIndex: 'isActive',
       key: 'isActive',
+      width: 90,
       render: (isActive: boolean) => (
         <Tag color={isActive ? 'green' : 'red'}>
           {isActive ? 'ACTIVE' : 'INACTIVE'}
@@ -78,20 +84,29 @@ const CampaignTable: React.FC<CampaignTableProps> = ({
     {
       title: 'Actions',
       key: 'actions',
-      width: 150,
-      fixed: 'right' as const,
+      width: 160,
       render: (_: any, record: Campaign) => (
-        <Space size="small">
+        <Space size={4}>
+          <Tooltip title="Preview Modal View">
+            <Button 
+              type="text" 
+              size="small"
+              icon={<EyeOutlined style={{ color: '#1890ff' }} />} 
+              onClick={() => onPreview(record)} 
+            />
+          </Tooltip>
           <Tooltip title="View Details">
             <Button 
               type="text" 
-              icon={<EyeOutlined style={{ color: '#52c41a' }} />} 
+              size="small"
+              icon={<SearchOutlined style={{ color: '#52c41a' }} />} 
               onClick={() => onView(record)} 
             />
           </Tooltip>
           <Tooltip title="Send Campaign (Email)">
             <Button 
               type="text" 
+              size="small"
               icon={<MailOutlined style={{ color: '#faad14' }} />} 
               onClick={() => onSend(record)} 
             />
@@ -99,6 +114,7 @@ const CampaignTable: React.FC<CampaignTableProps> = ({
           <Tooltip title="Edit">
             <Button 
               type="text" 
+              size="small"
               icon={<EditOutlined style={{ color: '#1890ff' }} />} 
               onClick={() => onEdit(record)} 
             />
@@ -112,6 +128,7 @@ const CampaignTable: React.FC<CampaignTableProps> = ({
             <Tooltip title="Delete">
               <Button 
                 type="text" 
+                size="small"
                 danger 
                 icon={<DeleteOutlined />} 
               />
