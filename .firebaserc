@@ -1,15 +1,15 @@
 {
   "projects": {
-    "default": "patlab-dev"
+    "dev": "patlab-dev",
+    "prod": "patlab-prod"
   },
   "targets": {
-    "patlab-dev": {
+    "dev": {
       "hosting": {
         "admin": [
           "patlab-admin"
         ]
       }
     }
-  },
-  "etags": {}
+  }
 }

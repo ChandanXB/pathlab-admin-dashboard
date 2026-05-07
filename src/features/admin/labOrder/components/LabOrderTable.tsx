@@ -68,6 +68,19 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
         }
     }, [highlightOrderCode, data]);
 
+    // Scroll to the highlighted row when it becomes active
+    useEffect(() => {
+        if (activeHighlight) {
+            const timer = setTimeout(() => {
+                const element = document.querySelector('.order-row-highlight');
+                if (element) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 500); // Wait for highlight class to be applied and rendered
+            return () => clearTimeout(timer);
+        }
+    }, [activeHighlight]);
+
     const getStatusColor = (status: string) => {
         const found = ORDER_STATUSES.find(s => s.value === status);
         return found ? found.color : 'default';
@@ -135,14 +148,14 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
                 return (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxWidth: '120px' }}>
                         {visible.map((tr, idx) => (
-                            <Tag 
-                                key={idx} 
-                                icon={<ExperimentOutlined />} 
-                                style={{ 
-                                    margin: 0, 
-                                    maxWidth: '100%', 
-                                    overflow: 'hidden', 
-                                    textOverflow: 'ellipsis', 
+                            <Tag
+                                key={idx}
+                                icon={<ExperimentOutlined />}
+                                style={{
+                                    margin: 0,
+                                    maxWidth: '100%',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
                                     whiteSpace: 'nowrap',
                                     display: 'inline-block',
                                     verticalAlign: 'bottom'
@@ -185,7 +198,7 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
                         </Space>
                     );
                 }
-                
+
                 if (record.order_type === 'lab_visit') {
                     return <Tag color="blue">LAB VISIT</Tag>;
                 }
@@ -355,7 +368,7 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
                     const highlight = activeHighlight.trim().toLowerCase();
                     const codeMatch = record.order_code?.trim().toLowerCase() === highlight;
                     const idMatch = String(record.id) === highlight;
-                    
+
                     return (codeMatch || idMatch) ? 'ant-table-row-selected order-row-highlight' : '';
                 }}
                 onRow={(record) => ({

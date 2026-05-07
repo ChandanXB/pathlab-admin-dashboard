@@ -79,9 +79,9 @@ const NotificationBell: React.FC = () => {
                             type="text"
                             icon={<DeleteOutlined />}
                             onClick={clearNotifications}
-                            style={{ 
-                                color: '#fff', 
-                                background: 'rgba(255,255,255,0.1)', 
+                            style={{
+                                color: '#fff',
+                                background: 'rgba(255,255,255,0.1)',
                                 borderRadius: '6px',
                                 fontWeight: 500,
                                 fontSize: '12px'
@@ -158,18 +158,18 @@ const NotificationBell: React.FC = () => {
                             </div>
                         </List.Item>
                     )}
-                    locale={{ 
+                    locale={{
                         emptyText: (
-                            <Empty 
+                            <Empty
                                 description={
                                     <div style={{ marginTop: 12 }}>
                                         <Text strong style={{ color: colors.textSecondary }}>All caught up!</Text>
                                         <Text type="secondary" style={{ display: 'block', fontSize: 12 }}>You have no new notifications.</Text>
                                     </div>
-                                } 
-                                style={{ marginTop: 60 }} 
+                                }
+                                style={{ marginTop: 60 }}
                             />
-                        ) 
+                        )
                     }}
                 />
             </SharedDetailDrawer>
