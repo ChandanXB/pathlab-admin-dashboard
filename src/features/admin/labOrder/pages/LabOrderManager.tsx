@@ -63,15 +63,46 @@ const LabOrderManager: React.FC = () => {
         }
     }, [statusParam, setFilters]);
 
-    // Clear the highlight param from URL after a delay
+    // If highlight is present but not found in current orders, automatically search for it
+    useEffect(() => {
+        if (highlightParam && !loading && orders.length > 0) {
+            const isFound = orders.some(o => 
+                o.order_code?.toLowerCase() === highlightParam.toLowerCase() || 
+                String(o.id) === highlightParam
+            );
+            
+            // Only trigger search if not found and we aren't already searching for it
+            if (!isFound && filters.search !== highlightParam) {
+                setFilters(prev => ({ ...prev, search: highlightParam, page: 1 }));
+            }
+        }
+    }, [highlightParam, orders, loading, filters.search, setFilters]);
+
+    // Clear the highlight param from URL and reset search filter after a delay
     useEffect(() => {
         if (highlightParam) {
             const timer = setTimeout(() => {
-                navigate('/lab-orders', { replace: true });
-            }, 3500);
+                // Clear highlight from URL while preserving other params
+                const params = new URLSearchParams(searchParams);
+                params.delete('highlight');
+                const newQuery = params.toString();
+                
+                navigate({
+                    pathname: '/lab-orders',
+                    search: newQuery ? `?${newQuery}` : ''
+                }, { replace: true });
+
+                // If we had automatically set a search filter for this highlight, clear it
+                setFilters(prev => {
+                    if (prev.search === highlightParam) {
+                        return { ...prev, search: undefined, page: 1 };
+                    }
+                    return prev;
+                });
+            }, 6000); // Give 6 seconds to see the highlighted row before returning to full list
             return () => clearTimeout(timer);
         }
-    }, [highlightParam, navigate]);
+    }, [highlightParam, searchParams, navigate, setFilters]);
 
     const handleSearch = (value: string) => {
         setFilters((prev) => ({ ...prev, search: value, page: 1 }));
@@ -217,10 +248,10 @@ const LabOrderManager: React.FC = () => {
 
     return (
         <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: isMobile ? '12px' : '16px' }}>
-            <div style={{ 
-                display: 'flex', 
+            <div style={{
+                display: 'flex',
                 flexDirection: isMobile ? 'column' : 'row',
-                justifyContent: 'space-between', 
+                justifyContent: 'space-between',
                 alignItems: isMobile ? 'stretch' : 'center',
                 gap: isMobile ? '16px' : '0'
             }}>
@@ -239,7 +270,6 @@ const LabOrderManager: React.FC = () => {
                         <Title level={isMobile ? 4 : 3} style={{ margin: 0 }}>Lab Test Orders</Title>
                         <Space wrap={isMobile}>
                             <Badge status="processing" text={`${pagination.total} Orders`} />
-                            {!isMobile && <Badge status="warning" text="Manage Life-cycle" />}
                         </Space>
                     </div>
                 </Space>
@@ -248,8 +278,8 @@ const LabOrderManager: React.FC = () => {
                     icon={<PlusOutlined />}
                     onClick={handleAdd}
                     size={isMobile ? "middle" : "large"}
-                    style={{ 
-                        borderRadius: '8px', 
+                    style={{
+                        borderRadius: '8px',
                         boxShadow: '0 4px 10px rgba(24, 144, 255, 0.3)',
                         width: isMobile ? '100%' : 'auto'
                     }}

@@ -72,10 +72,18 @@ const PNCManager: React.FC = () => {
         }
     }, [patients, selectedChild?.id]);
 
-    // Filter patients who are children (added by someone else, or age < 12)
-    const childPatients = patients.filter(p =>
-        p.added_by_id !== null || (p.dob && dayjs().diff(dayjs(p.dob), 'year') < 12)
-    );
+    // Filter patients who are children
+    // Criteria: Relation is explicitly Son/Daughter/Child OR (Age < 15 and NOT Spouse/Mother/Self)
+    const childPatients = patients.filter(p => {
+        const isChildRelation = ['Son', 'Daughter', 'Child'].includes(p.relation || '');
+        const ageYears = p.dob ? dayjs().diff(dayjs(p.dob), 'year') : 0;
+        const isMinor = p.dob ? ageYears < 15 : false;
+        
+        // Exclude specific adult relations even if age is missing or small (edge cases)
+        const isAdultRelation = ['Spouse', 'Mother', 'Father', 'Self'].includes(p.relation || '');
+        
+        return isChildRelation || (isMinor && !isAdultRelation);
+    });
 
     const getParentName = (record: Patient) => {
         const directParentName = record.added_by?.patient?.full_name || record.added_by?.name || record.user?.patient?.full_name || record.user?.name;

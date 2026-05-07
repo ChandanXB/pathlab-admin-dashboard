@@ -157,7 +157,7 @@ const AgentDashboard: React.FC = () => {
                                     padding: '6px 16px',
                                     fontSize: '13px'
                                 }}>
-                                    {profile.vehicle_type || 'Vehicle'}: {profile.vehicle_no}
+                                    {profile.vehicle_type || 'Vehicle'}: {profile.vehicle_no?.toUpperCase()}
                                 </Tag>
                             </div>
                         )}
