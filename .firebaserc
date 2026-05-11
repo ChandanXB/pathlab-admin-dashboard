@@ -10,6 +10,21 @@
           "patlab-admin"
         ]
       }
+    },
+    "prod": {
+      "hosting": {
+        "admin": [
+          "patlab-prod-admin"
+        ]
+      }
+    },
+    "patlab-dev": {
+      "hosting": {
+        "admin": [
+          "patlab-admin"
+        ]
+      }
     }
-  }
+  },
+  "etags": {}
 }

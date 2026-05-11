@@ -75,4 +75,12 @@ export const patientService = {
         const response = await apiClient.delete(`/child-vaccination/immunization/${id}`);
         return response.data;
     },
+
+    /**
+     * Send vaccination schedule email to parent
+     */
+    sendVaccinationSchedule: async (patientId: number): Promise<{ success: boolean; message: string }> => {
+        const response = await apiClient.post(`/child-vaccination/send-schedule/${patientId}`);
+        return response.data;
+    },
 };
