@@ -23,11 +23,11 @@ export const useNotifications = () => {
                     const vapidKey = import.meta.env.VITE_FIREBASE_VAPID_KEY;
 
                     const swUrl = import.meta.env.DEV
-                        ? new URL('../service-worker/firebase-messaging-sw.ts', import.meta.url).href
+                        ? '/src/service-worker/firebase-messaging-sw.ts'
                         : '/firebase-messaging-sw.js';
 
                     const registration = await navigator.serviceWorker.register(swUrl, {
-                        type: import.meta.env.DEV ? 'module' : 'classic'
+                        type: 'module' // Vite generates ESM even in production for this entry point
                     });
 
                     const token = await getToken(messaging, {

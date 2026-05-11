@@ -104,7 +104,7 @@ const RoutineCheckupFormModal: React.FC<RoutineCheckupFormModalProps> = (props) 
             onCancel={onCancel}
             onOk={() => form.submit()}
             confirmLoading={loading}
-            width={700}
+            width={850}
             centered
             destroyOnClose
         >
@@ -150,104 +150,141 @@ const RoutineCheckupFormModal: React.FC<RoutineCheckupFormModalProps> = (props) 
                     </div>
                     
                     <div style={{ flex: 1 }}>
-                        <Form.Item
-                            name="parent_id"
-                            label="Parent Package (Optional)"
-                            extra="Select if this is a plan under an existing package (e.g. Silver Plan under Smart Full Body Checkup)"
-                        >
-                            <Select placeholder="Select main package" allowClear showSearch filterOption={(input, option) => (option?.label as string || '').toLowerCase().includes(input.toLowerCase())}>
-                                {parentOptions.map(pkg => (
-                                    <Option key={pkg.id} value={pkg.id} label={pkg.title}>{pkg.title}</Option>
-                                ))}
-                            </Select>
-                        </Form.Item>
-
-                        <Form.Item
-                            name="title"
-                            label="Package Title"
-                            rules={[{ required: true, message: 'Please enter title' }]}
-                        >
-                            <Input placeholder="e.g. Smart Full Body Checkup" />
-                        </Form.Item>
-
-
-                        <Form.Item
-                            name="sub_title"
-                            label="Package Sub-title"
-                            extra="This will be displayed prominently on the card (e.g., 'Under 30 yrs')"
-                        >
-                            <Input placeholder="e.g. Under 30 yrs" />
-                        </Form.Item>
-
                         <div style={{ display: 'flex', gap: '16px' }}>
                             <Form.Item
-                                name="mrp"
-                                label="MRP (Original Price)"
-                                style={{ flex: 1 }}
+                                name="title"
+                                label="Package Title"
+                                rules={[{ required: true, message: 'Please enter title' }]}
+                                style={{ flex: 1, marginBottom: '16px' }}
                             >
-                                <InputNumber 
-                                    style={{ width: '100%' }} 
-                                    formatter={value => `₹ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                                    parser={value => value?.replace(/\₹\s?|(,*)/g, '') as any}
-                                    placeholder="8566" 
-                                />
+                                <Input placeholder="e.g. Smart Full Body Checkup" />
                             </Form.Item>
 
                             <Form.Item
-                                name="price"
-                                label="Discounted Price"
-                                style={{ flex: 1 }}
+                                name="sub_title"
+                                label="Package Sub-title"
+                                extra="Displayed on card"
+                                style={{ flex: 1, marginBottom: '16px' }}
                             >
-                                <InputNumber 
-                                    style={{ width: '100%' }} 
-                                    formatter={value => `₹ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                                    parser={value => value?.replace(/\₹\s?|(,*)/g, '') as any}
-                                    placeholder="1799" 
-                                />
+                                <Input placeholder="e.g. Under 30 yrs" />
                             </Form.Item>
                         </div>
 
-                        <div style={{ display: 'flex', gap: '16px' }}>
-                            <Form.Item
-                                name="gender"
-                                label="Theme/Gender"
-                                style={{ flex: 1 }}
-                                rules={[{ required: true, message: 'Select theme' }]}
-                            >
-                                <Select placeholder="Select theme">
-                                    <Option value="male">Male (Blue Style)</Option>
-                                    <Option value="female">Female (Pink Style)</Option>
-                                    <Option value="general">General (Green Style)</Option>
-                                </Select>
-                            </Form.Item>
-
-                            <Form.Item
-                                name="age_group"
-                                label="Age Group"
-                                style={{ flex: 1 }}
-                                initialValue="all"
-                            >
-                                <Select placeholder="Select age group">
-                                    <Option value="all">All Ages</Option>
-                                    <Option value="kids">Kids (0-12)</Option>
-                                    <Option value="teens">Teens (13-19)</Option>
-                                    <Option value="adults">Adults (20-60)</Option>
-                                    <Option value="seniors">Seniors (60+)</Option>
-                                </Select>
-                            </Form.Item>
-
-                            <Form.Item
-                                name="status"
-                                label="Status"
-                                style={{ flex: 1 }}
-                            >
-                                <Select>
-                                    <Option value="active">Active</Option>
-                                    <Option value="inactive">Inactive</Option>
-                                </Select>
-                            </Form.Item>
-                        </div>
+                        <Form.Item label="Highlight Tags (Max 3 Recommended)" style={{ marginBottom: 0 }}>
+                            <Form.List name="tags">
+                                {(fields, { add, remove }) => (
+                                    <>
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                            {fields.map(({ key, name, ...restField }) => (
+                                                <Space key={key} style={{ display: 'flex' }} align="baseline">
+                                                    <Form.Item
+                                                        {...restField}
+                                                        name={[name]}
+                                                        rules={[{ required: true, message: 'Tag cannot be empty' }]}
+                                                        style={{ marginBottom: '8px' }}
+                                                    >
+                                                        <Input placeholder="e.g. Cardiac" style={{ width: '150px' }} />
+                                                    </Form.Item>
+                                                    <MinusCircleOutlined onClick={() => remove(name)} style={{ color: '#ff4d4f' }} />
+                                                </Space>
+                                            ))}
+                                            {fields.length < 3 && (
+                                                <Button 
+                                                    type="dashed" 
+                                                    onClick={() => add()} 
+                                                    icon={<PlusOutlined />}
+                                                    style={{ height: '32px' }}
+                                                >
+                                                    Add Tag
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </>
+                                )}
+                            </Form.List>
+                        </Form.Item>
                     </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
+                    <Form.Item
+                        name="parent_id"
+                        label="Parent Package (Optional)"
+                        style={{ flex: 1 }}
+                    >
+                        <Select placeholder="Select main package" allowClear showSearch filterOption={(input, option) => (option?.label as string || '').toLowerCase().includes(input.toLowerCase())}>
+                            {parentOptions.map(pkg => (
+                                <Option key={pkg.id} value={pkg.id} label={pkg.title}>{pkg.title}</Option>
+                            ))}
+                        </Select>
+                    </Form.Item>
+
+                    <Form.Item
+                        name="gender"
+                        label="Theme/Gender"
+                        style={{ flex: 1 }}
+                        rules={[{ required: true, message: 'Select theme' }]}
+                    >
+                        <Select placeholder="Select theme">
+                            <Option value="male">Male (Blue Style)</Option>
+                            <Option value="female">Female (Pink Style)</Option>
+                            <Option value="general">General (Green Style)</Option>
+                        </Select>
+                    </Form.Item>
+
+                    <Form.Item
+                        name="status"
+                        label="Status"
+                        style={{ flex: 1 }}
+                    >
+                        <Select>
+                            <Option value="active">Active</Option>
+                            <Option value="inactive">Inactive</Option>
+                        </Select>
+                    </Form.Item>
+                </div>
+
+                <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
+                    <Form.Item
+                        name="mrp"
+                        label="MRP (Original Price)"
+                        style={{ flex: 1 }}
+                    >
+                        <InputNumber 
+                            style={{ width: '100%' }} 
+                            formatter={value => `₹ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                            parser={value => value?.replace(/\₹\s?|(,*)/g, '') as any}
+                            placeholder="8566" 
+                        />
+                    </Form.Item>
+
+                    <Form.Item
+                        name="price"
+                        label="Discounted Price"
+                        style={{ flex: 1 }}
+                    >
+                        <InputNumber 
+                            style={{ width: '100%' }} 
+                            formatter={value => `₹ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                            parser={value => value?.replace(/\₹\s?|(,*)/g, '') as any}
+                            placeholder="1799" 
+                        />
+                    </Form.Item>
+
+                    <Form.Item
+                        name="age_group"
+                        label="Age Group"
+                        style={{ flex: 1 }}
+                        initialValue="all"
+                    >
+                        <Select placeholder="Select age group">
+                            <Option value="all">All Ages</Option>
+                            <Option value="kids">Kids (0-12)</Option>
+                            <Option value="teens">Teens (13-19)</Option>
+                            <Option value="adults">Adults (20-60)</Option>
+                            <Option value="seniors">Seniors (60+)</Option>
+                        </Select>
+                    </Form.Item>
                 </div>
 
                 <div style={{ display: 'flex', gap: '16px' }}>
@@ -302,31 +339,7 @@ const RoutineCheckupFormModal: React.FC<RoutineCheckupFormModalProps> = (props) 
                     <TextArea rows={3} placeholder="Describe the health package benefits" />
                 </Form.Item>
 
-                <Form.Item label="Highlight Tags (Max 3 Recommended)">
-                    <Form.List name="tags">
-                        {(fields, { add, remove }) => (
-                            <>
-                                {fields.map(({ key, name, ...restField }) => (
-                                    <Space key={key} style={{ display: 'flex', marginBottom: 8 }} align="baseline">
-                                        <Form.Item
-                                            {...restField}
-                                            name={[name]}
-                                            rules={[{ required: true, message: 'Tag cannot be empty' }]}
-                                        >
-                                            <Input placeholder="e.g. Cardiac" style={{ width: 400 }} />
-                                        </Form.Item>
-                                        <MinusCircleOutlined onClick={() => remove(name)} />
-                                    </Space>
-                                ))}
-                                <Form.Item>
-                                    <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined />}>
-                                        Add Tag
-                                    </Button>
-                                </Form.Item>
-                            </>
-                        )}
-                    </Form.List>
-                </Form.Item>
+
 
 
             </Form>

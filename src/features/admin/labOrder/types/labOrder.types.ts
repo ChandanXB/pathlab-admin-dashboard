@@ -55,6 +55,14 @@ export interface LabOrder {
         appointment_date: string;
         appointment_time: string;
     };
+    coupon_id?: number;
+    discount_amount?: string | number;
+    coupon?: {
+        id: number;
+        code: string;
+        discountType: string;
+        discountValue: string | number;
+    };
 }
 
 export interface LabOrderQueryParams {

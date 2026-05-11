@@ -28,7 +28,8 @@ const PNCManager: React.FC = () => {
         loadMore,
         deletePatient, 
         deleteGrowthRecord, 
-        deleteImmunization 
+        deleteImmunization,
+        sendVaccinationSchedule
     } = usePatients();
     const [selectedChild, setSelectedChild] = useState<Patient | null>(null);
     const [drawerOpen, setDrawerOpen] = useState(false);
@@ -123,16 +124,16 @@ const PNCManager: React.FC = () => {
     };
 
     const handleSendSchedule = async () => {
-        if (!selectedChild?.added_by?.patient?.email && !selectedChild?.added_by?.email && !selectedChild?.user?.patient?.email && !selectedChild?.user?.email) {
-            message.error('No parent email found to send schedule.');
-            return;
-        }
+        if (!selectedChild?.id) return;
+        
         setSendingSchedule(true);
         try {
-            await new Promise(res => setTimeout(res, 1500));
-            message.success('Vaccination schedule sent to parent email!');
+            const success = await sendVaccinationSchedule(selectedChild.id);
+            if (success) {
+                // message.success is handled in the hook
+            }
         } catch (err) {
-            message.error('Failed to send schedule.');
+            // Error handled in the hook
         } finally {
             setSendingSchedule(false);
         }

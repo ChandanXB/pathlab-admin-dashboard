@@ -331,7 +331,26 @@ const LabOrderDetailDrawer: React.FC<LabOrderDetailDrawerProps> = ({ open, order
                                                 type="link"
                                                 size="small"
                                                 icon={<CloudUploadOutlined rotate={180} />}
-                                                onClick={() => window.open(url, '_blank')}
+                                                onClick={async () => {
+                                                    try {
+                                                        const response = await fetch(url);
+                                                        const blob = await response.blob();
+                                                        const blobUrl = window.URL.createObjectURL(blob);
+                                                        
+                                                        const link = document.createElement('a');
+                                                        link.href = blobUrl;
+                                                        const fileName = `${order.order_code}-Report-${idx + 1}.pdf`;
+                                                        link.download = fileName;
+                                                        document.body.appendChild(link);
+                                                        link.click();
+                                                        
+                                                        document.body.removeChild(link);
+                                                        window.URL.revokeObjectURL(blobUrl);
+                                                    } catch (error) {
+                                                        console.error('Download failed:', error);
+                                                        window.open(url, '_blank');
+                                                    }
+                                                }}
                                             >
                                                 View Report
                                             </Button>
@@ -354,12 +373,28 @@ const LabOrderDetailDrawer: React.FC<LabOrderDetailDrawerProps> = ({ open, order
                             <Descriptions.Item label="Status">
                                 <Badge status={order.payment_status === 'paid' ? 'success' : 'warning'} text={order.payment_status.toUpperCase()} />
                             </Descriptions.Item>
+                            
                             <Descriptions.Item label="Paid Amount">
                                 <Text strong style={{ color: '#52c41a' }}>₹{order.paid_amount || 0}</Text>
                             </Descriptions.Item>
                             <Descriptions.Item label="Mode">
                                 <Tag color="blue">{order.payment_mode?.toUpperCase() || 'CASH'}</Tag>
                             </Descriptions.Item>
+
+                            {order.coupon && (
+                                <>
+                                    <Descriptions.Item label="Coupon">
+                                        <Tag color="green" icon={<FileTextOutlined />} style={{ fontWeight: 700, margin: 0 }}>
+                                            {order.coupon.code}
+                                        </Tag>
+                                    </Descriptions.Item>
+                                    <Descriptions.Item label="Discount">
+                                        <Text strong style={{ color: '#000' }}>
+                                            - ₹{order.discount_amount || 0}
+                                        </Text>
+                                    </Descriptions.Item>
+                                </>
+                            )}
                         </Descriptions>
                     </Card>
                 </div>

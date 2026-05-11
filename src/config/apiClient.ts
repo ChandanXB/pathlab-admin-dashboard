@@ -3,7 +3,7 @@ import type { AxiosInstance, InternalAxiosRequestConfig, AxiosError } from 'axio
 import { message } from 'antd';
 import { useAuthStore } from '../store/authStore';
 
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:5000/api/v1';
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1';
 
 const apiClient: AxiosInstance = axios.create({
     baseURL: API_BASE_URL,

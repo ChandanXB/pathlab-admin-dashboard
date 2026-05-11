@@ -114,6 +114,17 @@ export const usePatients = (enabled: boolean = true) => {
         }
     };
 
+    const sendVaccinationSchedule = async (patientId: number) => {
+        try {
+            await patientService.sendVaccinationSchedule(patientId);
+            message.success('Vaccination schedule sent to parent email!');
+            return true;
+        } catch (error: any) {
+            // Error handled by interceptor
+            return false;
+        }
+    };
+
     const resetFilters = () => {
         setPatientFilters({
             page: 1,
@@ -150,6 +161,7 @@ export const usePatients = (enabled: boolean = true) => {
         deletePatient,
         deleteGrowthRecord,
         deleteImmunization,
+        sendVaccinationSchedule,
         resetFilters,
         loadMore,
     };

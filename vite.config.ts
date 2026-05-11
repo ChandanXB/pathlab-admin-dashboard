@@ -27,8 +27,8 @@ export default defineConfig({
       },
       output: {
         entryFileNames: (chunkInfo) => {
-          return chunkInfo.name === 'firebase-messaging-sw' 
-            ? '[name].js' 
+          return chunkInfo.name === 'firebase-messaging-sw'
+            ? '[name].js'
             : 'assets/[name]-[hash].js';
         },
       },
