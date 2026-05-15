@@ -37,6 +37,7 @@ const RoutineCheckupFormModal: React.FC<RoutineCheckupFormModalProps> = (props) 
         loading = false
     } = props;
 
+    const testIds = Form.useWatch('test_ids', form);
     const [previewImage, setPreviewImage] = useState<string | null>(null);
 
     const getFullImageUrl = (url: string) => {
@@ -113,6 +114,16 @@ const RoutineCheckupFormModal: React.FC<RoutineCheckupFormModalProps> = (props) 
                 layout="vertical"
                 onFinish={onSubmit}
                 initialValues={{ status: 'active' }}
+                onValuesChange={(changedValues) => {
+                    if (changedValues.test_ids) {
+                        const selectedTestIds = changedValues.test_ids;
+                        const totalMrp = tests
+                            .filter(t => selectedTestIds.includes(t.id))
+                            .reduce((sum, t) => sum + Number(t.price || 0), 0);
+                        
+                        form.setFieldsValue({ mrp: totalMrp });
+                    }
+                }}
             >
                 <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start', marginBottom: '16px' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '130px' }}>
@@ -212,9 +223,24 @@ const RoutineCheckupFormModal: React.FC<RoutineCheckupFormModalProps> = (props) 
                         label="Parent Package (Optional)"
                         style={{ flex: 1 }}
                     >
-                        <Select placeholder="Select main package" allowClear showSearch filterOption={(input, option) => (option?.label as string || '').toLowerCase().includes(input.toLowerCase())}>
+                        <Select 
+                            placeholder="Select main package" 
+                            allowClear 
+                            showSearch 
+                            optionLabelProp="label"
+                            filterOption={(input, option) => {
+                                const pkg = packages.find(p => p.id === option?.value);
+                                if (!pkg) return false;
+                                return pkg.title.toLowerCase().includes(input.toLowerCase());
+                            }}
+                        >
                             {parentOptions.map(pkg => (
-                                <Option key={pkg.id} value={pkg.id} label={pkg.title}>{pkg.title}</Option>
+                                <Option key={pkg.id} value={pkg.id} label={pkg.title}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <span>{pkg.title}</span>
+                                        <span style={{ fontWeight: 600, color: '#2f54eb' }}>₹{pkg.price}</span>
+                                    </div>
+                                </Option>
                             ))}
                         </Select>
                     </Form.Item>
@@ -249,6 +275,11 @@ const RoutineCheckupFormModal: React.FC<RoutineCheckupFormModalProps> = (props) 
                         name="mrp"
                         label="MRP (Original Price)"
                         style={{ flex: 1 }}
+                        extra={testIds?.length > 0 && (
+                            <div style={{ fontSize: '11px', color: '#666', marginTop: '4px' }}>
+                                Calculated from {testIds.length} selected tests
+                            </div>
+                        )}
                     >
                         <InputNumber 
                             style={{ width: '100%' }} 
@@ -299,12 +330,27 @@ const RoutineCheckupFormModal: React.FC<RoutineCheckupFormModalProps> = (props) 
                             showSearch 
                             placeholder="Select specific tests" 
                             allowClear
-                            filterOption={false}
+                            className="scrollable-select"
+                            filterOption={(input, option) => {
+                                const test = tests.find(t => t.id === option?.value);
+                                if (!test) return false;
+                                const searchStr = `${test.test_name} ${test.test_code} ${test.category?.category_name || ''}`.toLowerCase();
+                                return searchStr.includes(input.toLowerCase());
+                            }}
                             onSearch={onSearchTests}
+                            optionLabelProp="label"
                         >
                             {tests.map(test => (
-                                <Option key={test.id} value={test.id}>
-                                    [{test.category?.category_name || 'Uncategorized'}] {test.test_name} ({test.test_code})
+                                <Option key={test.id} value={test.id} label={`${test.test_name} (${test.test_code}) - ₹${test.price}`}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                            <span style={{ fontWeight: 500 }}>{test.test_name}</span>
+                                            <span style={{ fontSize: '11px', color: '#8c8c8c' }}>
+                                                [{test.category?.category_name || 'Uncategorized'}] {test.test_code}
+                                            </span>
+                                        </div>
+                                        <span style={{ fontWeight: 600, color: '#2f54eb' }}>₹{test.price}</span>
+                                    </div>
                                 </Option>
                             ))}
                         </Select>
@@ -321,6 +367,7 @@ const RoutineCheckupFormModal: React.FC<RoutineCheckupFormModalProps> = (props) 
                             showSearch 
                             placeholder="Select categories" 
                             allowClear
+                            className="scrollable-select"
                             filterOption={false}
                             onSearch={onSearchCategories}
                         >
@@ -342,11 +389,43 @@ const RoutineCheckupFormModal: React.FC<RoutineCheckupFormModalProps> = (props) 
 
 
 
+
+
             </Form>
             <style>{`
                 .routine-image-upload.ant-upload-wrapper.ant-upload-picture-card-wrapper .ant-upload.ant-upload-select {
                     width: 130px;
                     height: 130px;
+                }
+                .scrollable-select .ant-select-selector {
+                    max-height: 145px !important;
+                    overflow-y: auto !important;
+                }
+                .scrollable-select .ant-select-selection-overflow {
+                    max-height: 140px !important;
+                    overflow-y: auto !important;
+                    display: block !important; /* Essential for vertical scrolling in some AntD versions */
+                }
+                /* Ensure tags still look like tags even in block mode */
+                .scrollable-select .ant-select-selection-overflow-item {
+                    display: inline-block !important;
+                    vertical-align: middle;
+                }
+                /* Custom scrollbar for better visibility */
+                .scrollable-select .ant-select-selector::-webkit-scrollbar,
+                .scrollable-select .ant-select-selection-overflow::-webkit-scrollbar {
+                    width: 6px;
+                    display: block !important;
+                }
+                .scrollable-select .ant-select-selector::-webkit-scrollbar-thumb,
+                .scrollable-select .ant-select-selection-overflow::-webkit-scrollbar-thumb {
+                    background: #c1c1c1;
+                    border-radius: 10px;
+                }
+                .scrollable-select .ant-select-selector::-webkit-scrollbar-track,
+                .scrollable-select .ant-select-selection-overflow::-webkit-scrollbar-track {
+                    background: #f1f1f1;
+                    border-radius: 10px;
                 }
             `}</style>
         </Modal>
