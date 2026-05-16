@@ -13,6 +13,7 @@ export const useDoctors = (enabled: boolean = true) => {
         total: 0,
         hasMore: true,
     });
+    const [savingDoctor, setSavingDoctor] = useState(false);
     const [doctorFilters, setDoctorFilters] = useState<DoctorQueryParams>({
         page: 1,
         limit: 20,
@@ -61,6 +62,7 @@ export const useDoctors = (enabled: boolean = true) => {
     };
 
     const createDoctor = async (values: any) => {
+        setSavingDoctor(true);
         try {
             await doctorService.createDoctor(values);
             message.success('Doctor onboarded successfully');
@@ -68,10 +70,13 @@ export const useDoctors = (enabled: boolean = true) => {
             return true;
         } catch (error: any) {
             return false;
+        } finally {
+            setSavingDoctor(false);
         }
     };
 
     const updateDoctor = async (id: number, values: any) => {
+        setSavingDoctor(true);
         try {
             await doctorService.updateDoctor(id, values);
             message.success('Doctor updated successfully');
@@ -79,6 +84,8 @@ export const useDoctors = (enabled: boolean = true) => {
             return true;
         } catch (error: any) {
             return false;
+        } finally {
+            setSavingDoctor(false);
         }
     };
 
@@ -116,5 +123,6 @@ export const useDoctors = (enabled: boolean = true) => {
         updateDoctor,
         deleteDoctor,
         loadMore,
+        savingDoctor,
     };
 };

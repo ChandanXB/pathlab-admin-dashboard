@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Layout, Menu, Typography, Avatar, Dropdown, Button, Space, Badge, Popover, List } from 'antd';
+import { Layout, Menu, Typography, Avatar, Dropdown, Button, Space, Divider } from 'antd';
 import {
     DashboardOutlined,
     UserOutlined,
@@ -7,7 +7,6 @@ import {
     MenuUnfoldOutlined,
     MenuFoldOutlined,
     MedicineBoxOutlined,
-    BellOutlined
 } from '@ant-design/icons';
 import { useNavigate, useLocation, Outlet, Navigate } from 'react-router-dom';
 import colors from '@/styles/colors';
@@ -15,6 +14,8 @@ import { useAuthStore } from '@/store/authStore';
 import MeetingBanner from '@/shared/components/MeetingBanner';
 import { appointmentService } from '@/features/doctor/appointments/services/appointmentService';
 import { doctorService } from '@/features/admin/doctors/services/doctorService';
+import { useNotifications } from '@/hooks/useNotifications';
+import NotificationBell from '@/shared/components/NotificationBell';
 
 const { Header, Content, Sider } = Layout;
 const { Text } = Typography;
@@ -25,11 +26,13 @@ const DoctorLayout: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
 
+    // Register FCM notifications
+    useNotifications();
+
     // Fetch auth from store
     const { user, logout, isAuthenticated } = useAuthStore();
     const [stats, setStats] = useState({ total: 0, scheduled: 0, completed: 0, cancelled: 0 });
     const [profileImage, setProfileImage] = useState<string | null>(null);
-    const [upcomingAppointments, setUpcomingAppointments] = useState<any[]>([]);
 
     useEffect(() => {
         const fetchBio = async () => {
@@ -62,31 +65,7 @@ const DoctorLayout: React.FC = () => {
                     });
 
                     // Filter upcoming for today and starting within 30 minutes
-                    const parseTime = (timeStr: string) => {
-                        try {
-                            const [time, period] = timeStr.trim().split(' ');
-                            let [hours, minutes] = time.split(':').map(Number);
-                            if (period === 'PM' && hours < 12) hours += 12;
-                            if (period === 'AM' && hours === 12) hours = 0;
-                            const d = new Date();
-                            d.setHours(hours, minutes, 0, 0);
-                            return d.getTime();
-                        } catch (e) { return 0; }
-                    };
-
-                    const today = new Date().toLocaleDateString();
-                    const now = new Date().getTime();
-                    const thirtyMinsFromNow = now + (30 * 60 * 1000);
-
-                    const upcoming = data.filter((a: any) => {
-                        if (a.status !== 'scheduled') return false;
-                        if (new Date(a.appointment_date).toLocaleDateString() !== today) return false;
-                        
-                        const aptTime = parseTime(a.appointment_time);
-                        return aptTime >= now && aptTime <= thirtyMinsFromNow;
-                    }).sort((a: any, b: any) => parseTime(a.appointment_time) - parseTime(b.appointment_time));
-                    
-                    setUpcomingAppointments(upcoming);
+                    // stats logic...
                 }
             } catch (error) {
                 console.error('Failed to fetch stats', error);
@@ -353,53 +332,8 @@ const DoctorLayout: React.FC = () => {
                     />
 
                     <Space size="middle" style={{ marginRight: isMobile ? 8 : 24 }}>
-                        <Popover
-                            placement="bottomRight"
-                            title={<Text strong>Upcoming Consultations (Today)</Text>}
-                            content={
-                                <List
-                                    size="small"
-                                    dataSource={upcomingAppointments}
-                                    style={{ width: isMobile ? '100vw' : 300, maxWidth: 300 }}
-                                    renderItem={(item) => (
-                                        <List.Item 
-                                            style={{ cursor: 'pointer' }} 
-                                            onClick={() => navigate(`/doctor/patients?status=scheduled`)}
-                                        >
-                                            <List.Item.Meta
-                                                avatar={<Avatar icon={<UserOutlined />} src={item.patient?.profile_image} />}
-                                                title={item.patient?.full_name}
-                                                description={
-                                                    <Space direction="vertical" size={0}>
-                                                        <Text type="secondary" style={{ fontSize: 12 }}>
-                                                            Time: <Text strong>{item.appointment_time}</Text>
-                                                        </Text>
-                                                        <Text type="secondary" style={{ fontSize: 11 }}>
-                                                            Status: <Badge status="processing" text="Upcoming" />
-                                                        </Text>
-                                                    </Space>
-                                                }
-                                            />
-                                        </List.Item>
-                                    )}
-                                    locale={{ emptyText: 'No urgent meetings for today' }}
-                                />
-                            }
-                            trigger="click"
-                        >
-                            <Badge count={upcomingAppointments.length} overflowCount={9} size="small" offset={[2, 2]}>
-                                <Button 
-                                    type="text" 
-                                    icon={<BellOutlined style={{ fontSize: 20, color: colors.secondary }} />} 
-                                    style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center'
-                                    }}
-                                />
-                            </Badge>
-                        </Popover>
-
+                        <NotificationBell />
+                        <Divider type="vertical" style={{ height: 24 }} />
                         <Dropdown menu={userMenu} placement="bottomRight" arrow>
                             <Space style={{ cursor: 'pointer', padding: '4px 8px', borderRadius: '8px' }} className="user-dropdown-trigger">
                                 {profileImage ? (

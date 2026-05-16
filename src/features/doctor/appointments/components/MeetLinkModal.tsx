@@ -77,7 +77,12 @@ const MeetLinkModal: React.FC<MeetLinkModalProps> = ({ open, appointment, onClos
                             label="Scheduled Date"
                             rules={[{ required: true, message: 'Please select a date' }]}
                         >
-                            <DatePicker style={{ width: '100%' }} size="large" format="DD/MM/YY" />
+                            <DatePicker 
+                                style={{ width: '100%' }} 
+                                size="large" 
+                                format="DD/MM/YY" 
+                                getPopupContainer={(trigger) => trigger.parentElement!}
+                            />
                         </Form.Item>
                     </Col>
                     <Col span={12}>
@@ -86,7 +91,13 @@ const MeetLinkModal: React.FC<MeetLinkModalProps> = ({ open, appointment, onClos
                             label="Scheduled Time"
                             rules={[{ required: true, message: 'Please select a time' }]}
                         >
-                            <TimePicker style={{ width: '100%' }} size="large" format="hh:mm A" use12Hours />
+                            <TimePicker 
+                                style={{ width: '100%' }} 
+                                size="large" 
+                                format="hh:mm A" 
+                                use12Hours 
+                                getPopupContainer={(trigger) => trigger.parentElement!}
+                            />
                         </Form.Item>
                     </Col>
                 </Row>

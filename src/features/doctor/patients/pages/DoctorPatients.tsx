@@ -1,7 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import type { MenuProps } from 'antd';
 import { Card, Typography, Tag, Space, Button, Input, message, Dropdown } from 'antd';
-import { CalendarOutlined, SearchOutlined, PhoneOutlined, FileTextOutlined, SafetyCertificateOutlined, VideoCameraOutlined, DownOutlined, EditOutlined, CloseCircleOutlined } from '@ant-design/icons';
+import { 
+    CalendarOutlined, 
+    SearchOutlined, 
+    PhoneOutlined, 
+    FileTextOutlined, 
+    SafetyCertificateOutlined, 
+    VideoCameraOutlined, 
+    DownOutlined, 
+    EditOutlined, 
+    CloseCircleOutlined,
+    EyeOutlined,
+    CheckCircleOutlined 
+} from '@ant-design/icons';
 import colors from '@/styles/colors';
 import { appointmentService } from '../../appointments/services/appointmentService';
 import PrecautionModal from '../../appointments/components/PrecautionModal';
@@ -9,6 +21,7 @@ import MeetLinkModal from '../../appointments/components/MeetLinkModal';
 import UpdateStatusModal from '../../appointments/components/UpdateStatusModal';
 import RescheduleModal from '../../appointments/components/RescheduleModal';
 import CancelModal from '../../appointments/components/CancelModal';
+import ConsultationDetailDrawer from '../../appointments/components/ConsultationDetailDrawer';
 import InfiniteScrollTable from '@/shared/components/InfiniteScrollTable';
 import { useSearchParams } from 'react-router-dom';
 
@@ -26,6 +39,7 @@ const DoctorPatients: React.FC = () => {
     const [statusModal, setStatusModal] = useState<{ visible: boolean; appointment: any }>({ visible: false, appointment: null });
     const [rescheduleModal, setRescheduleModal] = useState<{ visible: boolean; appointment: any }>({ visible: false, appointment: null });
     const [cancelModal, setCancelModal] = useState<{ visible: boolean; appointment: any }>({ visible: false, appointment: null });
+    const [detailDrawer, setDetailDrawer] = useState<{ visible: boolean; appointment: any }>({ visible: false, appointment: null });
 
     const [page, setPage] = useState(1);
     const PAGE_SIZE = 10;
@@ -34,8 +48,13 @@ const DoctorPatients: React.FC = () => {
         setPage(1);
     }, [searchText]);
 
-    const handlePrecautionSuccess = (appointmentId: number, precaution: string) => {
-        setAppointments(prev => prev.map(a => a.id === appointmentId ? { ...a, precaution } : a));
+    const handlePrecautionSuccess = (appointmentId: number, precaution: string, newStatus?: string, fileUrl?: string) => {
+        setAppointments(prev => prev.map(a => a.id === appointmentId ? { 
+            ...a, 
+            precaution, 
+            status: newStatus || a.status,
+            precaution_file_url: fileUrl || a.precaution_file_url 
+        } : a));
     };
 
     const handleMeetLinkSuccess = (meetLink: string, newDate?: string, newTime?: string) => {
@@ -87,11 +106,7 @@ const DoctorPatients: React.FC = () => {
             apt.patient?.patient_code?.toLowerCase().includes(searchText.toLowerCase()) ||
             apt.notes?.toLowerCase().includes(searchText.toLowerCase())
         )
-        .sort((a, b) => {
-            const timeA = new Date(`${new Date(a.appointment_date).toDateString()} ${a.appointment_time}`).getTime();
-            const timeB = new Date(`${new Date(b.appointment_date).toDateString()} ${b.appointment_time}`).getTime();
-            return timeB - timeA; // Descending order (newest first)
-        });
+        .sort((a, b) => b.id - a.id);
 
     const displayedAppointments = filteredAppointments.slice(0, page * PAGE_SIZE);
 
@@ -101,10 +116,12 @@ const DoctorPatients: React.FC = () => {
             key: 'patient',
             width: 160,
             render: (_: any, record: any) => (
-                <Space direction="vertical" size={0}>
-                    <Text strong>{record.patient?.full_name}</Text>
-                    <Text type="secondary" style={{ fontSize: 12 }}>{record.patient?.patient_code}</Text>
-                </Space>
+                <div onClick={() => setDetailDrawer({ visible: true, appointment: record })} style={{ cursor: 'pointer' }}>
+                    <Space direction="vertical" size={0}>
+                        <Text strong style={{ color: colors.primary }}>{record.patient?.full_name}</Text>
+                        <Text type="secondary" style={{ fontSize: 12 }}>{record.patient?.patient_code}</Text>
+                    </Space>
+                </div>
             ),
         },
         {
@@ -144,7 +161,13 @@ const DoctorPatients: React.FC = () => {
 
                 return (
                     <Space direction="vertical" size="small" style={{ width: '100%' }}>
-                        <Text>{mainNote}</Text>
+                        <div style={{ padding: '6px 10px', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 6 }}>
+                            <Text strong style={{ fontSize: 11, color: '#64748b', display: 'block', textTransform: 'uppercase', marginBottom: 2 }}>
+                                Patient Concern:
+                            </Text>
+                            <Text>{mainNote}</Text>
+                        </div>
+
                         {fileUrl && (
                             <Button 
                                 type="dashed" 
@@ -156,9 +179,12 @@ const DoctorPatients: React.FC = () => {
                                 View Attached Report
                             </Button>
                         )}
+
                         {record.precaution && (
-                            <div style={{ marginTop: 8, padding: '8px 12px', backgroundColor: '#f6ffed', border: '1px solid #b7eb8f', borderRadius: 6 }}>
-                                <Text strong style={{ color: '#389e0d', display: 'block', marginBottom: 2 }}><SafetyCertificateOutlined /> Doctor Precaution:</Text>
+                            <div style={{ padding: '6px 10px', backgroundColor: '#f6ffed', border: '1px solid #b7eb8f', borderRadius: 6 }}>
+                                <Text strong style={{ fontSize: 11, color: '#389e0d', display: 'block', textTransform: 'uppercase', marginBottom: 2 }}>
+                                    <SafetyCertificateOutlined /> Doctor Notes:
+                                </Text>
                                 <Text type="secondary">{record.precaution}</Text>
                             </div>
                         )}
@@ -172,7 +198,11 @@ const DoctorPatients: React.FC = () => {
             key: 'status',
             width: 150,
             render: (status: string) => {
-                const color = status === 'scheduled' ? 'blue' : status === 'completed' ? 'green' : 'red';
+                const color = 
+                    status === 'scheduled' ? 'blue' : 
+                    status === 'pending' ? 'orange' :
+                    status === 'completed' ? 'green' : 
+                    'red';
                 return <Tag color={color} style={{ whiteSpace: 'nowrap', margin: 0 }}>{status.toUpperCase()}</Tag>;
             },
         },
@@ -183,6 +213,13 @@ const DoctorPatients: React.FC = () => {
             align: 'right' as const,
             render: (_: any, record: any) => {
                 const items: MenuProps['items'] = [
+                    {
+                        key: 'details',
+                        label: 'View Details',
+                        icon: <EyeOutlined />,
+                        onClick: () => setDetailDrawer({ visible: true, appointment: record })
+                    },
+                    { type: 'divider' },
                     {
                         key: 'status',
                         label: 'Update Status',
@@ -203,21 +240,49 @@ const DoctorPatients: React.FC = () => {
                     }
                 ];
 
-                if (record.status === 'scheduled') {
+                if (record.status !== 'completed' && record.status !== 'cancelled') {
+                    items.push({
+                        key: 'complete',
+                        label: 'Mark as Completed',
+                        icon: <CheckCircleOutlined style={{ color: '#10b981' }} />,
+                        onClick: async () => {
+                            try {
+                                const data = await appointmentService.updateStatus(record.id, 'completed');
+                                if (data?.success) {
+                                    message.success('Consultation marked as completed');
+                                    handleStatusSuccess(record.id, 'completed');
+                                }
+                            } catch (error) {
+                                message.error('Failed to update status');
+                            }
+                        }
+                    });
+                }
+
+                const canReschedule = ['scheduled', 'pending', 'cancelled'].includes(record.status);
+                const canCancel = ['scheduled', 'pending'].includes(record.status);
+
+                if (canReschedule || canCancel) {
                     items.push({ type: 'divider' });
-                    items.push({
-                        key: 'reschedule',
-                        label: 'Reschedule',
-                        icon: <CalendarOutlined style={{ color: '#f59e0b' }} />,
-                        onClick: () => setRescheduleModal({ visible: true, appointment: record })
-                    });
-                    items.push({
-                        key: 'cancel',
-                        label: 'Cancel',
-                        icon: <CloseCircleOutlined style={{ color: '#ef4444' }} />,
-                        danger: true,
-                        onClick: () => setCancelModal({ visible: true, appointment: record })
-                    });
+                    
+                    if (canReschedule) {
+                        items.push({
+                            key: 'reschedule',
+                            label: 'Reschedule',
+                            icon: <CalendarOutlined style={{ color: '#f59e0b' }} />,
+                            onClick: () => setRescheduleModal({ visible: true, appointment: record })
+                        });
+                    }
+
+                    if (canCancel) {
+                        items.push({
+                            key: 'cancel',
+                            label: 'Cancel',
+                            icon: <CloseCircleOutlined style={{ color: '#ef4444' }} />,
+                            danger: true,
+                            onClick: () => setCancelModal({ visible: true, appointment: record })
+                        });
+                    }
                 }
 
                 return (
@@ -296,6 +361,12 @@ const DoctorPatients: React.FC = () => {
                 appointment={cancelModal.appointment}
                 onClose={() => setCancelModal({ visible: false, appointment: null })}
                 onSuccess={handleCancelSuccess}
+            />
+
+            <ConsultationDetailDrawer
+                open={detailDrawer.visible}
+                appointment={detailDrawer.appointment}
+                onClose={() => setDetailDrawer({ visible: false, appointment: null })}
             />
         </div>
     );

@@ -150,7 +150,7 @@ const ConsultationManager: React.FC<ConsultationManagerProps> = ({ hideHeader = 
             key: 'status',
             width: 120,
             render: (status: string) => {
-                const color = status === 'scheduled' ? 'blue' : status === 'completed' ? 'green' : 'red';
+                const color = status === 'scheduled' ? 'blue' : status === 'pending' ? 'orange' : status === 'completed' ? 'green' : 'red';
                 return <Tag color={color} style={{ margin: 0, whiteSpace: 'nowrap' }}>{status.toUpperCase()}</Tag>;
             },
         },

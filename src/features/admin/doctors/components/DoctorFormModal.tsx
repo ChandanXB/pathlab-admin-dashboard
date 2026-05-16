@@ -12,6 +12,7 @@ interface DoctorFormModalProps {
     form: any;
     onOk: () => void;
     onCancel: () => void;
+    loading?: boolean;
 }
 
 const DoctorFormModal: React.FC<DoctorFormModalProps> = ({
@@ -20,6 +21,7 @@ const DoctorFormModal: React.FC<DoctorFormModalProps> = ({
     form,
     onOk,
     onCancel,
+    loading,
 }) => {
     const fileToBase64 = (file: File): Promise<string> => {
         return new Promise((resolve, reject) => {
@@ -41,6 +43,8 @@ const DoctorFormModal: React.FC<DoctorFormModalProps> = ({
         }
     };
 
+    const profileImage = Form.useWatch('profile_image', form);
+
     return (
         <SharedModal
             title={editingDoctor ? "Edit Doctor" : "Onboard New Doctor"}
@@ -48,6 +52,7 @@ const DoctorFormModal: React.FC<DoctorFormModalProps> = ({
             onOk={onOk}
             onCancel={onCancel}
             okText={editingDoctor ? "Update" : "Onboard"}
+            confirmLoading={loading}
             width={850}
             centered={true}
         >
@@ -61,8 +66,9 @@ const DoctorFormModal: React.FC<DoctorFormModalProps> = ({
                         name="profile_image" 
                         label="Profile Photo" 
                         style={{ margin: 0 }}
-                        getValueFromEvent={() => {
-                            // AntD Upload throws an event, we ignore it and return the string we set manually
+                        getValueFromEvent={(_) => {
+                            // If the event contains a file list (default AntD behavior), 
+                            // we ignore it and return the current base64 string from the form.
                             return form.getFieldValue('profile_image');
                         }}
                     >
@@ -74,8 +80,8 @@ const DoctorFormModal: React.FC<DoctorFormModalProps> = ({
                             listType="picture-card"
                             style={{ width: '100px', height: '100px' }}
                         >
-                            {form.getFieldValue('profile_image') ? (
-                                <img src={form.getFieldValue('profile_image')} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }} />
+                            {profileImage ? (
+                                <img src={profileImage} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }} />
                             ) : (
                                 <div><UploadOutlined /><div style={{ marginTop: 8 }}>Upload</div></div>
                             )}

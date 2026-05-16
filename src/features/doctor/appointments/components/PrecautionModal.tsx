@@ -9,7 +9,7 @@ interface PrecautionModalProps {
     open: boolean;
     appointment: any | null;
     onClose: () => void;
-    onSuccess: (appointmentId: number, precaution: string) => void;
+    onSuccess: (appointmentId: number, precaution: string, newStatus?: string, fileUrl?: string) => void;
 }
 
 const PrecautionModal: React.FC<PrecautionModalProps> = ({ open, appointment, onClose, onSuccess }) => {
@@ -51,30 +51,52 @@ const PrecautionModal: React.FC<PrecautionModalProps> = ({ open, appointment, on
 
     const handleSave = async () => {
         if (!appointment) return;
+        
+        // Validation: Ensure at least some text is provided if it's the first time
+        if (!existingText && !newText.trim()) {
+            message.warning('Please provide clinical notes or advice');
+            return;
+        }
+
         setLoading(true);
         try {
             let finalPrecaution = existingText;
+            let finalFileUrl = appointment.precaution_file_url;
+
             if (newText.trim()) {
                 const timestamp = new Date().toLocaleString();
                 const newEntry = `[${timestamp}]\n${newText.trim()}`;
                 finalPrecaution = existingText ? `${existingText}\n\n${newEntry}` : newEntry;
             }
 
-            // If nothing changed, just close
-            if (!newText.trim() && !fileBase64) {
-                onClose();
-                setLoading(false);
-                return;
+            // If text/file changed, save precaution
+            const contentChanged = newText.trim() || fileBase64;
+            if (contentChanged) {
+                const data = await appointmentService.savePrecaution(appointment.id, finalPrecaution, fileBase64 || undefined);
+                if (!data?.success) throw new Error(data?.message || 'Failed to save precaution');
+                if (data.data?.precaution_file_url) {
+                    finalFileUrl = data.data.precaution_file_url;
+                }
             }
 
-            const data = await appointmentService.savePrecaution(appointment.id, finalPrecaution, fileBase64 || undefined);
-            if (data?.success) {
-                message.success('Precaution updated successfully');
-                onSuccess(appointment.id, finalPrecaution);
-                onClose();
+            // Always mark as completed if new content was added and it wasn't already completed
+            if (contentChanged && appointment.status !== 'completed') {
+                const statusData = await appointmentService.updateStatus(appointment.id, 'completed');
+                if (statusData?.success) {
+                    message.success('Consultation completed successfully');
+                    onSuccess(appointment.id, finalPrecaution, 'completed', finalFileUrl);
+                } else {
+                    throw new Error(statusData?.message || 'Failed to update status');
+                }
+            } else if (contentChanged) {
+                message.success('Consultation notes updated successfully');
+                onSuccess(appointment.id, finalPrecaution, appointment.status, finalFileUrl);
             }
-        } catch (error) {
-            message.error('Failed to save precaution');
+            onClose();
+        } catch (error: any) {
+            // Only show one error message
+            console.error('Save error:', error);
+            message.error(error.message || 'Failed to save consultation details');
         } finally {
             setLoading(false);
         }
@@ -86,14 +108,14 @@ const PrecautionModal: React.FC<PrecautionModalProps> = ({ open, appointment, on
             open={open}
             onOk={handleSave}
             onCancel={onClose}
-            okText="Save Precaution"
+            okText="Save & Mark Completed"
             confirmLoading={loading}
             destroyOnClose
             centered
         >
             <div style={{ paddingTop: 8 }}>
                 <Text type="secondary" style={{ display: 'block', marginBottom: 16 }}>
-                    Review the patient's reports and provide any necessary precautions, advice, or medication instructions.
+                    Provide clinical advice or upload a prescription. Saving will automatically mark this consultation as Completed.
                 </Text>
 
                 {existingText && (
@@ -120,14 +142,14 @@ const PrecautionModal: React.FC<PrecautionModalProps> = ({ open, appointment, on
                 </Text>
                 <Input.TextArea
                     rows={4}
-                    placeholder="Write your new clinical precautions here..."
+                    placeholder="Write your clinical advice here..."
                     value={newText}
                     onChange={(e) => setNewText(e.target.value)}
                     style={{ resize: 'none' }}
                 />
 
                 <div style={{ marginTop: 24 }}>
-                    <Text strong style={{ display: 'block', marginBottom: 8 }}>Attach Document (Optional)</Text>
+                    <Text strong style={{ display: 'block', marginBottom: 8 }}>Attach Prescription / Report (Optional)</Text>
                     <Upload
                         beforeUpload={() => false}
                         onChange={handleFileChange}
@@ -135,7 +157,7 @@ const PrecautionModal: React.FC<PrecautionModalProps> = ({ open, appointment, on
                         maxCount={1}
                         accept="image/*,.pdf"
                     >
-                        <Button icon={<UploadOutlined />}>Upload Report/Note File</Button>
+                        <Button icon={<UploadOutlined />}>Upload File</Button>
                     </Upload>
                 </div>
             </div>

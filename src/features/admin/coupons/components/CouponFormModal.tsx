@@ -73,6 +73,8 @@ const CouponFormModal: React.FC<CouponFormModalProps> = ({
       okText={editingCoupon ? 'Update' : 'Create'}
       destroyOnClose
       centered
+      style={{ top: 20 }}
+      bodyStyle={{ maxHeight: 'calc(100vh - 200px)', overflowY: 'auto', paddingRight: '8px' }}
     >
       <Form form={form} layout="vertical">
         <Row gutter={16}>

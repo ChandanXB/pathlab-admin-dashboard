@@ -145,12 +145,13 @@ const AgentProfilePage: React.FC = () => {
 
     return (
         <div style={{
-            padding: '0 0 24px 0',
+            padding: '0 0 12px 0',
             height: '100%',
-            overflowY: 'auto',
-            overflowX: 'hidden'
+            overflow: 'hidden',
+            display: 'flex',
+            flexDirection: 'column'
         }}>
-            <div style={{ marginBottom: '16px' }}>
+            <div style={{ marginBottom: '8px' }}>
                 <Breadcrumb
                     items={[
                         { title: <Link to="/">Dashboard</Link> },
@@ -160,18 +161,21 @@ const AgentProfilePage: React.FC = () => {
                 />
             </div>
 
-            <Card style={{ marginBottom: '24px', borderRadius: '12px', border: 'none', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+            <Card 
+                style={{ marginBottom: '12px', borderRadius: '12px', border: 'none', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}
+                bodyStyle={{ padding: '12px 20px' }}
+            >
                 <Row gutter={[24, 24]} align="middle">
                     <Col xs={24} sm={4} md={3} lg={2} style={{ textAlign: 'center' }}>
                         <Avatar
-                            size={80}
+                            size={64}
                             icon={<UserOutlined />}
                             style={{ backgroundColor: '#1890ff', boxShadow: '0 4px 12px rgba(24,144,255,0.3)' }}
                         />
                     </Col>
                     <Col xs={24} sm={20} md={13} lg={14}>
                         <Space direction="vertical" size={0}>
-                            <Title level={2} style={{ margin: 0 }}>{formatName(agent.name)}</Title>
+                            <Title level={3} style={{ margin: 0 }}>{formatName(agent.name)}</Title>
                             <Space split={<Divider vertical />} wrap>
                                 <Text type="secondary"><BarcodeOutlined /> ID: AG-{agent.id.toString().padStart(4, '0')}</Text>
                                 <Tag color={agent.status === 'active' ? 'green' : 'red'}>
@@ -181,15 +185,15 @@ const AgentProfilePage: React.FC = () => {
                         </Space>
                     </Col>
                     <Col xs={24} md={8} lg={8}>
-                        <Row gutter={32} justify="end">
+                        <Row gutter={24} justify="end">
                             <Col>
-                                <Statistic title="Total Collections" value={stats.total} />
+                                <Statistic title={<Text type="secondary" style={{ fontSize: '12px' }}>Total Collections</Text>} value={stats.total} valueStyle={{ fontSize: '20px', fontWeight: 700 }} />
                             </Col>
                             <Col>
-                                <Statistic title="Pending" value={stats.pending} valueStyle={{ color: '#faad14' }} />
+                                <Statistic title={<Text type="secondary" style={{ fontSize: '12px' }}>Pending</Text>} value={stats.pending} valueStyle={{ color: '#faad14', fontSize: '20px', fontWeight: 700 }} />
                             </Col>
                             <Col>
-                                <Statistic title="Completed" value={stats.completed} valueStyle={{ color: '#52c41a' }} />
+                                <Statistic title={<Text type="secondary" style={{ fontSize: '12px' }}>Completed</Text>} value={stats.completed} valueStyle={{ color: '#52c41a', fontSize: '20px', fontWeight: 700 }} />
                             </Col>
                         </Row>
                     </Col>
@@ -204,54 +208,57 @@ const AgentProfilePage: React.FC = () => {
                         key: 'overview',
                         label: <span><InfoCircleOutlined /> Overview</span>,
                         children: (
-                            <Row gutter={[24, 24]}>
-                                <Col xs={24} xl={16}>
-                                    <Card title="Detailed Information" bordered={false} style={{ borderRadius: '12px' }}>
-                                        <Descriptions column={{ xxl: 2, xl: 2, lg: 2, md: 2, sm: 1, xs: 1 }} bordered size="middle">
-                                            <Descriptions.Item label="Full Name">{formatName(agent.name)}</Descriptions.Item>
-                                            <Descriptions.Item label="Phone"><Space><PhoneOutlined /> {agent.phone}</Space></Descriptions.Item>
-                                            <Descriptions.Item label="Email"><Space><MailOutlined /> {agent.email || 'N/A'}</Space></Descriptions.Item>
-                                            <Descriptions.Item label="Status">
-                                                <Badge status={agent.status === 'active' ? 'success' : 'error'} text={agent.status.toUpperCase()} />
-                                            </Descriptions.Item>
-                                            <Descriptions.Item label="Vehicle Type"><Space><CarOutlined /> {formatName(agent.vehicle_type) || 'N/A'}</Space></Descriptions.Item>
-                                            <Descriptions.Item label="Vehicle No">{agent.vehicle_no?.toUpperCase() || 'N/A'}</Descriptions.Item>
-                                            <Descriptions.Item label="Joined On">{dayjs(agent.createdAt).format('DD MMMM YYYY')}</Descriptions.Item>
-                                            <Descriptions.Item label="Address" span={2}>
-                                                <Space align="start">
-                                                    <EnvironmentOutlined style={{ marginTop: '4px', color: '#ff4d4f' }} />
-                                                    {formatName(agent.address) || 'N/A'}
-                                                </Space>
-                                            </Descriptions.Item>
-                                        </Descriptions>
-                                    </Card>
-                                </Col>
-                                <Col xs={24} xl={8}>
-                                    <Card title="Quick Stats" bordered={false} style={{ borderRadius: '12px' }}>
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                                            <div style={{ background: '#f6ffed', padding: '16px', borderRadius: '8px', border: '1px solid #b7eb8f' }}>
-                                                <Text type="secondary">Collection Efficiency</Text>
-                                                <div style={{ fontSize: '24px', fontWeight: 600, color: '#52c41a' }}>
-                                                    {stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0}%
+                            <div style={{ height: 'calc(100vh - 250px)', overflowY: 'auto', overflowX: 'hidden', paddingRight: '4px', paddingBottom: '40px' }}>
+                                <Row gutter={[16, 16]}>
+                                    <Col xs={24} xl={16}>
+                                        <Card title="Detailed Information" bordered={false} style={{ borderRadius: '12px', height: '100%' }}>
+                                            <Descriptions column={{ xxl: 2, xl: 2, lg: 2, md: 2, sm: 1, xs: 1 }} bordered size="small">
+                                                <Descriptions.Item label="Full Name">{formatName(agent.name)}</Descriptions.Item>
+                                                <Descriptions.Item label="Phone"><Space><PhoneOutlined /> {agent.phone}</Space></Descriptions.Item>
+                                                <Descriptions.Item label="Email"><Space style={{ whiteSpace: 'nowrap' }}><MailOutlined /> {agent.email || 'N/A'}</Space></Descriptions.Item>
+                                                <Descriptions.Item label="Status">
+                                                    <Badge status={agent.status === 'active' ? 'success' : 'error'} text={agent.status.toUpperCase()} />
+                                                </Descriptions.Item>
+                                                <Descriptions.Item label="Vehicle Type"><Space><CarOutlined /> {formatName(agent.vehicle_type) || 'N/A'}</Space></Descriptions.Item>
+                                                <Descriptions.Item label="Vehicle No">{agent.vehicle_no?.toUpperCase() || 'N/A'}</Descriptions.Item>
+                                                <Descriptions.Item label="Joined On">{dayjs(agent.createdAt).format('DD MMMM YYYY')}</Descriptions.Item>
+                                                <Descriptions.Item label="Address" span={2}>
+                                                    <Space align="start">
+                                                        <EnvironmentOutlined style={{ marginTop: '4px', color: '#ff4d4f' }} />
+                                                        {formatName(agent.address) || 'N/A'}
+                                                    </Space>
+                                                </Descriptions.Item>
+                                            </Descriptions>
+                                        </Card>
+                                    </Col>
+                                    <Col xs={24} xl={8}>
+                                        <Card title="Quick Stats" bordered={false} style={{ borderRadius: '12px', height: '100%' }}>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', height: '100%' }}>
+                                                <div style={{ background: '#f6ffed', padding: '12px', borderRadius: '8px', border: '1px solid #b7eb8f' }}>
+                                                    <Text type="secondary" style={{ fontSize: '12px' }}>Collection Efficiency</Text>
+                                                    <div style={{ fontSize: '20px', fontWeight: 600, color: '#52c41a' }}>
+                                                        {stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0}%
+                                                    </div>
+                                                </div>
+                                                <div style={{ background: '#e6f7ff', padding: '12px', borderRadius: '8px', border: '1px solid #91d5ff' }}>
+                                                    <Text type="secondary" style={{ fontSize: '12px' }}>Active Deliveries</Text>
+                                                    <div style={{ fontSize: '20px', fontWeight: 600, color: '#1890ff' }}>
+                                                        {stats.pending + stats.collected}
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <div style={{ background: '#e6f7ff', padding: '16px', borderRadius: '8px', border: '1px solid #91d5ff' }}>
-                                                <Text type="secondary">Active Deliveries</Text>
-                                                <div style={{ fontSize: '24px', fontWeight: 600, color: '#1890ff' }}>
-                                                    {stats.pending + stats.collected}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </Card>
-                                </Col>
-                            </Row>
+                                        </Card>
+                                    </Col>
+                                </Row>
+                            </div>
                         )
                     },
                     {
                         key: 'tasks',
                         label: <span><CheckCircleOutlined /> Assigned Collections</span>,
                         children: (
-                            <Card bordered={false} style={{ borderRadius: '12px' }}>
+                            <div style={{ height: 'calc(100vh - 250px)', overflowY: 'auto', overflowX: 'hidden', paddingRight: '4px', paddingBottom: '40px' }}>
+                                <Card bordered={false} style={{ borderRadius: '12px' }}>
                                 <List
                                     grid={{ gutter: 16, xxl: 3, xl: 2, lg: 2, md: 1, sm: 1, xs: 1 }}
                                     dataSource={agent.lab_orders || []}
@@ -293,6 +300,7 @@ const AgentProfilePage: React.FC = () => {
                                     )}
                                 />
                             </Card>
+                            </div>
                         )
                     }
                 ]}

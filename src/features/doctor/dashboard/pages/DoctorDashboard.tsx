@@ -67,7 +67,7 @@ const DoctorDashboard: React.FC = () => {
             key: 'status',
             width: 150,
             render: (status: string) => {
-                const color = status === 'scheduled' ? 'blue' : status === 'completed' ? 'green' : 'red';
+                const color = status === 'scheduled' ? 'blue' : status === 'pending' ? 'orange' : status === 'completed' ? 'green' : 'red';
                 return <Tag color={color}>{status.toUpperCase()}</Tag>;
             },
         },
@@ -137,12 +137,13 @@ const DoctorDashboard: React.FC = () => {
                     </Card>
                 </Col>
 
-                <Col xs={24} lg={16}>
+                <Col xs={24} lg={16} style={{ display: 'flex' }}>
                     <Card
                         title="Recent Consultations"
                         bordered={false}
                         className="shadow-sm"
-                        style={{ borderRadius: 12 }}
+                        style={{ borderRadius: 12, height: '100%', width: '100%', display: 'flex', flexDirection: 'column' }}
+                        styles={{ body: { flex: 1, display: 'flex', flexDirection: 'column' } }}
                     >
                         <Table
                             dataSource={appointments}
@@ -150,11 +151,12 @@ const DoctorDashboard: React.FC = () => {
                             rowKey="id"
                             loading={loading}
                             pagination={{ pageSize: 5 }}
+                            style={{ flex: 1 }}
                         />
                     </Card>
                 </Col>
 
-                <Col xs={24} lg={8}>
+                <Col xs={24} lg={8} style={{ display: 'flex' }}>
                     <WeeklyConsultationTrend appointments={appointments} />
                 </Col>
             </Row>
@@ -196,7 +198,8 @@ const WeeklyConsultationTrend: React.FC<{ appointments: any[] }> = ({ appointmen
             title={<Space><BarChartOutlined style={{ color: colors.info }} /> Consultation Activity</Space>}
             bordered={false}
             className="shadow-sm"
-            style={{ borderRadius: 12, height: '100%' }}
+            style={{ borderRadius: 12, height: '100%', width: '100%', display: 'flex', flexDirection: 'column' }}
+            styles={{ body: { flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' } }}
         >
             <div style={{ height: 260, display: 'flex', alignItems: 'flex-end', gap: '8%', padding: '10px 0 20px' }}>
                 {weeklyData.counts.map((count, i) => {
