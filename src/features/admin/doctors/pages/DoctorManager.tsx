@@ -31,6 +31,7 @@ const DoctorManager: React.FC = () => {
         updateDoctor,
         deleteDoctor,
         loadMore,
+        savingDoctor,
     } = useDoctors();
 
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -204,6 +205,7 @@ const DoctorManager: React.FC = () => {
                 form={form}
                 onOk={handleModalOk}
                 onCancel={() => setIsModalOpen(false)}
+                loading={savingDoctor}
             />
 
             <DoctorDetailDrawer

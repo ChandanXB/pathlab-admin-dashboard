@@ -257,21 +257,24 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
             width: 110,
             render: (_: any, record: LabOrder) => {
                 const isLabVisit = record.order_type === 'lab_visit';
+                const isCollected = record.status === 'collected' || record.status === 'processing' || record.status === 'completed';
+                const isReassignDisabled = isLabVisit || isCollected;
+                
                 const button = (
                     <Button
                         type="primary"
                         ghost
                         size="small"
-                        disabled={isLabVisit}
+                        disabled={isReassignDisabled}
                         icon={record.collection_agent
                             ? <UserSwitchOutlined />
                             : <UserAddOutlined />
                         }
-                        onClick={() => !isLabVisit && onAssign(record)}
+                        onClick={() => !isReassignDisabled && onAssign(record)}
                         style={{
                             borderRadius: '6px',
-                            borderColor: isLabVisit ? '#d9d9d9' : (record.collection_agent ? '#52c41a' : '#faad14'),
-                            color: isLabVisit ? 'rgba(0, 0, 0, 0.25)' : (record.collection_agent ? '#52c41a' : '#faad14'),
+                            borderColor: isReassignDisabled ? '#d9d9d9' : (record.collection_agent ? '#52c41a' : '#faad14'),
+                            color: isReassignDisabled ? 'rgba(0, 0, 0, 0.25)' : (record.collection_agent ? '#52c41a' : '#faad14'),
                             fontWeight: 600,
                             height: '32px',
                             width: '100px',
@@ -280,7 +283,7 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
                             justifyContent: 'center'
                         }}
                     >
-                        {record.collection_agent ? "Reassign" : "Assign"}
+                        {isCollected ? "Assigned" : (record.collection_agent ? "Reassign" : "Assign")}
                     </Button>
                 );
 
