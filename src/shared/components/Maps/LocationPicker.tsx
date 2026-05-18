@@ -18,7 +18,14 @@ interface LocationPickerProps {
         lng: number;
         address?: string;
     };
-    onChange?: (data: { lat: number; lng: number; address: string }) => void;
+    onChange?: (data: { 
+        lat: number; 
+        lng: number; 
+        address: string;
+        city?: string;
+        state?: string;
+        pincode?: string;
+    }) => void;
     height?: string | number;
     showSearch?: boolean;
     placeholder?: string;
@@ -49,8 +56,28 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
             const pos = { lat: Number(value.lat), lng: Number(value.lng) };
             setMarkerPos(pos);
             setMapCenter(pos);
+            if (mapRef.current) mapRef.current.panTo(pos);
         }
     }, [value?.lat, value?.lng]);
+
+    const parseAddressComponents = (components: google.maps.GeocoderAddressComponent[]) => {
+        let city = '';
+        let state = '';
+        let pincode = '';
+
+        for (const component of components) {
+            const types = component.types;
+            if (types.includes('locality')) {
+                city = component.long_name;
+            } else if (types.includes('administrative_area_level_1')) {
+                state = component.long_name;
+            } else if (types.includes('postal_code')) {
+                pincode = component.long_name;
+            }
+        }
+
+        return { city, state, pincode };
+    };
 
     const onPlaceChanged = () => {
         if (autocomplete) {
@@ -61,12 +88,13 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
                     lng: place.geometry.location.lng()
                 };
                 const address = place.formatted_address || '';
+                const { city, state, pincode } = parseAddressComponents(place.address_components || []);
 
                 setMarkerPos(location);
                 setMapCenter(location);
                 if (mapRef.current) mapRef.current.panTo(location);
 
-                onChange?.({ ...location, address });
+                onChange?.({ ...location, address, city, state, pincode });
             }
         }
     };
@@ -86,7 +114,9 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
         geocoder.geocode({ location }, (results, status) => {
             setIsGeocoding(false);
             if (status === 'OK' && results && results[0]) {
-                onChange?.({ ...location, address: results[0].formatted_address });
+                const address = results[0].formatted_address;
+                const { city, state, pincode } = parseAddressComponents(results[0].address_components || []);
+                onChange?.({ ...location, address, city, state, pincode });
             } else {
                 message.error('Geocoding failed');
             }
