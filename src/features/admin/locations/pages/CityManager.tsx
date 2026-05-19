@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import dayjs from 'dayjs';
 import { 
     Card, 
@@ -42,7 +42,8 @@ import colors from '@/styles/colors';
 const { Text } = Typography;
 
 const CityTab: React.FC<{ isMobile: boolean }> = ({ isMobile }) => {
-    const [cities, setCities] = useState<ServiceableCity[]>([]);
+    const [allCities, setAllCities] = useState<ServiceableCity[]>([]);
+    const [visibleCount, setVisibleCount] = useState(10);
     const [loading, setLoading] = useState(false);
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [editingCity, setEditingCity] = useState<ServiceableCity | null>(null);
@@ -53,7 +54,7 @@ const CityTab: React.FC<{ isMobile: boolean }> = ({ isMobile }) => {
         try {
             const response = await locationService.getCities();
             if (response.success) {
-                setCities(response.data);
+                setAllCities(response.data);
             }
         } catch (error: any) {
             message.error('Failed to fetch cities');
@@ -65,6 +66,32 @@ const CityTab: React.FC<{ isMobile: boolean }> = ({ isMobile }) => {
     useEffect(() => {
         fetchCities();
     }, []);
+
+    const cities = useMemo(() => {
+        return allCities.slice(0, visibleCount);
+    }, [allCities, visibleCount]);
+
+    const hasMore = visibleCount < allCities.length;
+    const loadMoreRef = useRef<HTMLDivElement | null>(null);
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting && hasMore && !loading) {
+                    setVisibleCount(prev => prev + 10);
+                }
+            },
+            { threshold: 0.1 }
+        );
+
+        if (loadMoreRef.current) {
+            observer.observe(loadMoreRef.current);
+        }
+
+        return () => {
+            observer.disconnect();
+        };
+    }, [hasMore, loading]);
 
     const handleAdd = () => {
         setEditingCity(null);
@@ -102,7 +129,7 @@ const CityTab: React.FC<{ isMobile: boolean }> = ({ isMobile }) => {
             const response = await locationService.updateCity(city.id, { status } as any);
             if (response.success) {
                 message.success(`City ${checked ? 'activated' : 'deactivated'}`);
-                setCities(cities.map(c => c.id === city.id ? { ...c, status } : c));
+                setAllCities(allCities.map(c => c.id === city.id ? { ...c, status } : c));
             }
         } catch (error: any) {
             message.error('Failed to update status');
@@ -190,9 +217,28 @@ const CityTab: React.FC<{ isMobile: boolean }> = ({ isMobile }) => {
                 dataSource={cities} 
                 rowKey="id" 
                 loading={loading}
-                pagination={{ pageSize: 10 }}
-                scroll={{ x: isMobile ? 'max-content' : undefined }}
+                pagination={false}
+                size="middle"
+                scroll={{ y: 'calc(100vh - 350px)', x: isMobile ? 'max-content' : undefined }}
             />
+            {hasMore && (
+                <div 
+                    ref={loadMoreRef} 
+                    style={{ 
+                        padding: '16px 0', 
+                        textAlign: 'center', 
+                        display: 'flex', 
+                        justifyContent: 'center', 
+                        alignItems: 'center',
+                        gap: '8px',
+                        color: colors.primary,
+                        fontWeight: 500
+                    }}
+                >
+                    <ClockCircleOutlined spin style={{ fontSize: 16 }} />
+                    <span>Loading more cities...</span>
+                </div>
+            )}
             <Modal
                 title={editingCity ? 'Edit City' : 'Add New City'}
                 open={isModalVisible}
@@ -229,7 +275,8 @@ const CityTab: React.FC<{ isMobile: boolean }> = ({ isMobile }) => {
 };
 
 const CenterTab: React.FC<{ isMobile: boolean }> = ({ isMobile }) => {
-    const [centers, setCenters] = useState<CollectionCenter[]>([]);
+    const [allCenters, setAllCenters] = useState<CollectionCenter[]>([]);
+    const [visibleCount, setVisibleCount] = useState(10);
     const [loading, setLoading] = useState(false);
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [editingCenter, setEditingCenter] = useState<CollectionCenter | null>(null);
@@ -240,7 +287,7 @@ const CenterTab: React.FC<{ isMobile: boolean }> = ({ isMobile }) => {
         try {
             const response = await collectionCenterService.getCenters();
             if (response.success) {
-                setCenters(response.data);
+                setAllCenters(response.data);
             }
         } catch (error: any) {
             message.error('Failed to fetch centers');
@@ -252,6 +299,32 @@ const CenterTab: React.FC<{ isMobile: boolean }> = ({ isMobile }) => {
     useEffect(() => {
         fetchCenters();
     }, []);
+
+    const centers = useMemo(() => {
+        return allCenters.slice(0, visibleCount);
+    }, [allCenters, visibleCount]);
+
+    const hasMore = visibleCount < allCenters.length;
+    const loadMoreRef = useRef<HTMLDivElement | null>(null);
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting && hasMore && !loading) {
+                    setVisibleCount(prev => prev + 10);
+                }
+            },
+            { threshold: 0.1 }
+        );
+
+        if (loadMoreRef.current) {
+            observer.observe(loadMoreRef.current);
+        }
+
+        return () => {
+            observer.disconnect();
+        };
+    }, [hasMore, loading]);
 
     const handleAdd = () => {
         setEditingCenter(null);
@@ -326,7 +399,7 @@ const CenterTab: React.FC<{ isMobile: boolean }> = ({ isMobile }) => {
             key: 'details',
             render: (_: any, record: CollectionCenter) => (
                 <Space direction="vertical" size={0}>
-                    <Text strong>{record.center_name}</Text>
+                    <Text strong style={{ textTransform: 'capitalize' }}>{record.center_name}</Text>
                     <Tag color={record.type.includes('NABL') ? 'gold' : 'blue'} style={{ marginTop: 4 }}>
                         {record.type}
                     </Tag>
@@ -387,9 +460,28 @@ const CenterTab: React.FC<{ isMobile: boolean }> = ({ isMobile }) => {
                 dataSource={centers} 
                 rowKey="id" 
                 loading={loading}
-                pagination={{ pageSize: 10 }}
-                scroll={{ x: isMobile ? 'max-content' : undefined }}
+                pagination={false}
+                size="middle"
+                scroll={{ y: 'calc(100vh - 350px)', x: isMobile ? 'max-content' : undefined }}
             />
+            {hasMore && (
+                <div 
+                    ref={loadMoreRef} 
+                    style={{ 
+                        padding: '16px 0', 
+                        textAlign: 'center', 
+                        display: 'flex', 
+                        justifyContent: 'center', 
+                        alignItems: 'center',
+                        gap: '8px',
+                        color: colors.primary,
+                        fontWeight: 500
+                    }}
+                >
+                    <ClockCircleOutlined spin style={{ fontSize: 16 }} />
+                    <span>Loading more collection centers...</span>
+                </div>
+            )}
             <Modal
                 title={editingCenter ? 'Edit Center' : 'Add New Center'}
                 open={isModalVisible}
@@ -551,9 +643,20 @@ const CityManager: React.FC = () => {
                 { title: 'Location Management' },
                 { title: 'Cities & Centers' }
             ]} />
-            <Card bordered={false} className="shadow-sm" style={{ flex: 1 }}>
-                <Tabs defaultActiveKey="cities" items={items} />
+            <Card 
+                bordered={false} 
+                className="shadow-sm"
+                style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
+                styles={{ body: { flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: '12px 24px' } }}
+            >
+                <Tabs defaultActiveKey="cities" items={items} style={{ height: '100%' }} />
             </Card>
+            <style>{`
+                .ant-tabs { height: 100%; display: flex; flex-direction: column; }
+                .ant-tabs-content-holder { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+                .ant-tabs-content { height: 100%; }
+                .ant-tabs-tabpane { height: 100%; display: flex; flex-direction: column; overflow: hidden; }
+            `}</style>
         </div>
     );
 };
