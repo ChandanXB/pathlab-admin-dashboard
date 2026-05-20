@@ -122,6 +122,18 @@ export const useLabOrders = (initialFilters: LabOrderQueryParams = { page: 1, li
         }
     };
 
+    const bulkDeleteOrders = async (ids: number[]) => {
+        try {
+            await labOrderService.bulkDeleteOrders(ids);
+            message.success('Selected lab orders deleted');
+            fetchOrders();
+            return true;
+        } catch (error: any) {
+            message.error(error.response?.data?.error || 'Failed to delete selected lab orders');
+            return false;
+        }
+    };
+
     const assignAgent = async (id: number, agentId: number | null) => {
         try {
             const response = await labOrderService.assignAgent(id, agentId);
@@ -184,6 +196,7 @@ export const useLabOrders = (initialFilters: LabOrderQueryParams = { page: 1, li
         broadcastOrder,
         uploadReports,
         deleteOrder,
+        bulkDeleteOrders,
         loadMore,
         refresh: fetchOrders
     };

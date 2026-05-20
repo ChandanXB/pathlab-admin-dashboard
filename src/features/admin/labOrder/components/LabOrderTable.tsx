@@ -37,6 +37,8 @@ interface LabOrderTableProps {
     visibleColumns?: string[];
     highlightOrderCode?: string;
     scroll?: { x?: number | string; y?: number | string };
+    selectedRowKeys?: React.Key[];
+    onSelectionChange?: (selectedRowKeys: React.Key[]) => void;
 }
 
 const LabOrderTable: React.FC<LabOrderTableProps> = ({
@@ -54,6 +56,8 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
     visibleColumns = ['order_info', 'patient', 'tests', 'agent', 'agent_assign', 'amount', 'status', 'actions'],
     highlightOrderCode,
     scroll,
+    selectedRowKeys,
+    onSelectionChange,
 }) => {
     // Delay activating the highlight until data has rendered into rows
     const [activeHighlight, setActiveHighlight] = useState<string | undefined>(undefined);
@@ -354,10 +358,15 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
     // Filter columns based on visibility
     const filteredColumns = columns.filter(col => visibleColumns.includes(col.key || ''));
 
+    const rowSelection = onSelectionChange ? {
+        selectedRowKeys,
+        onChange: onSelectionChange,
+    } : undefined;
 
     return (
         <div className="infinite-scroll-table-wrapper" style={{ width: '100%' }}>
             <InfiniteScrollTable
+                rowSelection={rowSelection}
                 columns={filteredColumns}
                 dataSource={data}
                 loading={loading}
@@ -376,7 +385,12 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
                 }}
                 onRow={(record) => ({
                     onClick: (e: any) => {
-                        if (e.target.closest('.ant-dropdown-trigger') || e.target.closest('button') || e.target.closest('.anticon')) {
+                        if (
+                            e.target.closest('.ant-dropdown-trigger') || 
+                            e.target.closest('button') || 
+                            e.target.closest('.anticon') ||
+                            e.target.closest('.ant-table-selection-column')
+                        ) {
                             return;
                         }
                         onRowClick(record);
