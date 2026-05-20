@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Card, Button, Form, Typography, Space, Badge, Checkbox, Divider } from 'antd';
-import { PlusOutlined, ExperimentOutlined } from '@ant-design/icons';
+import { Card, Button, Form, Typography, Space, Badge, Checkbox, Divider, Modal } from 'antd';
+import { PlusOutlined, ExperimentOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useLabOrders } from '../hooks/useLabOrders';
 import { LabOrderTable, LabOrderFilters, LabOrderFormModal, LabOrderDetailDrawer, AssignAgentModal, ReportUploadModal } from '../components';
@@ -31,6 +31,7 @@ const LabOrderManager: React.FC = () => {
         broadcastOrder,
         uploadReports,
         deleteOrder,
+        bulkDeleteOrders,
         loadMore
     } = useLabOrders({
         page: 1,
@@ -51,6 +52,20 @@ const LabOrderManager: React.FC = () => {
         'order_info', 'patient', 'tests', 'agent', 'agent_assign', 'amount', 'status', 'actions'
     ]);
     const [form] = Form.useForm();
+    const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+
+    // Reset selection when filters change (excluding page and limit)
+    useEffect(() => {
+        setSelectedRowKeys([]);
+    }, [
+        filters.search,
+        filters.status,
+        filters.sortBy,
+        filters.sortOrder,
+        filters.patient_id,
+        filters.date_from,
+        filters.date_to
+    ]);
 
     const selectedOrder = orders.find(o => o.id === selectedOrderId) || null;
 
@@ -132,6 +147,24 @@ const LabOrderManager: React.FC = () => {
 
     const handleDelete = async (id: number) => {
         await deleteOrder(id);
+    };
+
+    const handleBulkDelete = () => {
+        Modal.confirm({
+            title: 'Delete Selected Orders',
+            content: `Are you sure you want to permanently delete ${selectedRowKeys.length} selected orders? This action cannot be undone.`,
+            okText: 'Yes, Delete',
+            okType: 'danger',
+            cancelText: 'No',
+            style: { top: 80 },
+            onOk: async () => {
+                const ids = selectedRowKeys.map(Number);
+                const success = await bulkDeleteOrders(ids);
+                if (success) {
+                    setSelectedRowKeys([]);
+                }
+            }
+        });
     };
 
 
@@ -273,19 +306,36 @@ const LabOrderManager: React.FC = () => {
                         </Space>
                     </div>
                 </Space>
-                <Button
-                    type="primary"
-                    icon={<PlusOutlined />}
-                    onClick={handleAdd}
-                    size={isMobile ? "middle" : "large"}
-                    style={{
-                        borderRadius: '8px',
-                        boxShadow: '0 4px 10px rgba(24, 144, 255, 0.3)',
-                        width: isMobile ? '100%' : 'auto'
-                    }}
-                >
-                    Create New Order
-                </Button>
+                <Space size="middle" style={{ width: isMobile ? '100%' : 'auto', justifyContent: isMobile ? 'stretch' : 'flex-end' }}>
+                    {selectedRowKeys.length > 0 && (
+                        <Button
+                            type="primary"
+                            danger
+                            icon={<DeleteOutlined />}
+                            onClick={handleBulkDelete}
+                            size={isMobile ? "middle" : "large"}
+                            style={{
+                                borderRadius: '8px',
+                                width: isMobile ? '100%' : 'auto'
+                            }}
+                        >
+                            Delete ({selectedRowKeys.length})
+                        </Button>
+                    )}
+                    <Button
+                        type="primary"
+                        icon={<PlusOutlined />}
+                        onClick={handleAdd}
+                        size={isMobile ? "middle" : "large"}
+                        style={{
+                            borderRadius: '8px',
+                            boxShadow: '0 4px 10px rgba(24, 144, 255, 0.3)',
+                            width: isMobile ? '100%' : 'auto'
+                        }}
+                    >
+                        Create New Order
+                    </Button>
+                </Space>
             </div>
 
             <LabOrderFilters
@@ -325,6 +375,8 @@ const LabOrderManager: React.FC = () => {
                         visibleColumns={visibleColumns}
                         highlightOrderCode={highlightParam || undefined}
                         scroll={{ x: isMobile ? 'max-content' : undefined, y: tableHeight }}
+                        selectedRowKeys={selectedRowKeys}
+                        onSelectionChange={setSelectedRowKeys}
                     />
                 </div>
             </Card>

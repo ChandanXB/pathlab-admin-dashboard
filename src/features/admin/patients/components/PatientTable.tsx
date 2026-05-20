@@ -16,6 +16,8 @@ interface PatientTableProps {
     onDelete: (id: number) => void;
     onLoadMore: () => void;
     scroll?: { x?: number | string; y?: number | string };
+    selectedRowKeys?: React.Key[];
+    onSelectionChange?: (selectedRowKeys: React.Key[]) => void;
 }
 
 const PatientTable: React.FC<PatientTableProps> = ({
@@ -28,6 +30,8 @@ const PatientTable: React.FC<PatientTableProps> = ({
     onDelete,
     onLoadMore,
     scroll,
+    selectedRowKeys,
+    onSelectionChange
 }) => {
     // Calculate age from DOB
     const calculateAge = (dob: string): number => {
@@ -130,6 +134,11 @@ const PatientTable: React.FC<PatientTableProps> = ({
         },
     ];
 
+    const rowSelection = onSelectionChange ? {
+        selectedRowKeys,
+        onChange: onSelectionChange,
+    } : undefined;
+
     return (
         <React.Fragment>
             <style>
@@ -143,6 +152,7 @@ const PatientTable: React.FC<PatientTableProps> = ({
                 `}
             </style>
             <InfiniteScrollTable
+                rowSelection={rowSelection}
                 columns={columns}
                 dataSource={data}
                 loading={loading}
@@ -153,7 +163,7 @@ const PatientTable: React.FC<PatientTableProps> = ({
                 rowKey="id"
                 rowClassName={(record: Patient) => record.added_by_id ? 'family-child-row' : ''}
                 expandable={{
-                    expandIconColumnIndex: 0,
+                    expandIconColumnIndex: rowSelection ? 1 : 0,
                     indentSize: 24,
                     expandIcon: ({ expanded, onExpand, record }) => {
                         const hasChildren = record.children && record.children.length > 0;

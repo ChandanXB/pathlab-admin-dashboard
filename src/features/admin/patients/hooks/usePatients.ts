@@ -92,6 +92,17 @@ export const usePatients = (enabled: boolean = true) => {
         }
     };
 
+    const bulkDeletePatients = async (ids: number[]) => {
+        try {
+            await patientService.bulkDeletePatients(ids);
+            message.success('Selected patients deleted successfully');
+            setPatientFilters((prev) => ({ ...prev, page: 1 }));
+            return true;
+        } catch (error: any) {
+            return false;
+        }
+    };
+
     const deleteGrowthRecord = async (recordId: number) => {
         try {
             await patientService.deleteGrowthRecord(recordId);
@@ -159,6 +170,7 @@ export const usePatients = (enabled: boolean = true) => {
         createPatient,
         updatePatient,
         deletePatient,
+        bulkDeletePatients,
         deleteGrowthRecord,
         deleteImmunization,
         sendVaccinationSchedule,

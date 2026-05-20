@@ -89,6 +89,17 @@ export const useAgents = (enabled: boolean = true) => {
         }
     };
 
+    const bulkDeleteAgents = async (ids: number[]) => {
+        try {
+            await collectionAgentService.bulkDeleteAgents(ids);
+            message.success('Selected agents deleted');
+            setAgentFilters((prev: any) => ({ ...prev, page: 1 }));
+            return true;
+        } catch (error: any) {
+            return false;
+        }
+    };
+
     const loadMore = () => {
         if (agentPagination.hasMore && !loadingMoreAgents) {
             setAgentFilters((prev: any) => ({ ...prev, page: (prev.page || 1) + 1 }));
@@ -111,6 +122,7 @@ export const useAgents = (enabled: boolean = true) => {
         createAgent,
         updateAgent,
         deleteAgent,
+        bulkDeleteAgents,
         loadMore,
     };
 };

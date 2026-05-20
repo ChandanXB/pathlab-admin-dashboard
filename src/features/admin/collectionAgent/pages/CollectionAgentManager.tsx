@@ -3,11 +3,13 @@ import {
     Button,
     Card,
     Input,
-    Form
+    Form,
+    Modal
 } from 'antd';
 import {
     PlusOutlined,
-    SearchOutlined
+    SearchOutlined,
+    DeleteOutlined
 } from '@ant-design/icons';
 import { useAgents } from '../hooks/useAgents';
 import { type CollectionAgent } from '../services/collectionAgentService';
@@ -20,10 +22,12 @@ const CollectionAgentManager: React.FC = () => {
         loadingAgents,
         loadingMoreAgents,
         agentPagination,
+        agentFilters,
         setAgentFilters,
         createAgent,
         updateAgent,
         deleteAgent,
+        bulkDeleteAgents,
         loadMore,
     } = useAgents();
 
@@ -31,6 +35,12 @@ const CollectionAgentManager: React.FC = () => {
     const [editingAgent, setEditingAgent] = useState<CollectionAgent | null>(null);
     const [form] = Form.useForm();
     const navigate = useNavigate();
+    const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+
+    // Reset selection when search filters change
+    useEffect(() => {
+        setSelectedRowKeys([]);
+    }, [agentFilters?.search]);
 
     const handleSearch = (value: string) => {
         setAgentFilters((prev: any) => ({ ...prev, search: value, page: 1 }));
@@ -50,6 +60,24 @@ const CollectionAgentManager: React.FC = () => {
 
     const handleDelete = async (id: number) => {
         await deleteAgent(id);
+    };
+
+    const handleBulkDelete = () => {
+        Modal.confirm({
+            title: 'Delete Selected Agents',
+            content: `Are you sure you want to delete ${selectedRowKeys.length} selected agents? This action cannot be undone.`,
+            okText: 'Yes, Delete',
+            okType: 'danger',
+            cancelText: 'No',
+            style: { top: 80 },
+            onOk: async () => {
+                const ids = selectedRowKeys.map(Number);
+                const success = await bulkDeleteAgents(ids);
+                if (success) {
+                    setSelectedRowKeys([]);
+                }
+            }
+        });
     };
 
     const handleRowClick = (agent: CollectionAgent) => {
@@ -127,14 +155,27 @@ const CollectionAgentManager: React.FC = () => {
                         style={{ width: isMobile ? '100%' : 300 }}
                         onChange={(e) => handleSearch(e.target.value)}
                     />
-                    <Button
-                        type="primary"
-                        icon={<PlusOutlined />}
-                        onClick={handleAdd}
-                        block={isMobile}
-                    >
-                        Add New Agent
-                    </Button>
+                    <div style={{ display: 'flex', gap: 8, width: isMobile ? '100%' : 'auto' }}>
+                        {selectedRowKeys.length > 0 && (
+                            <Button
+                                type="primary"
+                                danger
+                                icon={<DeleteOutlined />}
+                                onClick={handleBulkDelete}
+                                style={{ flex: isMobile ? 1 : 'none' }}
+                            >
+                                Delete {selectedRowKeys.length > 0 ? `(${selectedRowKeys.length})` : ''}
+                            </Button>
+                        )}
+                        <Button
+                            type="primary"
+                            icon={<PlusOutlined />}
+                            onClick={handleAdd}
+                            style={{ flex: isMobile ? 1 : 'none', minWidth: 140 }}
+                        >
+                            Add New Agent
+                        </Button>
+                    </div>
                 </div>
 
                 <div ref={containerRef} style={{ flex: 1, overflow: 'hidden' }}>
@@ -147,6 +188,8 @@ const CollectionAgentManager: React.FC = () => {
                         onDelete={handleDelete}
                         onRowClick={handleRowClick}
                         onLoadMore={loadMore}
+                        selectedRowKeys={selectedRowKeys}
+                        onSelectionChange={setSelectedRowKeys}
                         scroll={{ x: isMobile ? 'max-content' : undefined, y: tableHeight }}
                     />
                 </div>

@@ -15,6 +15,8 @@ interface AgentTableProps {
     onRowClick: (agent: CollectionAgent) => void;
     onLoadMore: () => void;
     scroll?: { x?: number | string; y?: number | string };
+    selectedRowKeys?: React.Key[];
+    onSelectionChange?: (selectedRowKeys: React.Key[]) => void;
 }
 
 const AgentTable: React.FC<AgentTableProps> = ({
@@ -26,7 +28,9 @@ const AgentTable: React.FC<AgentTableProps> = ({
     onDelete,
     onRowClick,
     onLoadMore,
-    scroll
+    scroll,
+    selectedRowKeys,
+    onSelectionChange
 }) => {
     const columns = [
         {
@@ -120,8 +124,14 @@ const AgentTable: React.FC<AgentTableProps> = ({
         },
     ];
 
+    const rowSelection = onSelectionChange ? {
+        selectedRowKeys,
+        onChange: onSelectionChange,
+    } : undefined;
+
     return (
         <InfiniteScrollTable
+            rowSelection={rowSelection}
             columns={columns}
             dataSource={agents}
             loading={loading}
@@ -132,7 +142,11 @@ const AgentTable: React.FC<AgentTableProps> = ({
             scroll={scroll}
             onRow={(record) => ({
                 onClick: (e: any) => {
-                    if (e.target.closest('button') || e.target.closest('.anticon')) {
+                    if (
+                        e.target.closest('button') || 
+                        e.target.closest('.anticon') ||
+                        e.target.closest('.ant-table-selection-column')
+                    ) {
                         return;
                     }
                     onRowClick(record);

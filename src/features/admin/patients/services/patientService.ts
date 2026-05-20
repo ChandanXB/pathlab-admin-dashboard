@@ -61,6 +61,14 @@ export const patientService = {
     },
 
     /**
+     * Bulk delete patients
+     */
+    bulkDeletePatients: async (ids: number[]): Promise<{ success: boolean; message: string }> => {
+        const response = await apiClient.delete('/patients/bulk', { data: { ids } });
+        return response.data;
+    },
+
+    /**
      * Delete a growth record
      */
     deleteGrowthRecord: async (recordId: number): Promise<{ success: boolean; message: string }> => {

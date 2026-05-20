@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Card, Button, Form } from 'antd';
-import { PlusOutlined, UnorderedListOutlined, MedicineBoxOutlined, LineChartOutlined } from '@ant-design/icons';
+import { Card, Button, Form, Modal } from 'antd';
+import { PlusOutlined, UnorderedListOutlined, MedicineBoxOutlined, LineChartOutlined, DeleteOutlined } from '@ant-design/icons';
 import { usePatients } from '../hooks/usePatients';
 import { PatientTable, PatientFilters, PatientFormModal, PatientDetailDrawer } from '../components';
 import type { Patient } from '../types/patient.types';
@@ -19,6 +19,7 @@ const PatientManager: React.FC = () => {
         createPatient,
         updatePatient,
         deletePatient,
+        bulkDeletePatients,
         loadMore
     } = usePatients();
 
@@ -27,6 +28,12 @@ const PatientManager: React.FC = () => {
     const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
     const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
     const [form] = Form.useForm();
+    const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+
+    // Reset selection when search filters change
+    useEffect(() => {
+        setSelectedRowKeys([]);
+    }, [patientFilters?.search, patientFilters?.gender]);
 
     const groupedPatients = useMemo(() => {
         const userToPatientMap = new Map<number, Patient>();
@@ -107,6 +114,24 @@ const PatientManager: React.FC = () => {
         await deletePatient(id);
     };
 
+    const handleBulkDelete = () => {
+        Modal.confirm({
+            title: 'Delete Selected Patients',
+            content: `Are you sure you want to delete ${selectedRowKeys.length} selected patients? All records including pregnancy checklists, appointments, growth history, and vaccinations will be cascade-deleted. This action cannot be undone.`,
+            okText: 'Yes, Delete',
+            okType: 'danger',
+            cancelText: 'No',
+            style: { top: 80 },
+            onOk: async () => {
+                const ids = selectedRowKeys.map(Number);
+                const success = await bulkDeletePatients(ids);
+                if (success) {
+                    setSelectedRowKeys([]);
+                }
+            }
+        });
+    };
+
     const [screenSize, setScreenSize] = useState(window.innerWidth);
     const isMobile = screenSize < 768;
 
@@ -170,9 +195,22 @@ const PatientManager: React.FC = () => {
                 marginBottom: 16 
             }}>
                 <h1 style={{ fontSize: isMobile ? '20px' : '24px', margin: 0 }}>Patient Management</h1>
-                <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd} block={isMobile}>
-                    Add New Patient
-                </Button>
+                <div style={{ display: 'flex', gap: 8, width: isMobile ? '100%' : 'auto' }}>
+                    {selectedRowKeys.length > 0 && (
+                        <Button
+                            type="primary"
+                            danger
+                            icon={<DeleteOutlined />}
+                            onClick={handleBulkDelete}
+                            style={{ flex: isMobile ? 1 : 'none' }}
+                        >
+                            Delete {selectedRowKeys.length > 0 ? `(${selectedRowKeys.length})` : ''}
+                        </Button>
+                    )}
+                    <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd} style={{ flex: isMobile ? 1 : 'none', minWidth: 140 }}>
+                        Add New Patient
+                    </Button>
+                </div>
             </div>
 
             <PatientFilters
@@ -195,6 +233,8 @@ const PatientManager: React.FC = () => {
                         onView={handleView}
                         onDelete={handleDelete}
                         onLoadMore={loadMore}
+                        selectedRowKeys={selectedRowKeys}
+                        onSelectionChange={setSelectedRowKeys}
                         scroll={{ x: isMobile ? 'max-content' : undefined, y: tableHeight }}
                     />
                 </div>

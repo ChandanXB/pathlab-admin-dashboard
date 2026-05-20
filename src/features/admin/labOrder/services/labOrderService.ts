@@ -56,6 +56,14 @@ export const labOrderService = {
     },
 
     /**
+     * Delete multiple lab orders in bulk
+     */
+    bulkDeleteOrders: async (ids: number[]): Promise<{ success: boolean; message: string }> => {
+        const response = await apiClient.delete('/lab-orders/bulk', { data: { ids } });
+        return response.data;
+    },
+
+    /**
      * Get order statistics
      */
     getOrderStats: async () => {

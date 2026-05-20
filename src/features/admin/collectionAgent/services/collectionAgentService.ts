@@ -58,5 +58,10 @@ export const collectionAgentService = {
     deleteAgent: async (id: number) => {
         const response = await apiClient.delete(`/collection-agents/${id}`);
         return response.data;
+    },
+
+    bulkDeleteAgents: async (ids: number[]) => {
+        const response = await apiClient.delete('/collection-agents/bulk', { data: { ids } });
+        return response.data;
     }
 };
