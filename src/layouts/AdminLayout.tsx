@@ -20,7 +20,7 @@ import { ORDER_STATUSES } from '@/shared/constants/app.constants';
 import { labOrderService } from '@/features/admin/labOrder/services/labOrderService';
 import { collectionAgentService, type CollectionAgent } from '@/features/admin/collectionAgent/services/collectionAgentService';
 import { formatName } from '@/shared/utils/nameUtils';
-import { useNotifications } from '@/hooks/useNotifications';
+import { useNotifications } from '@/shared/hooks/useNotifications';
 import NotificationBell from '@/shared/components/NotificationBell';
 
 const { Header, Content, Sider } = Layout;

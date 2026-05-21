@@ -1,20 +1,26 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
     Button,
     Card,
     Input,
+    Space,
     Form,
-    Modal
+    message,
+    Typography
 } from 'antd';
 import {
     PlusOutlined,
     SearchOutlined,
-    DeleteOutlined
+    TeamOutlined
 } from '@ant-design/icons';
+import colors from '@/styles/colors';
 import { useAgents } from '../hooks/useAgents';
 import { type CollectionAgent } from '../services/collectionAgentService';
 import { useNavigate } from 'react-router-dom';
 import { AgentTable, AgentFormModal } from '../components';
+import SelectionToolbar from '@/shared/components/SelectionToolbar';
+
+const { Title, Text } = Typography;
 
 const CollectionAgentManager: React.FC = () => {
     const {
@@ -35,12 +41,21 @@ const CollectionAgentManager: React.FC = () => {
     const [editingAgent, setEditingAgent] = useState<CollectionAgent | null>(null);
     const [form] = Form.useForm();
     const navigate = useNavigate();
-    const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
 
-    // Reset selection when search filters change
-    useEffect(() => {
+    const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+    const [selectedAgents, setSelectedAgents] = useState<CollectionAgent[]>([]);
+
+    const clearSelection = useCallback(() => {
         setSelectedRowKeys([]);
-    }, [agentFilters?.search]);
+        setSelectedAgents([]);
+    }, []);
+
+    // Reset selection when filters change
+    useEffect(() => {
+        clearSelection();
+    }, [agentFilters?.search, clearSelection]);
+
+
 
     const handleSearch = (value: string) => {
         setAgentFilters((prev: any) => ({ ...prev, search: value, page: 1 }));
@@ -58,26 +73,33 @@ const CollectionAgentManager: React.FC = () => {
         setIsModalOpen(true);
     };
 
+    const handleEditSelected = () => {
+        if (selectedAgents.length === 1) {
+            handleEdit(selectedAgents[0]);
+        }
+    };
+
     const handleDelete = async (id: number) => {
         await deleteAgent(id);
     };
 
-    const handleBulkDelete = () => {
-        Modal.confirm({
-            title: 'Delete Selected Agents',
-            content: `Are you sure you want to delete ${selectedRowKeys.length} selected agents? This action cannot be undone.`,
-            okText: 'Yes, Delete',
-            okType: 'danger',
-            cancelText: 'No',
-            style: { top: 80 },
-            onOk: async () => {
-                const ids = selectedRowKeys.map(Number);
-                const success = await bulkDeleteAgents(ids);
-                if (success) {
-                    setSelectedRowKeys([]);
-                }
+    const handleDeleteSelected = async () => {
+        const total = selectedRowKeys.length;
+        const hide = message.loading(`Deleting ${total} selected agent(s)...`, 0);
+        try {
+            const ids = selectedRowKeys.map(Number);
+            const success = await bulkDeleteAgents(ids);
+            if (success) {
+                message.success(`Successfully deleted ${total} selected agent(s)`);
+                clearSelection();
+            } else {
+                message.error('Failed to delete selected agents');
             }
-        });
+        } catch (err: any) {
+            message.error('Bulk delete failed: ' + err.message);
+        } finally {
+            hide();
+        }
     };
 
     const handleRowClick = (agent: CollectionAgent) => {
@@ -95,7 +117,7 @@ const CollectionAgentManager: React.FC = () => {
             }
             if (success) setIsModalOpen(false);
         } catch (error) {
-            // Error handled by form
+            // Validation error handled by form
         }
     };
 
@@ -119,63 +141,83 @@ const CollectionAgentManager: React.FC = () => {
                 }
             }
         });
-
         if (containerRef.current) observer.observe(containerRef.current);
         return () => observer.disconnect();
     }, []);
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: isMobile ? 16 : 24 }}>
-            <Card
-                title={isMobile ? "Agents" : "Collection Agents Management"}
-                style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}
-                styles={{ 
-                    header: { padding: isMobile ? '8px 16px' : '16px 24px' },
-                    body: { 
-                        flex: 1, 
-                        display: 'flex', 
-                        flexDirection: 'column', 
-                        minHeight: 0, 
-                        overflow: 'hidden', 
-                        padding: isMobile ? '16px' : '24px' 
-                    } 
-                }}
-            >
-                <div style={{ 
-                    marginBottom: 16, 
-                    display: 'flex', 
-                    flexDirection: isMobile ? 'column' : 'row',
-                    justifyContent: 'space-between', 
-                    gap: isMobile ? 12 : 16,
-                    flexShrink: 0 
-                }}>
-                    <Input
-                        placeholder="Search agents..."
-                        prefix={<SearchOutlined />}
-                        style={{ width: isMobile ? '100%' : 300 }}
-                        onChange={(e) => handleSearch(e.target.value)}
-                    />
-                    <div style={{ display: 'flex', gap: 8, width: isMobile ? '100%' : 'auto' }}>
-                        {selectedRowKeys.length > 0 && (
-                            <Button
-                                type="primary"
-                                danger
-                                icon={<DeleteOutlined />}
-                                onClick={handleBulkDelete}
-                                style={{ flex: isMobile ? 1 : 'none' }}
-                            >
-                                Delete {selectedRowKeys.length > 0 ? `(${selectedRowKeys.length})` : ''}
-                            </Button>
-                        )}
-                        <Button
-                            type="primary"
-                            icon={<PlusOutlined />}
-                            onClick={handleAdd}
-                            style={{ flex: isMobile ? 1 : 'none', minWidth: 140 }}
-                        >
-                            Add New Agent
-                        </Button>
+        <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: isMobile ? '16px' : '24px' }}>
+            {/* Page Header */}
+            <div style={{
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                justifyContent: 'space-between',
+                alignItems: isMobile ? 'stretch' : 'center',
+                gap: isMobile ? '16px' : '0',
+                flexShrink: 0
+            }}>
+                <Space align="center" size="middle">
+                    <div style={{
+                        background: colors.info,
+                        padding: isMobile ? '8px' : '10px',
+                        borderRadius: '12px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                    }}>
+                        <TeamOutlined style={{ fontSize: isMobile ? '20px' : '24px', color: colors.white }} />
                     </div>
+                    <div>
+                        <Title level={isMobile ? 4 : 3} style={{ margin: 0 }}>Collection Agents</Title>
+                        {!isMobile && <Text type="secondary">Manage field collection agents and assignments</Text>}
+                    </div>
+                </Space>
+                <Button
+                    type="primary"
+                    icon={<PlusOutlined />}
+                    onClick={handleAdd}
+                    size={isMobile ? 'middle' : 'large'}
+                    block={isMobile}
+                >
+                    Add New Agent
+                </Button>
+            </div>
+
+            {/* Main Card */}
+            <Card
+                styles={{
+                    body: {
+                        flex: 1,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        overflow: 'hidden',
+                        padding: isMobile ? '16px' : '24px'
+                    }
+                }}
+                style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
+            >
+                {/* Toolbar area — fixed height so table never shifts */}
+                <div style={{ flexShrink: 0 }}>
+                    {selectedRowKeys.length > 0 ? (
+                        <SelectionToolbar
+                            count={selectedRowKeys.length}
+                            itemName="agent"
+                            onDeselect={clearSelection}
+                            onEdit={handleEditSelected}
+                            onDelete={handleDeleteSelected}
+                            editDisabled={selectedRowKeys.length !== 1}
+                        />
+                    ) : (
+                        <div style={{ marginBottom: 16 }}>
+                            <Input
+                                placeholder="Search agents..."
+                                prefix={<SearchOutlined />}
+                                style={{ width: isMobile ? '100%' : 350 }}
+                                allowClear
+                                onChange={(e) => handleSearch(e.target.value)}
+                            />
+                        </div>
+                    )}
                 </div>
 
                 <div ref={containerRef} style={{ flex: 1, overflow: 'hidden' }}>
@@ -189,7 +231,10 @@ const CollectionAgentManager: React.FC = () => {
                         onRowClick={handleRowClick}
                         onLoadMore={loadMore}
                         selectedRowKeys={selectedRowKeys}
-                        onSelectionChange={setSelectedRowKeys}
+                        onSelectionChange={(keys, rows) => {
+                            setSelectedRowKeys(keys);
+                            setSelectedAgents(rows as CollectionAgent[]);
+                        }}
                         scroll={{ x: isMobile ? 'max-content' : undefined, y: tableHeight }}
                     />
                 </div>

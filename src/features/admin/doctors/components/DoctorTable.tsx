@@ -1,6 +1,6 @@
 import React from 'react';
-import { Space, Button, Tag, Popconfirm, Tooltip, Avatar } from 'antd';
-import { EditOutlined, DeleteOutlined, UserOutlined } from '@ant-design/icons';
+import { Space, Tag, Avatar } from 'antd';
+import { UserOutlined } from '@ant-design/icons';
 import InfiniteScrollTable from '@/shared/components/InfiniteScrollTable';
 import type { Doctor } from '../types/doctor.types';
 import { formatName, formatDoctorName } from '@/shared/utils/nameUtils';
@@ -15,6 +15,7 @@ interface DoctorTableProps {
     onRowClick: (record: Doctor) => void;
     onLoadMore: () => void;
     scroll?: { x?: number | string; y?: number | string };
+    rowSelection?: any;
 }
 
 const DoctorTable: React.FC<DoctorTableProps> = ({
@@ -26,7 +27,8 @@ const DoctorTable: React.FC<DoctorTableProps> = ({
     onDelete,
     onRowClick,
     onLoadMore,
-    scroll
+    scroll,
+    rowSelection
 }) => {
     const columns = [
         {
@@ -71,44 +73,6 @@ const DoctorTable: React.FC<DoctorTableProps> = ({
                 </Tag>
             ),
         },
-        {
-            title: 'Actions',
-            key: 'actions',
-            width: 100,
-            render: (_: any, record: Doctor) => (
-                <Space size="middle">
-                    <Tooltip title="Edit">
-                        <Button
-                            type="text"
-                            icon={<EditOutlined />}
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onEdit(record);
-                            }}
-                        />
-                    </Tooltip>
-                    <Popconfirm
-                        title="Delete this doctor?"
-                        onConfirm={(e) => {
-                            e?.stopPropagation();
-                            onDelete(record.id);
-                        }}
-                        onCancel={(e) => e?.stopPropagation()}
-                        okText="Yes"
-                        cancelText="No"
-                    >
-                        <Tooltip title="Delete">
-                            <Button
-                                type="text"
-                                danger
-                                icon={<DeleteOutlined />}
-                                onClick={(e) => e.stopPropagation()}
-                            />
-                        </Tooltip>
-                    </Popconfirm>
-                </Space>
-            ),
-        },
     ];
 
     return (
@@ -121,6 +85,7 @@ const DoctorTable: React.FC<DoctorTableProps> = ({
             next={onLoadMore}
             rowKey="id"
             scroll={scroll}
+            rowSelection={rowSelection}
             onRow={(record) => ({
                 onClick: () => onRowClick(record),
                 style: { cursor: 'pointer' }

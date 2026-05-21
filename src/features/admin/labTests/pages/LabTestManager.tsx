@@ -1,7 +1,14 @@
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
-import { Card, Tabs, Button, Form, Breadcrumb, Space } from 'antd';
+import { Card, Tabs, Button, Form, Breadcrumb, Space, message } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { debounce } from '@/shared/utils/debounce';
+
+// Shared Components
+import SelectionToolbar from '@/shared/components/SelectionToolbar';
+
+// Services
+import { labTestService } from '../services/labTestService';
+import { routineCheckupService } from '../services/routineCheckupService';
 
 // Components
 import TestFilters from '../components/TestFilters';
@@ -83,6 +90,180 @@ const LabTestManager: React.FC = () => {
         updateRoutineCheckup,
         deleteRoutineCheckup,
     } = useRoutineCheckups(activeTab === 'routine');
+
+    // Selections for tables
+    const [selectedTestKeys, setSelectedTestKeys] = useState<React.Key[]>([]);
+    const [selectedTests, setSelectedTests] = useState<any[]>([]);
+    const [selectedRoutineKeys, setSelectedRoutineKeys] = useState<React.Key[]>([]);
+    const [selectedRoutines, setSelectedRoutines] = useState<any[]>([]);
+    const [selectedCategoryKeys, setSelectedCategoryKeys] = useState<React.Key[]>([]);
+    const [selectedCategories, setSelectedCategories] = useState<any[]>([]);
+
+    const clearTestSelection = useCallback(() => {
+        setSelectedTestKeys([]);
+        setSelectedTests([]);
+    }, []);
+
+    const clearRoutineSelection = useCallback(() => {
+        setSelectedRoutineKeys([]);
+        setSelectedRoutines([]);
+    }, []);
+
+    const clearCategorySelection = useCallback(() => {
+        setSelectedCategoryKeys([]);
+        setSelectedCategories([]);
+    }, []);
+
+    // Clear selections on tab switch
+    useEffect(() => {
+        clearTestSelection();
+        clearRoutineSelection();
+        clearCategorySelection();
+    }, [activeTab, clearTestSelection, clearRoutineSelection, clearCategorySelection]);
+
+    // Clear selections when filters change
+    useEffect(() => {
+        clearTestSelection();
+    }, [testFilters, clearTestSelection]);
+
+    useEffect(() => {
+        clearCategorySelection();
+    }, [categoryFilters, clearCategorySelection]);
+
+    useEffect(() => {
+        clearRoutineSelection();
+    }, [routineCheckupFilters, clearRoutineSelection]);
+
+    // Row selection useMemo definitions
+    const testRowSelection = useMemo(() => ({
+        selectedRowKeys: selectedTestKeys,
+        onChange: (keys: React.Key[], rows: any[]) => {
+            setSelectedTestKeys(keys);
+            setSelectedTests(rows);
+        }
+    }), [selectedTestKeys]);
+
+    const routineRowSelection = useMemo(() => ({
+        selectedRowKeys: selectedRoutineKeys,
+        onChange: (keys: React.Key[], rows: any[]) => {
+            setSelectedRoutineKeys(keys);
+            setSelectedRoutines(rows);
+        }
+    }), [selectedRoutineKeys]);
+
+    const categoryRowSelection = useMemo(() => ({
+        selectedRowKeys: selectedCategoryKeys,
+        onChange: (keys: React.Key[], rows: any[]) => {
+            setSelectedCategoryKeys(keys);
+            setSelectedCategories(rows);
+        }
+    }), [selectedCategoryKeys]);
+
+    // ===== BULK ACTION HANDLERS =====
+    const handleEditSelectedTest = () => {
+        if (selectedTests.length === 1) {
+            handleEditTest(selectedTests[0]);
+        }
+    };
+
+    const handleDeleteSelectedTests = async () => {
+        const total = selectedTestKeys.length;
+        const hide = message.loading(`Deleting ${total} selected test(s)...`, 0);
+        try {
+            let successCount = 0;
+            for (const key of selectedTestKeys) {
+                try {
+                    await labTestService.deleteTest(Number(key));
+                    successCount++;
+                } catch (e: any) {
+                    console.error(`Failed to delete test ID ${key}`, e);
+                }
+            }
+            if (successCount === total) {
+                message.success(`Successfully deleted all ${total} selected tests`);
+            } else if (successCount > 0) {
+                message.warning(`Successfully deleted ${successCount} of ${total} selected tests`);
+            } else {
+                message.error(`Failed to delete any of the selected tests`);
+            }
+            clearTestSelection();
+            setTestFilters(prev => ({ ...prev, page: 1 }));
+        } catch (err: any) {
+            message.error(`Bulk delete failed: ` + err.message);
+        } finally {
+            hide();
+        }
+    };
+
+    const handleEditSelectedCategory = () => {
+        if (selectedCategories.length === 1) {
+            handleEditCategory(selectedCategories[0]);
+        }
+    };
+
+    const handleDeleteSelectedCategories = async () => {
+        const total = selectedCategoryKeys.length;
+        const hide = message.loading(`Deleting ${total} selected category(ies)...`, 0);
+        try {
+            let successCount = 0;
+            for (const key of selectedCategoryKeys) {
+                try {
+                    await labTestService.deleteCategory(Number(key));
+                    successCount++;
+                } catch (e: any) {
+                    console.error(`Failed to delete category ID ${key}`, e);
+                }
+            }
+            if (successCount === total) {
+                message.success(`Successfully deleted all ${total} selected categories`);
+            } else if (successCount > 0) {
+                message.warning(`Successfully deleted ${successCount} of ${total} selected categories`);
+            } else {
+                message.error(`Failed to delete any of the selected categories`);
+            }
+            clearCategorySelection();
+            setCategoryFilters(prev => ({ ...prev, page: 1 }));
+        } catch (err: any) {
+            message.error(`Bulk delete failed: ` + err.message);
+        } finally {
+            hide();
+        }
+    };
+
+    const handleEditSelectedRoutine = () => {
+        if (selectedRoutines.length === 1) {
+            handleEditRoutine(selectedRoutines[0]);
+        }
+    };
+
+    const handleDeleteSelectedRoutines = async () => {
+        const total = selectedRoutineKeys.length;
+        const hide = message.loading(`Deleting ${total} selected package(s)...`, 0);
+        try {
+            let successCount = 0;
+            for (const key of selectedRoutineKeys) {
+                try {
+                    await routineCheckupService.deleteRoutineCheckup(Number(key));
+                    successCount++;
+                } catch (e: any) {
+                    console.error(`Failed to delete routine package ID ${key}`, e);
+                }
+            }
+            if (successCount === total) {
+                message.success(`Successfully deleted all ${total} selected routine packages`);
+            } else if (successCount > 0) {
+                message.warning(`Successfully deleted ${successCount} of ${total} selected routine packages`);
+            } else {
+                message.error(`Failed to delete any of the selected routine packages`);
+            }
+            clearRoutineSelection();
+            setRoutineCheckupFilters(prev => ({ ...prev, page: 1 }));
+        } catch (err: any) {
+            message.error(`Bulk delete failed: ` + err.message);
+        } finally {
+            hide();
+        }
+    };
 
     const [screenSize, setScreenSize] = useState(window.innerWidth);
     const isMobile = screenSize < 768;
@@ -296,12 +477,23 @@ const LabTestManager: React.FC = () => {
                                         </div>
                                     )}
                                     <div style={{ flexShrink: 0 }}>
-                                        <TestFilters
-                                            filters={testFilters}
-                                            onFilterChange={(filters) => setTestFilters(prev => ({ ...prev, ...filters }))}
-                                            onSearch={debouncedSearchTests}
-                                            categories={allCategories}
-                                        />
+                                        {selectedTestKeys.length > 0 ? (
+                                            <SelectionToolbar
+                                                count={selectedTestKeys.length}
+                                                itemName="test"
+                                                onDeselect={clearTestSelection}
+                                                onEdit={handleEditSelectedTest}
+                                                onDelete={handleDeleteSelectedTests}
+                                                editDisabled={selectedTestKeys.length !== 1}
+                                            />
+                                        ) : (
+                                            <TestFilters
+                                                filters={testFilters}
+                                                onFilterChange={(filters) => setTestFilters(prev => ({ ...prev, ...filters }))}
+                                                onSearch={debouncedSearchTests}
+                                                categories={allCategories}
+                                            />
+                                        )}
                                     </div>
 
                                     <div
@@ -317,6 +509,7 @@ const LabTestManager: React.FC = () => {
                                             onDelete={deleteTest}
                                             scroll={{ y: testTableHeight, x: isMobile ? 'max-content' : 900 }}
                                             onScroll={fetchMoreTests}
+                                            rowSelection={testRowSelection}
                                         />
                                     </div>
                                 </div>
@@ -340,11 +533,22 @@ const LabTestManager: React.FC = () => {
                                         </div>
                                     )}
                                     <div style={{ flexShrink: 0 }}>
-                                        <RoutineFilters
-                                            filters={routineCheckupFilters}
-                                            onFilterChange={(filters) => setRoutineCheckupFilters(prev => ({ ...prev, ...filters }))}
-                                            onSearch={debouncedSearchRoutine}
-                                        />
+                                        {selectedRoutineKeys.length > 0 ? (
+                                            <SelectionToolbar
+                                                count={selectedRoutineKeys.length}
+                                                itemName="routine package"
+                                                onDeselect={clearRoutineSelection}
+                                                onEdit={handleEditSelectedRoutine}
+                                                onDelete={handleDeleteSelectedRoutines}
+                                                editDisabled={selectedRoutineKeys.length !== 1}
+                                            />
+                                        ) : (
+                                            <RoutineFilters
+                                                filters={routineCheckupFilters}
+                                                onFilterChange={(filters) => setRoutineCheckupFilters(prev => ({ ...prev, ...filters }))}
+                                                onSearch={debouncedSearchRoutine}
+                                            />
+                                        )}
                                     </div>
                                     
                                     <div
@@ -357,6 +561,7 @@ const LabTestManager: React.FC = () => {
                                             onEdit={handleEditRoutine}
                                             onDelete={deleteRoutineCheckup}
                                             scroll={{ y: routineTableHeight, x: isMobile ? 'max-content' : 800 }}
+                                            rowSelection={routineRowSelection}
                                         />
                                     </div>
                                 </div>
@@ -380,11 +585,22 @@ const LabTestManager: React.FC = () => {
                                         </div>
                                     )}
                                     <div style={{ flexShrink: 0 }}>
-                                        <CategoryFilters
-                                            filters={categoryFilters}
-                                            onFilterChange={(filters) => setCategoryFilters(prev => ({ ...prev, ...filters }))}
-                                            onSearch={debouncedSearchCategories}
-                                        />
+                                        {selectedCategoryKeys.length > 0 ? (
+                                            <SelectionToolbar
+                                                count={selectedCategoryKeys.length}
+                                                itemName="category"
+                                                onDeselect={clearCategorySelection}
+                                                onEdit={handleEditSelectedCategory}
+                                                onDelete={handleDeleteSelectedCategories}
+                                                editDisabled={selectedCategoryKeys.length !== 1}
+                                            />
+                                        ) : (
+                                            <CategoryFilters
+                                                filters={categoryFilters}
+                                                onFilterChange={(filters) => setCategoryFilters(prev => ({ ...prev, ...filters }))}
+                                                onSearch={debouncedSearchCategories}
+                                            />
+                                        )}
                                     </div>
 
                                     <div
@@ -400,6 +616,7 @@ const LabTestManager: React.FC = () => {
                                             onDelete={deleteCategory}
                                             onNext={fetchMoreCategories}
                                             scroll={{ y: categoryTableHeight, x: isMobile ? 'max-content' : 800 }}
+                                            rowSelection={categoryRowSelection}
                                         />
                                     </div>
                                 </div>

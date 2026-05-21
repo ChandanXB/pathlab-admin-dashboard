@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
     Button,
     Card,
@@ -17,6 +17,7 @@ import colors from '@/styles/colors';
 import { useDoctors } from '../hooks/useDoctors';
 import { DoctorTable, DoctorFormModal, DoctorDetailDrawer } from '../components';
 import type { Doctor } from '../types/doctor.types';
+import SelectionToolbar from '@/shared/components/SelectionToolbar';
 
 const { Title, Text } = Typography;
 
@@ -33,6 +34,60 @@ const DoctorManager: React.FC = () => {
         loadMore,
         savingDoctor,
     } = useDoctors();
+
+    const [selectedDoctorKeys, setSelectedDoctorKeys] = useState<React.Key[]>([]);
+    const [selectedDoctors, setSelectedDoctors] = useState<Doctor[]>([]);
+
+    const clearDoctorSelection = useCallback(() => {
+        setSelectedDoctorKeys([]);
+        setSelectedDoctors([]);
+    }, []);
+
+    useEffect(() => {
+        clearDoctorSelection();
+    }, [doctors, clearDoctorSelection]);
+
+    const doctorRowSelection = useMemo(() => ({
+        selectedRowKeys: selectedDoctorKeys,
+        onChange: (keys: React.Key[], rows: any[]) => {
+            setSelectedDoctorKeys(keys);
+            setSelectedDoctors(rows);
+        }
+    }), [selectedDoctorKeys]);
+
+    const handleEditSelectedDoctor = () => {
+        if (selectedDoctors.length === 1) {
+            handleEdit(selectedDoctors[0]);
+        }
+    };
+
+    const handleDeleteSelectedDoctors = async () => {
+        const total = selectedDoctorKeys.length;
+        const hide = message.loading(`Deleting ${total} selected doctor(s)...`, 0);
+        try {
+            let successCount = 0;
+            for (const key of selectedDoctorKeys) {
+                try {
+                    await deleteDoctor(Number(key));
+                    successCount++;
+                } catch (e: any) {
+                    console.error(`Failed to delete doctor ID ${key}`, e);
+                }
+            }
+            if (successCount === total) {
+                message.success(`Successfully deleted all ${total} selected doctors`);
+            } else if (successCount > 0) {
+                message.warning(`Successfully deleted ${successCount} of ${total} selected doctors`);
+            } else {
+                message.error(`Failed to delete any of the selected doctors`);
+            }
+            clearDoctorSelection();
+        } catch (err: any) {
+            message.error(`Bulk delete failed: ` + err.message);
+        } finally {
+            hide();
+        }
+    };
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingDoctor, setEditingDoctor] = useState<Doctor | null>(null);
@@ -174,14 +229,27 @@ const DoctorManager: React.FC = () => {
                 }}
                 style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
             >
-                <div style={{ marginBottom: 16, flexShrink: 0 }}>
-                    <Input
-                        placeholder="Search doctors..."
-                        prefix={<SearchOutlined />}
-                        style={{ width: isMobile ? '100%' : 350 }}
-                        allowClear
-                        onChange={(e) => handleSearch(e.target.value)}
-                    />
+                <div style={{ flexShrink: 0 }}>
+                    {selectedDoctorKeys.length > 0 ? (
+                        <SelectionToolbar
+                            count={selectedDoctorKeys.length}
+                            itemName="doctor"
+                            onDeselect={clearDoctorSelection}
+                            onEdit={handleEditSelectedDoctor}
+                            onDelete={handleDeleteSelectedDoctors}
+                            editDisabled={selectedDoctorKeys.length !== 1}
+                        />
+                    ) : (
+                        <div style={{ marginBottom: 16 }}>
+                            <Input
+                                placeholder="Search doctors..."
+                                prefix={<SearchOutlined />}
+                                style={{ width: isMobile ? '100%' : 350 }}
+                                allowClear
+                                onChange={(e) => handleSearch(e.target.value)}
+                            />
+                        </div>
+                    )}
                 </div>
 
                 <div ref={containerRef} style={{ flex: 1, overflow: 'hidden' }}>
@@ -195,6 +263,7 @@ const DoctorManager: React.FC = () => {
                         onRowClick={handleRowClick}
                         onLoadMore={loadMore}
                         scroll={{ x: isMobile ? 'max-content' : undefined, y: tableHeight }}
+                        rowSelection={doctorRowSelection}
                     />
                 </div>
             </Card>

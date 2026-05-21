@@ -1,7 +1,6 @@
 import React from 'react';
 import { Modal } from 'antd';
 import { X } from 'lucide-react';
-import '../../styles/modal-overrides.css';
 
 interface SharedModalProps {
     title: string;

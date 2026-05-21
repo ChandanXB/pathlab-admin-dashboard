@@ -1,6 +1,6 @@
 import React from 'react';
-import { Tag, Space, Button, Popconfirm } from 'antd';
-import { EditOutlined, DeleteOutlined, UserOutlined, EyeOutlined, DownOutlined, RightOutlined } from '@ant-design/icons';
+import { Tag, Space, Button } from 'antd';
+import { UserOutlined, DownOutlined, RightOutlined } from '@ant-design/icons';
 import InfiniteScrollTable from '@/shared/components/InfiniteScrollTable';
 import type { Patient } from '../types/patient.types';
 import dayjs from 'dayjs';
@@ -16,8 +16,7 @@ interface PatientTableProps {
     onDelete: (id: number) => void;
     onLoadMore: () => void;
     scroll?: { x?: number | string; y?: number | string };
-    selectedRowKeys?: React.Key[];
-    onSelectionChange?: (selectedRowKeys: React.Key[]) => void;
+    rowSelection?: any;
 }
 
 const PatientTable: React.FC<PatientTableProps> = ({
@@ -30,8 +29,7 @@ const PatientTable: React.FC<PatientTableProps> = ({
     onDelete,
     onLoadMore,
     scroll,
-    selectedRowKeys,
-    onSelectionChange
+    rowSelection
 }) => {
     // Calculate age from DOB
     const calculateAge = (dob: string): number => {
@@ -94,50 +92,7 @@ const PatientTable: React.FC<PatientTableProps> = ({
             width: 130,
             render: (date: string) => <span style={{ whiteSpace: 'nowrap' }}>{dayjs(date).format('DD/MM/YY')}</span>,
         },
-        {
-            title: 'Actions',
-            key: 'actions',
-            width: 150,
-            render: (_: any, record: Patient) => (
-                <Space size="small">
-                    <Button
-                        type="text"
-                        size="small"
-                        icon={<EyeOutlined style={{ color: '#1890ff' }} />}
-                        onClick={() => onView(record)}
-                        title="View Profile"
-                    />
-                    <Button
-                        type="text"
-                        size="small"
-                        icon={<EditOutlined />}
-                        onClick={() => onEdit(record)}
-                        title="Edit Patient"
-                    />
-                    <Popconfirm
-                        title="Delete Patient?"
-                        description="Are you sure you want to delete this patient?"
-                        onConfirm={() => onDelete(record.id)}
-                        okText="Yes"
-                        cancelText="No"
-                    >
-                        <Button
-                            type="text"
-                            size="small"
-                            danger
-                            icon={<DeleteOutlined />}
-                            title="Delete Patient"
-                        />
-                    </Popconfirm>
-                </Space>
-            ),
-        },
     ];
-
-    const rowSelection = onSelectionChange ? {
-        selectedRowKeys,
-        onChange: onSelectionChange,
-    } : undefined;
 
     return (
         <React.Fragment>

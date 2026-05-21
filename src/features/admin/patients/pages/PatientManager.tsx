@@ -1,12 +1,13 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Card, Button, Form, Modal } from 'antd';
-import { PlusOutlined, UnorderedListOutlined, MedicineBoxOutlined, LineChartOutlined, DeleteOutlined } from '@ant-design/icons';
+import { PlusOutlined, UnorderedListOutlined, MedicineBoxOutlined, LineChartOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons';
 import { usePatients } from '../hooks/usePatients';
 import { PatientTable, PatientFilters, PatientFormModal, PatientDetailDrawer } from '../components';
 import type { Patient } from '../types/patient.types';
 import ConsultationManager from '../../consultations/pages/ConsultationManager';
 import PNCManager from './PNCManager';
 import { Tabs } from 'antd';
+import SelectionToolbar from '@/shared/components/SelectionToolbar';
 
 const PatientManager: React.FC = () => {
     const {
@@ -29,11 +30,45 @@ const PatientManager: React.FC = () => {
     const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
     const [form] = Form.useForm();
     const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+    const [selectedPatients, setSelectedPatients] = useState<Patient[]>([]);
 
-    // Reset selection when search filters change
-    useEffect(() => {
+    const clearPatientSelection = useCallback(() => {
         setSelectedRowKeys([]);
-    }, [patientFilters?.search, patientFilters?.gender]);
+        setSelectedPatients([]);
+    }, []);
+
+    // Reset selection when search filters or flat list change
+    useEffect(() => {
+        clearPatientSelection();
+    }, [patients, patientFilters?.search, patientFilters?.gender, clearPatientSelection]);
+
+    const patientRowSelection = useMemo(() => ({
+        selectedRowKeys,
+        onChange: (keys: React.Key[], rows: any[]) => {
+            setSelectedRowKeys(keys);
+            setSelectedPatients(rows);
+        }
+    }), [selectedRowKeys]);
+
+    const handleEditSelectedPatient = () => {
+        if (selectedPatients.length === 1) {
+            handleEdit(selectedPatients[0]);
+        }
+    };
+
+    const handleViewSelectedPatient = () => {
+        if (selectedPatients.length === 1) {
+            handleView(selectedPatients[0]);
+        }
+    };
+
+    const handleDeleteSelectedPatients = async () => {
+        const ids = selectedRowKeys.map(Number);
+        const success = await bulkDeletePatients(ids);
+        if (success) {
+            clearPatientSelection();
+        }
+    };
 
     const groupedPatients = useMemo(() => {
         const userToPatientMap = new Map<number, Patient>();
@@ -196,28 +231,41 @@ const PatientManager: React.FC = () => {
             }}>
                 <h1 style={{ fontSize: isMobile ? '20px' : '24px', margin: 0 }}>Patient Management</h1>
                 <div style={{ display: 'flex', gap: 8, width: isMobile ? '100%' : 'auto' }}>
-                    {selectedRowKeys.length > 0 && (
-                        <Button
-                            type="primary"
-                            danger
-                            icon={<DeleteOutlined />}
-                            onClick={handleBulkDelete}
-                            style={{ flex: isMobile ? 1 : 'none' }}
-                        >
-                            Delete {selectedRowKeys.length > 0 ? `(${selectedRowKeys.length})` : ''}
-                        </Button>
-                    )}
                     <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd} style={{ flex: isMobile ? 1 : 'none', minWidth: 140 }}>
                         Add New Patient
                     </Button>
                 </div>
             </div>
 
-            <PatientFilters
-                filters={patientFilters}
-                onFilterChange={handleFilterChange}
-                onSearch={handleSearch}
-            />
+            {selectedRowKeys.length > 0 ? (
+                <SelectionToolbar
+                    count={selectedRowKeys.length}
+                    itemName="patient"
+                    onDeselect={clearPatientSelection}
+                    onEdit={handleEditSelectedPatient}
+                    onDelete={handleDeleteSelectedPatients}
+                    deletePopconfirmTitle={`Are you sure you want to delete ${selectedRowKeys.length} selected patients? All records including checklists, appointments, growth history, and vaccinations will be cascade-deleted.`}
+                    editDisabled={selectedRowKeys.length !== 1}
+                    extraActions={
+                        selectedRowKeys.length === 1 && (
+                            <Button
+                                type="default"
+                                icon={<EyeOutlined />}
+                                onClick={handleViewSelectedPatient}
+                                style={{ borderRadius: '6px' }}
+                            >
+                                View Details
+                            </Button>
+                        )
+                    }
+                />
+            ) : (
+                <PatientFilters
+                    filters={patientFilters}
+                    onFilterChange={handleFilterChange}
+                    onSearch={handleSearch}
+                />
+            )}
 
             <Card
                 styles={{ body: { flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: 0 } }}
@@ -233,8 +281,7 @@ const PatientManager: React.FC = () => {
                         onView={handleView}
                         onDelete={handleDelete}
                         onLoadMore={loadMore}
-                        selectedRowKeys={selectedRowKeys}
-                        onSelectionChange={setSelectedRowKeys}
+                        rowSelection={patientRowSelection}
                         scroll={{ x: isMobile ? 'max-content' : undefined, y: tableHeight }}
                     />
                 </div>

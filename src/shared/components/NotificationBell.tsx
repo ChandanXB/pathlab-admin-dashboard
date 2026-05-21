@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Badge, Button, List, Typography, Avatar, Empty } from 'antd';
 import { BellOutlined, CheckCircleOutlined, InfoCircleOutlined, WarningOutlined, CloseOutlined, DeleteOutlined } from '@ant-design/icons';
 import colors from '@/styles/colors';
-import { useNotificationContext, type NotificationItem } from '@/contexts/NotificationContext';
+import { useNotificationContext, type NotificationItem } from '@/shared/contexts/NotificationContext';
 import { useNavigate } from 'react-router-dom';
 import SharedDetailDrawer from '@/shared/components/SharedDetailDrawer';
 
