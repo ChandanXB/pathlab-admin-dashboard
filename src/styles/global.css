@@ -1,0 +1,57 @@
+@import "tailwindcss";
+
+/* ─── Design Tokens ─────────────────────────────────────────── */
+:root {
+  --color-brand-blue: #004aad;
+  --color-brand-black: #000000;
+  --color-brand-slate: #0f172a;
+}
+
+/* ─── Reset ─────────────────────────────────────────────────── */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  font-family: "Inter", "Roboto", "Helvetica", "Arial", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #fbfbfb;
+  overflow-x: hidden;
+  width: 100%;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* ─── Ant Design Modal Overrides ─────────────────────────────── */
+
+/* Hide body scrollbar when modal is open to fix double scroll */
+.ant-scrolling-effect {
+    overflow: hidden !important;
+    touch-action: none;
+}
+
+/* Custom scrollbar for modal content */
+.ant-modal-body div::-webkit-scrollbar {
+    width: 6px;
+}
+
+.ant-modal-body div::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.ant-modal-body div::-webkit-scrollbar-thumb {
+    background: #e2e8f0;
+    border-radius: 10px;
+}
+
+.ant-modal-body div::-webkit-scrollbar-thumb:hover {
+    background: #cbd5e1;
+}

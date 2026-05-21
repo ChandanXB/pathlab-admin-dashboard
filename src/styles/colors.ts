@@ -34,6 +34,13 @@ export const colors = {
         revenue: '#fffbe6'
     },
 
+    // Selection Toolbar Colors
+    selectionToolbar: {
+        background: '#e6f7ff',
+        border: '#91d5ff'
+    },
+
+
     // Order/Status Colors
     status: {
         pending: '#fa8c16',   // Orange

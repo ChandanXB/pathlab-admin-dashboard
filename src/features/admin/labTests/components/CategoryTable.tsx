@@ -1,6 +1,5 @@
 import React from 'react';
-import { Tag, Space, Button, Popconfirm } from 'antd';
-import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Tag } from 'antd';
 import InfiniteScrollTable from '@/shared/components/InfiniteScrollTable';
 
 interface CategoryTableProps {
@@ -12,6 +11,7 @@ interface CategoryTableProps {
     onDelete: (id: number) => void;
     onNext: () => void;
     scroll?: { x?: number | string; y?: number | string };
+    rowSelection?: any;
 }
 
 const CategoryTable: React.FC<CategoryTableProps> = ({
@@ -22,7 +22,8 @@ const CategoryTable: React.FC<CategoryTableProps> = ({
     onEdit,
     onDelete,
     onNext,
-    scroll
+    scroll,
+    rowSelection
 }) => {
     const columns = [
         {
@@ -47,32 +48,6 @@ const CategoryTable: React.FC<CategoryTableProps> = ({
                     {(status || 'inactive').toUpperCase()}
                 </Tag>
             )
-        },
-        {
-            title: 'Action',
-            key: 'action',
-            width: 100,
-            render: (_: any, record: any) => (
-                <Space size="middle">
-                    <Button
-                        type="text"
-                        icon={<EditOutlined />}
-                        onClick={() => onEdit(record)}
-                    />
-                    <Popconfirm
-                        title="Delete category?"
-                        onConfirm={() => onDelete(record.id)}
-                        okText="Yes"
-                        cancelText="No"
-                    >
-                        <Button
-                            type="text"
-                            danger
-                            icon={<DeleteOutlined />}
-                        />
-                    </Popconfirm>
-                </Space>
-            )
         }
     ];
 
@@ -86,6 +61,7 @@ const CategoryTable: React.FC<CategoryTableProps> = ({
             hasMore={hasMore}
             next={onNext}
             scroll={scroll}
+            rowSelection={rowSelection}
         />
     );
 };

@@ -1,6 +1,5 @@
 import React from 'react';
-import { Tag, Space, Button, Popconfirm } from 'antd';
-import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Tag } from 'antd';
 import InfiniteScrollTable from '@/shared/components/InfiniteScrollTable';
 
 interface TestTableProps {
@@ -12,6 +11,7 @@ interface TestTableProps {
     onDelete: (id: number) => void;
     scroll?: { x?: number | string; y?: number | string };
     onScroll?: (e: any) => void; // Keep for compatibility if needed, but InfiniteScroll handles this now
+    rowSelection?: any;
 }
 
 const TestTable: React.FC<TestTableProps> = ({
@@ -22,7 +22,8 @@ const TestTable: React.FC<TestTableProps> = ({
     onEdit,
     onDelete,
     scroll,
-    onScroll
+    onScroll,
+    rowSelection
 }) => {
     const columns = [
         { title: 'Test Code', dataIndex: 'test_code', width: 120 },
@@ -53,32 +54,6 @@ const TestTable: React.FC<TestTableProps> = ({
                     {(status || 'inactive').toUpperCase()}
                 </Tag>
             )
-        },
-        {
-            title: 'Action',
-            key: 'action',
-            width: 100,
-            render: (_: any, record: any) => (
-                <Space size="middle">
-                    <Button
-                        type="text"
-                        icon={<EditOutlined />}
-                        onClick={() => onEdit(record)}
-                    />
-                    <Popconfirm
-                        title="Delete test?"
-                        onConfirm={() => onDelete(record.id)}
-                        okText="Yes"
-                        cancelText="No"
-                    >
-                        <Button
-                            type="text"
-                            danger
-                            icon={<DeleteOutlined />}
-                        />
-                    </Popconfirm>
-                </Space>
-            )
         }
     ];
 
@@ -90,6 +65,7 @@ const TestTable: React.FC<TestTableProps> = ({
             loading={loading}
             loadingMore={loadingMore}
             hasMore={hasMore}
+            rowSelection={rowSelection}
             next={() => {
                 // If onScroll was passed, we can't easily trigger it, but we should 
                 // typically trigger the filter update logic here.

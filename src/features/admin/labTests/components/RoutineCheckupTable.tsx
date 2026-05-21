@@ -1,6 +1,5 @@
 import React from 'react';
-import { Table, Tag, Space, Button, Popconfirm, Tooltip } from 'antd';
-import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Table, Tag, Tooltip } from 'antd';
 import { API_BASE_URL } from '@/config/apiClient';
 import type { RoutineCheckup } from '../types/routineCheckup.types';
 
@@ -10,6 +9,7 @@ interface RoutineCheckupTableProps {
     onEdit: (record: RoutineCheckup) => void;
     onDelete: (id: number) => void;
     scroll?: { x?: number | string; y?: number | string };
+    rowSelection?: any;
 }
 
 const RoutineCheckupTable: React.FC<RoutineCheckupTableProps> = ({
@@ -17,7 +17,8 @@ const RoutineCheckupTable: React.FC<RoutineCheckupTableProps> = ({
     loading,
     onEdit,
     onDelete,
-    scroll
+    scroll,
+    rowSelection
 }) => {
     const getFullImageUrl = (url: string) => {
         if (!url) return '';
@@ -197,38 +198,6 @@ const RoutineCheckupTable: React.FC<RoutineCheckupTableProps> = ({
                 </Tag>
             ),
         },
-        {
-            title: 'Action',
-            key: 'action',
-            width: 100,
-            align: 'center' as const,
-            onCell: () => ({ style: { verticalAlign: 'middle' } }),
-            render: (_: any, record: RoutineCheckup) => (
-                <Space size="middle">
-                    <Tooltip title="Edit">
-                        <Button
-                            type="text"
-                            icon={<EditOutlined />}
-                            onClick={() => onEdit(record)}
-                        />
-                    </Tooltip>
-                    <Tooltip title="Delete">
-                        <Popconfirm
-                            title="Are you sure you want to delete this routine package?"
-                            onConfirm={() => onDelete(record.id)}
-                            okText="Yes"
-                            cancelText="No"
-                        >
-                            <Button
-                                type="text"
-                                danger
-                                icon={<DeleteOutlined />}
-                            />
-                        </Popconfirm>
-                    </Tooltip>
-                </Space>
-            ),
-        },
     ];
 
     return (
@@ -239,6 +208,7 @@ const RoutineCheckupTable: React.FC<RoutineCheckupTableProps> = ({
             loading={loading}
             pagination={false}
             scroll={scroll}
+            rowSelection={rowSelection}
             className="custom-table"
         />
     );

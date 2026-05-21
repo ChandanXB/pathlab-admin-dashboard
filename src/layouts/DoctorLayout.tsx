@@ -14,7 +14,7 @@ import { useAuthStore } from '@/store/authStore';
 import MeetingBanner from '@/shared/components/MeetingBanner';
 import { appointmentService } from '@/features/doctor/appointments/services/appointmentService';
 import { doctorService } from '@/features/admin/doctors/services/doctorService';
-import { useNotifications } from '@/hooks/useNotifications';
+import { useNotifications } from '@/shared/hooks/useNotifications';
 import NotificationBell from '@/shared/components/NotificationBell';
 
 const { Header, Content, Sider } = Layout;

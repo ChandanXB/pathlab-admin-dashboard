@@ -16,7 +16,7 @@ interface AgentTableProps {
     onLoadMore: () => void;
     scroll?: { x?: number | string; y?: number | string };
     selectedRowKeys?: React.Key[];
-    onSelectionChange?: (selectedRowKeys: React.Key[]) => void;
+    onSelectionChange?: (selectedRowKeys: React.Key[], selectedRows: CollectionAgent[]) => void;
 }
 
 const AgentTable: React.FC<AgentTableProps> = ({
@@ -126,7 +126,7 @@ const AgentTable: React.FC<AgentTableProps> = ({
 
     const rowSelection = onSelectionChange ? {
         selectedRowKeys,
-        onChange: onSelectionChange,
+        onChange: (keys: React.Key[], rows: CollectionAgent[]) => onSelectionChange(keys, rows),
     } : undefined;
 
     return (
