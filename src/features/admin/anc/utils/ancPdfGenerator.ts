@@ -5,10 +5,7 @@ import type { Pregnancy } from '../services/ancService';
 import { formatName } from '@/shared/utils/nameUtils';
 import { PATHLAB_STAMP_BASE64 } from '@/shared/constants/assets';
 
-/**
- * Generates a professional ANC Card PDF for a patient
- * Supports both direct download and dataURI return for previews
- */
+
 export const generateAncPdf = (data: Pregnancy, outputType: 'save' | 'datauri' = 'save'): string | void => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
