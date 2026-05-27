@@ -23,8 +23,6 @@ const DoctorTable: React.FC<DoctorTableProps> = ({
     loading,
     loadingMore,
     hasMore,
-    onEdit,
-    onDelete,
     onRowClick,
     onLoadMore,
     scroll,

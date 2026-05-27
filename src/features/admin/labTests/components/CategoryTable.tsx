@@ -19,8 +19,6 @@ const CategoryTable: React.FC<CategoryTableProps> = ({
     loading,
     loadingMore,
     hasMore,
-    onEdit,
-    onDelete,
     onNext,
     scroll,
     rowSelection
