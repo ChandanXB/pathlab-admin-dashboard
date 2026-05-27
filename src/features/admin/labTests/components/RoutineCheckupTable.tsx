@@ -15,8 +15,6 @@ interface RoutineCheckupTableProps {
 const RoutineCheckupTable: React.FC<RoutineCheckupTableProps> = ({
     data,
     loading,
-    onEdit,
-    onDelete,
     scroll,
     rowSelection
 }) => {
