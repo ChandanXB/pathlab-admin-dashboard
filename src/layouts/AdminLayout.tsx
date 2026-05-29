@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Layout, Menu, Typography, Avatar, Dropdown, Divider, theme, Button, Space } from 'antd';
+import { Layout, Menu, Typography, Avatar, Dropdown, Divider, theme, Button, Space, Tooltip } from 'antd';
 import {
     DashboardOutlined,
     UserOutlined,
@@ -9,7 +9,8 @@ import {
     MenuFoldOutlined,
     GlobalOutlined,
     MedicineBoxOutlined,
-    PercentageOutlined
+    PercentageOutlined,
+    RobotOutlined,
 } from '@ant-design/icons';
 
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
@@ -22,6 +23,10 @@ import { collectionAgentService, type CollectionAgent } from '@/features/admin/c
 import { formatName } from '@/shared/utils/nameUtils';
 import { useNotifications } from '@/shared/hooks/useNotifications';
 import NotificationBell from '@/shared/components/NotificationBell';
+import { useDashboardStats } from '@/features/admin/dashboard/hooks/useDashboardStats';
+import { useAIAssistant } from '@/features/admin/aiAssistant/hooks/useAIAssistant';
+import AIAssistantDrawer from '@/features/admin/aiAssistant/components/AIAssistantDrawer';
+import '@/features/admin/aiAssistant/components/AIAssistantDrawer.css';
 
 const { Header, Content, Sider } = Layout;
 const { Text } = Typography;
@@ -33,9 +38,22 @@ const AdminLayout: React.FC = () => {
     const location = useLocation();
     const { token: themeToken } = theme.useToken();
     const { user, logout } = useAuthStore();
-    
+
     // Register FCM notifications
     useNotifications();
+
+    // Dashboard stats for the AI assistant context
+    const { stats: dashboardStats } = useDashboardStats();
+
+    // AI Assistant
+    const aiAssistant = useAIAssistant({
+        totalPatients: dashboardStats.totalPatients,
+        totalRevenue: dashboardStats.totalRevenue,
+        activeTests: dashboardStats.activeTests,
+        pendingReports: dashboardStats.pendingReports,
+        statusCounts: dashboardStats.statusCounts,
+        recentOrders: dashboardStats.recentOrders,
+    });
 
     const [orderStats, setOrderStats] = useState<any>(null);
     const [agents, setAgents] = useState<CollectionAgent[]>([]);
@@ -375,6 +393,32 @@ const AdminLayout: React.FC = () => {
 
                     <Space size="middle">
                         <NotificationBell />
+                        <Tooltip title="PathLab AI Assistant" placement="bottom">
+                            <Button
+                                id="ai-assistant-btn"
+                                className="ai-header-btn"
+                                onClick={aiAssistant.openDrawer}
+                                icon={<RobotOutlined style={{ fontSize: 17 }} />}
+                                style={{
+                                    width: 38, height: 38,
+                                    borderRadius: 10,
+                                    border: '1.5px solid rgba(114,46,209,0.25)',
+                                    background: 'linear-gradient(135deg,rgba(114,46,209,0.07),rgba(83,29,171,0.04))',
+                                    color: '#722ed1',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    position: 'relative',
+                                    boxShadow: aiAssistant.isOpen ? '0 0 0 3px rgba(114,46,209,0.2)' : 'none',
+                                }}
+                            >
+                                {/* Live pulse dot */}
+                                <span style={{
+                                    position: 'absolute', top: -3, right: -3,
+                                    width: 10, height: 10, borderRadius: '50%',
+                                    background: '#52c41a', border: '2px solid #fff',
+                                    animation: 'ai-pulse-ring 2s infinite',
+                                }} />
+                            </Button>
+                        </Tooltip>
                         <Divider vertical style={{ height: 24 }} />
                         <Dropdown menu={userMenu} placement="bottomRight" arrow>
                             <Space style={{ cursor: 'pointer', padding: '4px 8px', borderRadius: '8px', transition: 'all 0.2s' }} className="user-dropdown-trigger">
@@ -410,6 +454,23 @@ const AdminLayout: React.FC = () => {
                     <Outlet />
                 </Content>
             </Layout>
+
+            {/* ─── AI Analytics Assistant Drawer ──────────── */}
+            <AIAssistantDrawer
+                open={aiAssistant.isOpen}
+                onClose={aiAssistant.closeDrawer}
+                messages={aiAssistant.messages}
+                loading={aiAssistant.loading}
+                onSend={aiAssistant.sendMessage}
+                onClear={aiAssistant.clearChat}
+                quickPrompts={aiAssistant.quickPrompts}
+                context={{
+                    totalPatients: dashboardStats.totalPatients,
+                    totalRevenue: dashboardStats.totalRevenue,
+                    activeTests: dashboardStats.activeTests,
+                    pendingReports: dashboardStats.pendingReports,
+                }}
+            />
         </Layout>
     );
 };
