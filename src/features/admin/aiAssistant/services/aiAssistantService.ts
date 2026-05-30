@@ -17,7 +17,7 @@ export const aiAssistantService = {
      */
     analyze: async (message: string, context: AIContext): Promise<string> => {
         const response = await apiClient.post(
-            '/lab-orders/ai-analyze',
+            '/ai/analyze',
             { message, context },
             { timeout: 30000 }
         );
