@@ -7,8 +7,8 @@ interface TestTableProps {
     loading: boolean;
     loadingMore: boolean;
     hasMore: boolean;
-    onEdit: (record: any) => void;
-    onDelete: (id: number) => void;
+    onEdit?: (test: any) => void;
+    onDelete?: (testId: any) => void;
     scroll?: { x?: number | string; y?: number | string };
     onScroll?: (e: any) => void; // Keep for compatibility if needed, but InfiniteScroll handles this now
     rowSelection?: any;

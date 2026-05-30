@@ -20,12 +20,7 @@ interface Props {
     onSend: (msg: string) => void;
     onClear: () => void;
     quickPrompts: { label: string; text: string }[];
-    context: {
-        totalPatients: number;
-        totalRevenue: number;
-        activeTests: number;
-        pendingReports: number;
-    };
+
 }
 
 /** Very lightweight markdown renderer — handles **bold**, bullet lists */
@@ -60,7 +55,7 @@ const parseBold = (text: string): React.ReactNode => {
 };
 
 const AIAssistantDrawer: React.FC<Props> = ({
-    open, onClose, messages, loading, onSend, onClear, quickPrompts, context
+    open, onClose, messages, loading, onSend, onClear, quickPrompts
 }) => {
     const [inputValue, setInputValue] = useState('');
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -97,9 +92,9 @@ const AIAssistantDrawer: React.FC<Props> = ({
                 <Space size={10} align="center">
                     <div style={{
                         width: 32, height: 32, borderRadius: '50%',
-                        background: 'linear-gradient(135deg, #722ed1, #531dab)',
+                        background: 'linear-gradient(135deg, #1890ff, #096dd9)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        boxShadow: '0 2px 8px rgba(114,46,209,0.5)',
+                        boxShadow: '0 2px 8px rgba(24,144,255,0.5)',
                         flexShrink: 0,
                     }}>
                         <RobotOutlined style={{ color: '#fff', fontSize: 16 }} />
@@ -133,27 +128,7 @@ const AIAssistantDrawer: React.FC<Props> = ({
             style={{ top: 64 }}          // below header
             styles={{ body: { padding: 0, display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' } }}
         >
-            {/* ─── Live Context Stats Strip ─────────────────────── */}
-            <div className="ai-context-strip">
-                <div className="ai-context-item">
-                    <div className="ai-context-value">{context.totalPatients.toLocaleString('en-IN')}</div>
-                    <div className="ai-context-label">Patients</div>
-                </div>
-                <div className="ai-context-item">
-                    <div className="ai-context-value">₹{(context.totalRevenue || 0).toLocaleString('en-IN')}</div>
-                    <div className="ai-context-label">Revenue</div>
-                </div>
-                <div className="ai-context-item">
-                    <div className="ai-context-value">{context.activeTests}</div>
-                    <div className="ai-context-label">Active</div>
-                </div>
-                <div className="ai-context-item">
-                    <div className="ai-context-value" style={{ color: context.pendingReports > 5 ? '#ff7875' : '#95de64' }}>
-                        {context.pendingReports}
-                    </div>
-                    <div className="ai-context-label">Pending</div>
-                </div>
-            </div>
+
 
             {/* ─── Messages Area ─────────────────────────────────── */}
             <div className="ai-messages-area">
@@ -227,10 +202,10 @@ const AIAssistantDrawer: React.FC<Props> = ({
                         disabled={loading || !inputValue.trim()}
                         style={{
                             width: 38, height: 38, borderRadius: '50%',
-                            background: 'linear-gradient(135deg, #722ed1, #531dab)',
+                            background: 'linear-gradient(135deg, #1890ff, #096dd9)',
                             border: 'none', cursor: loading || !inputValue.trim() ? 'not-allowed' : 'pointer',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            boxShadow: '0 4px 12px rgba(114,46,209,0.4)',
+                            boxShadow: '0 4px 12px rgba(24,144,255,0.4)',
                             flexShrink: 0, transition: 'transform 0.2s, box-shadow 0.2s',
                             opacity: loading || !inputValue.trim() ? 0.5 : 1,
                         }}

@@ -13,6 +13,8 @@ const QUICK_PROMPTS = [
     { label: '📦 Order Summary', text: 'Give me a complete summary of all orders and their current statuses.' },
     { label: '💰 Revenue Insights', text: 'Analyze my revenue — today vs yesterday, and overall trends.' },
     { label: '👥 Patient Growth', text: 'How many patients do I have? Give me insights on patient count.' },
+    { label: '🏥 Doctors', text: 'List all doctors in our network with their specialties and contact details.' },
+    { label: '🚴 Collection Agents', text: 'Show me all collection agents and their current pending pickups.' },
     { label: '⚠️ Needs Attention', text: 'Which orders need immediate attention or action?' },
     { label: '📊 Completion Rate', text: 'What is my order completion rate and how can I improve operations?' },
     { label: '🔍 Pending Backlog', text: 'How many orders are pending or processing? What should I do?' },

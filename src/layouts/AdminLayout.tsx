@@ -402,12 +402,12 @@ const AdminLayout: React.FC = () => {
                                 style={{
                                     width: 38, height: 38,
                                     borderRadius: 10,
-                                    border: '1.5px solid rgba(114,46,209,0.25)',
-                                    background: 'linear-gradient(135deg,rgba(114,46,209,0.07),rgba(83,29,171,0.04))',
-                                    color: '#722ed1',
+                                    border: '1.5px solid rgba(24,144,255,0.25)',
+                                    background: 'linear-gradient(135deg,rgba(24,144,255,0.07),rgba(9,109,217,0.04))',
+                                    color: '#1890ff',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     position: 'relative',
-                                    boxShadow: aiAssistant.isOpen ? '0 0 0 3px rgba(114,46,209,0.2)' : 'none',
+                                    boxShadow: aiAssistant.isOpen ? '0 0 0 3px rgba(24,144,255,0.2)' : 'none',
                                 }}
                             >
                                 {/* Live pulse dot */}
@@ -464,12 +464,7 @@ const AdminLayout: React.FC = () => {
                 onSend={aiAssistant.sendMessage}
                 onClear={aiAssistant.clearChat}
                 quickPrompts={aiAssistant.quickPrompts}
-                context={{
-                    totalPatients: dashboardStats.totalPatients,
-                    totalRevenue: dashboardStats.totalRevenue,
-                    activeTests: dashboardStats.activeTests,
-                    pendingReports: dashboardStats.pendingReports,
-                }}
+
             />
         </Layout>
     );
