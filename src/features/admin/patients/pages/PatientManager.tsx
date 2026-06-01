@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { Card, Button, Form, Modal } from 'antd';
-import { PlusOutlined, UnorderedListOutlined, MedicineBoxOutlined, LineChartOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons';
+import { Card, Button, Form } from 'antd';
+import { PlusOutlined, UnorderedListOutlined, MedicineBoxOutlined, LineChartOutlined, EyeOutlined } from '@ant-design/icons';
 import { usePatients } from '../hooks/usePatients';
 import { PatientTable, PatientFilters, PatientFormModal, PatientDetailDrawer } from '../components';
 import type { Patient } from '../types/patient.types';
@@ -147,24 +147,6 @@ const PatientManager: React.FC = () => {
 
     const handleDelete = async (id: number) => {
         await deletePatient(id);
-    };
-
-    const handleBulkDelete = () => {
-        Modal.confirm({
-            title: 'Delete Selected Patients',
-            content: `Are you sure you want to delete ${selectedRowKeys.length} selected patients? All records including pregnancy checklists, appointments, growth history, and vaccinations will be cascade-deleted. This action cannot be undone.`,
-            okText: 'Yes, Delete',
-            okType: 'danger',
-            cancelText: 'No',
-            style: { top: 80 },
-            onOk: async () => {
-                const ids = selectedRowKeys.map(Number);
-                const success = await bulkDeletePatients(ids);
-                if (success) {
-                    setSelectedRowKeys([]);
-                }
-            }
-        });
     };
 
     const [screenSize, setScreenSize] = useState(window.innerWidth);

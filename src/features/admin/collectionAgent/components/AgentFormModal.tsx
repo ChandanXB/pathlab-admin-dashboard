@@ -26,6 +26,7 @@ interface AgentFormModalProps {
     form: any;
     onOk: () => void;
     onCancel: () => void;
+    loading?: boolean;
 }
 
 const AgentFormModal: React.FC<AgentFormModalProps> = ({
@@ -34,6 +35,7 @@ const AgentFormModal: React.FC<AgentFormModalProps> = ({
     form,
     onOk,
     onCancel,
+    loading,
 }) => {
     // Handle changes from the LocationPicker
     const handleLocationChange = (data: { lat: number; lng: number; address: string }) => {
@@ -71,6 +73,7 @@ const AgentFormModal: React.FC<AgentFormModalProps> = ({
             onOk={onOk}
             onCancel={onCancel}
             okText={editingAgent ? "Update" : "Create"}
+            confirmLoading={loading}
             width={800}
         >
             <Form

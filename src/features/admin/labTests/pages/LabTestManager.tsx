@@ -61,6 +61,7 @@ const LabTestManager: React.FC = () => {
         testPagination,
         testFilters,
         setTestFilters,
+        isSubmitting: isTestSubmitting,
         createTest,
         updateTest,
         deleteTest,
@@ -74,6 +75,7 @@ const LabTestManager: React.FC = () => {
         categoryPagination,
         categoryFilters,
         setCategoryFilters,
+        isSubmitting: isCategorySubmitting,
         createCategory,
         updateCategory,
         deleteCategory,
@@ -633,6 +635,7 @@ const LabTestManager: React.FC = () => {
                 categories={allCategories}
                 form={testForm}
                 onSubmit={handleTestSubmit}
+                loading={isTestSubmitting}
                 onCancel={() => {
                     setIsTestModalVisible(false);
                     testForm.resetFields();
@@ -644,6 +647,7 @@ const LabTestManager: React.FC = () => {
                 editingCategory={editingCategory}
                 form={categoryForm}
                 onSubmit={handleCategorySubmit}
+                loading={isCategorySubmitting}
                 onCancel={() => {
                     setIsCategoryModalVisible(false);
                     categoryForm.resetFields();

@@ -19,8 +19,6 @@ const TestTable: React.FC<TestTableProps> = ({
     loading,
     loadingMore,
     hasMore,
-    onEdit,
-    onDelete,
     scroll,
     onScroll,
     rowSelection

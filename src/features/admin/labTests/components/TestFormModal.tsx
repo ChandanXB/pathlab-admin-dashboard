@@ -12,6 +12,7 @@ interface TestFormModalProps {
     form: any;
     onSubmit: (values: any) => void;
     onCancel: () => void;
+    loading?: boolean;
 }
 
 const TestFormModal: React.FC<TestFormModalProps> = ({
@@ -20,7 +21,8 @@ const TestFormModal: React.FC<TestFormModalProps> = ({
     categories,
     form,
     onSubmit,
-    onCancel
+    onCancel,
+    loading,
 }) => {
     return (
         <SharedModal
@@ -30,6 +32,7 @@ const TestFormModal: React.FC<TestFormModalProps> = ({
             onCancel={onCancel}
             width={700}
             okText={editingTest ? 'Update' : 'Create'}
+            confirmLoading={loading}
         >
             <Form
                 form={form}

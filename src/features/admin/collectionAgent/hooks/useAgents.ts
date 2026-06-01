@@ -6,6 +6,7 @@ export const useAgents = (enabled: boolean = true) => {
     const [agents, setAgents] = useState<CollectionAgent[]>([]);
     const [loadingAgents, setLoadingAgents] = useState(false);
     const [loadingMoreAgents, setLoadingMoreAgents] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [agentPagination, setAgentPagination] = useState({
         current: 1,
         pageSize: 20,
@@ -57,6 +58,7 @@ export const useAgents = (enabled: boolean = true) => {
     };
 
     const createAgent = async (values: CollectionAgentFormData) => {
+        setIsSubmitting(true);
         try {
             await collectionAgentService.createAgent(values);
             message.success('Agent created successfully');
@@ -64,10 +66,13 @@ export const useAgents = (enabled: boolean = true) => {
             return true;
         } catch (error: any) {
             return false;
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
     const updateAgent = async (id: number, values: Partial<CollectionAgentFormData>) => {
+        setIsSubmitting(true);
         try {
             await collectionAgentService.updateAgent(id, values);
             message.success('Agent updated successfully');
@@ -75,6 +80,8 @@ export const useAgents = (enabled: boolean = true) => {
             return true;
         } catch (error: any) {
             return false;
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -116,6 +123,7 @@ export const useAgents = (enabled: boolean = true) => {
         agents,
         loadingAgents,
         loadingMoreAgents,
+        isSubmitting,
         agentPagination,
         agentFilters,
         setAgentFilters,

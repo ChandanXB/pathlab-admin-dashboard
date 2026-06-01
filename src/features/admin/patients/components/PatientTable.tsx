@@ -24,9 +24,6 @@ const PatientTable: React.FC<PatientTableProps> = ({
     loading,
     loadingMore,
     hasMore,
-    onEdit,
-    onView,
-    onDelete,
     onLoadMore,
     scroll,
     rowSelection

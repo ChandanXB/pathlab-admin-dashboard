@@ -22,6 +22,7 @@ const CouponManager: React.FC = () => {
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [submittingCoupon, setSubmittingCoupon] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
   const [searchText, setSearchText] = useState('');
@@ -37,6 +38,7 @@ const CouponManager: React.FC = () => {
   const [hasMoreCampaigns, setHasMoreCampaigns] = useState(true);
   const [isCampaignModalVisible, setIsCampaignModalVisible] = useState(false);
   const [editingCampaign, setEditingCampaign] = useState<Campaign | null>(null);
+  const [submittingCampaign, setSubmittingCampaign] = useState(false);
   const [campaignForm] = Form.useForm();
   const [isSendCampaignModalVisible, setIsSendCampaignModalVisible] = useState(false);
   const [campaignToSend, setCampaignToSend] = useState<Campaign | null>(null);
@@ -232,6 +234,7 @@ const CouponManager: React.FC = () => {
   };
 
   const handleSubmit = async (values: any) => {
+    setSubmittingCoupon(true);
     try {
       if (editingCoupon) {
         await couponService.updateCoupon(editingCoupon.id, values);
@@ -246,10 +249,13 @@ const CouponManager: React.FC = () => {
       fetchCoupons(1, searchText);
     } catch (error: any) {
       message.error(error.response?.data?.message || 'Operation failed');
+    } finally {
+      setSubmittingCoupon(false);
     }
   };
 
   const handleCampaignSubmit = async (values: any) => {
+    setSubmittingCampaign(true);
     try {
       if (editingCampaign) {
         await campaignService.updateCampaign(editingCampaign.id, values);
@@ -263,6 +269,8 @@ const CouponManager: React.FC = () => {
       fetchCampaigns(1, searchText);
     } catch (error: any) {
       message.error(error.response?.data?.message || 'Failed to save campaign');
+    } finally {
+      setSubmittingCampaign(false);
     }
   };
 
@@ -348,6 +356,7 @@ const CouponManager: React.FC = () => {
         form={form}
         onSubmit={handleSubmit}
         onCancel={() => setIsModalVisible(false)}
+        confirmLoading={submittingCoupon}
         tests={tests}
         packages={packages}
       />
@@ -359,6 +368,7 @@ const CouponManager: React.FC = () => {
         coupons={coupons}
         onSubmit={handleCampaignSubmit}
         onCancel={() => setIsCampaignModalVisible(false)}
+        confirmLoading={submittingCampaign}
       />
 
       <SendCampaignModal

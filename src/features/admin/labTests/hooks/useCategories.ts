@@ -8,6 +8,7 @@ export const useCategories = (fetchListEnabled: boolean = true) => {
     const [allCategories, setAllCategories] = useState<any[]>([]);
     const [loadingCategories, setLoadingCategories] = useState(false);
     const [loadingMoreCategories, setLoadingMoreCategories] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [categoryPagination, setCategoryPagination] = useState({
         current: 1,
         pageSize: 20,
@@ -67,6 +68,7 @@ export const useCategories = (fetchListEnabled: boolean = true) => {
     };
 
     const createCategory = async (values: any) => {
+        setIsSubmitting(true);
         try {
             await labTestService.createCategory(values);
             message.success('Category created successfully');
@@ -76,10 +78,13 @@ export const useCategories = (fetchListEnabled: boolean = true) => {
         } catch (error: any) {
             message.error('Operation failed: ' + error.message);
             return false;
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
     const updateCategory = async (id: number, values: any) => {
+        setIsSubmitting(true);
         try {
             await labTestService.updateCategory(id, values);
             message.success('Category updated successfully');
@@ -89,6 +94,8 @@ export const useCategories = (fetchListEnabled: boolean = true) => {
         } catch (error: any) {
             message.error('Operation failed: ' + error.message);
             return false;
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -140,6 +147,7 @@ export const useCategories = (fetchListEnabled: boolean = true) => {
         allCategories,
         loadingCategories,
         loadingMoreCategories,
+        isSubmitting,
         categoryPagination,
         categoryFilters,
         setCategoryFilters,
