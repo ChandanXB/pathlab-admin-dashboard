@@ -8,6 +8,7 @@ export const useTests = (enabled: boolean = true) => {
     const [allTests, setAllTests] = useState<any[]>([]);
     const [loadingTests, setLoadingTests] = useState(false);
     const [loadingMoreTests, setLoadingMoreTests] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [testPagination, setTestPagination] = useState({
         current: 1,
         pageSize: 20,
@@ -71,6 +72,7 @@ export const useTests = (enabled: boolean = true) => {
     };
 
     const createTest = async (values: any) => {
+        setIsSubmitting(true);
         try {
             await labTestService.createTest(values);
             message.success('Test created successfully');
@@ -80,10 +82,13 @@ export const useTests = (enabled: boolean = true) => {
         } catch (error: any) {
             message.error('Operation failed: ' + error.message);
             return false;
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
     const updateTest = async (id: number, values: any) => {
+        setIsSubmitting(true);
         try {
             await labTestService.updateTest(id, values);
             message.success('Test updated successfully');
@@ -93,6 +98,8 @@ export const useTests = (enabled: boolean = true) => {
         } catch (error: any) {
             message.error('Operation failed: ' + error.message);
             return false;
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -149,6 +156,7 @@ export const useTests = (enabled: boolean = true) => {
         allTests,
         loadingTests,
         loadingMoreTests,
+        isSubmitting,
         testPagination,
         testFilters,
         setTestFilters,

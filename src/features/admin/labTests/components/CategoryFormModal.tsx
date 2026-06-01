@@ -12,6 +12,7 @@ interface CategoryFormModalProps {
     form: any;
     onSubmit: (values: any) => void;
     onCancel: () => void;
+    loading?: boolean;
 }
 
 const CategoryFormModal: React.FC<CategoryFormModalProps> = ({
@@ -19,7 +20,8 @@ const CategoryFormModal: React.FC<CategoryFormModalProps> = ({
     editingCategory,
     form,
     onSubmit,
-    onCancel
+    onCancel,
+    loading,
 }) => {
     useEffect(() => {
         if (visible && !editingCategory) {
@@ -34,6 +36,7 @@ const CategoryFormModal: React.FC<CategoryFormModalProps> = ({
             onOk={() => form.submit()}
             onCancel={onCancel}
             okText={editingCategory ? 'Update' : 'Create'}
+            confirmLoading={loading}
         >
             <Form
                 form={form}

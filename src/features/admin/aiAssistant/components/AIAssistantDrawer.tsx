@@ -7,7 +7,7 @@ import {
     ThunderboltOutlined,
 } from '@ant-design/icons';
 import type { ChatMessage } from '../hooks/useAIAssistant';
-import './AIAssistantDrawer.css';
+import '@/styles/features/aiAssistant.css';
 
 const { Text } = Typography;
 const { TextArea } = Input;

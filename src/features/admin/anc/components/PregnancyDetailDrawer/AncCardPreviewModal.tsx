@@ -25,8 +25,12 @@ const EditableField: React.FC<{
     type?: 'text' | 'number' | 'date' | 'select';
     options?: { value: string; label: string }[];
     style?: React.CSSProperties;
-}> = ({ value, onChange, editing, type = 'text', options, style }) => {
-    if (!editing) {
+    isPrinting?: boolean;
+}> = ({ value, onChange, editing, type = 'text', options, style, isPrinting }) => {
+    if (!editing || isPrinting) {
+        if (type === 'date') {
+            return <span style={{ ...style, display: 'inline-block', padding: '4px 0' }}>{dayjs(value as string).format('DD MMM YYYY')}</span>;
+        }
         return <span style={style}>{value}</span>;
     }
     if (type === 'number') {
@@ -43,7 +47,6 @@ const EditableField: React.FC<{
     if (type === 'date') {
         return (
             <Input
-                size="small"
                 type="date"
                 value={dayjs(value as string).format('YYYY-MM-DD')}
                 onChange={(e) => onChange(e.target.value)}
@@ -131,6 +134,9 @@ const AncCardPreviewModal: React.FC<AncCardPreviewModalProps> = ({ open, data, o
     const handleShareViaEmail = async () => {
         if (!data) return;
         setSharing(true);
+        // Wait for React to re-render the print-friendly DOM (replacing inputs with spans)
+        await new Promise((resolve) => setTimeout(resolve, 150));
+        
         const success = await shareAncCardViaBackend({
             element: cardRef.current,
             pregnancyData: data,
@@ -143,6 +149,9 @@ const AncCardPreviewModal: React.FC<AncCardPreviewModalProps> = ({ open, data, o
     /** Download: Save locally via Helper */
     const handleLocalDownload = async () => {
         setDownloading(true);
+        // Wait for React to re-render the print-friendly DOM (replacing inputs with spans)
+        await new Promise((resolve) => setTimeout(resolve, 150));
+        
         await downloadAncCardLocally(cardRef.current, fields);
         setDownloading(false);
     };
@@ -266,7 +275,7 @@ const AncCardPreviewModal: React.FC<AncCardPreviewModalProps> = ({ open, data, o
                                 </div>
                                 <div>
                                     <span style={{ fontWeight: 600, fontSize: 12 }}>Full Name: </span>
-                                    <EditableField value={fields.full_name} onChange={set('full_name')} editing={editing} />
+                                    <EditableField value={fields.full_name} onChange={set('full_name')} editing={editing} isPrinting={sharing || downloading} />
                                 </div>
                                 <div>
                                     <span style={{ fontWeight: 600, fontSize: 12 }}>Risk Level: </span>
@@ -281,11 +290,12 @@ const AncCardPreviewModal: React.FC<AncCardPreviewModalProps> = ({ open, data, o
                                             { value: 'High', label: 'HIGH' },
                                         ]}
                                         style={{ color: riskColor, fontWeight: 700 }}
+                                        isPrinting={sharing || downloading}
                                     />
                                 </div>
                                 <div>
                                     <span style={{ fontWeight: 600, fontSize: 12 }}>Contact No: </span>
-                                    <EditableField value={fields.phone} onChange={set('phone')} editing={editing} />
+                                    <EditableField value={fields.phone} onChange={set('phone')} editing={editing} isPrinting={sharing || downloading} />
                                 </div>
                             </div>
 
@@ -305,6 +315,7 @@ const AncCardPreviewModal: React.FC<AncCardPreviewModalProps> = ({ open, data, o
                                                 editing={editing}
                                                 type="number"
                                                 style={{ fontSize: 20, fontWeight: 700, color: '#1e293b' }}
+                                                isPrinting={sharing || downloading}
                                             />
                                         </div>
                                     );
@@ -314,11 +325,11 @@ const AncCardPreviewModal: React.FC<AncCardPreviewModalProps> = ({ open, data, o
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 24px', marginBottom: 20 }}>
                                 <div>
                                     <span style={{ fontWeight: 600, fontSize: 12, display: 'block', marginBottom: 4 }}>LMP Date</span>
-                                    <EditableField value={fields.lmp_date} onChange={set('lmp_date')} editing={editing} type="date" style={{ fontSize: 12 }} />
+                                    <EditableField value={fields.lmp_date} onChange={set('lmp_date')} editing={editing} type="date" style={{ fontSize: 12 }} isPrinting={sharing || downloading} />
                                 </div>
                                 <div>
                                     <span style={{ fontWeight: 600, fontSize: 12, display: 'block', marginBottom: 4 }}>EDD Date</span>
-                                    <EditableField value={fields.edd_date} onChange={set('edd_date')} editing={editing} type="date" style={{ fontSize: 12, color: '#dc0000', fontWeight: 700 }} />
+                                    <EditableField value={fields.edd_date} onChange={set('edd_date')} editing={editing} type="date" style={{ fontSize: 12, color: '#dc0000', fontWeight: 700 }} isPrinting={sharing || downloading} />
                                 </div>
                             </div>
 
@@ -375,6 +386,15 @@ const AncCardPreviewModal: React.FC<AncCardPreviewModalProps> = ({ open, data, o
                 .ant-input:focus, .ant-input-number-focused {
                     border-bottom-color: ${primaryColor} !important;
                     box-shadow: none !important;
+                }
+                /* Style the native date inputs to be beautifully aligned and not cut off in the UI */
+                input[type="date"] {
+                    height: 32px !important;
+                    line-height: 1.5 !important;
+                    padding: 4px 8px !important;
+                    box-sizing: border-box !important;
+                    font-family: inherit !important;
+                    vertical-align: middle !important;
                 }
             `}</style>
         </Modal>

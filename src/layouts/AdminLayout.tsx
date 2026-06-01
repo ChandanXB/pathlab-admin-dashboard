@@ -26,7 +26,7 @@ import NotificationBell from '@/shared/components/NotificationBell';
 import { useDashboardStats } from '@/features/admin/dashboard/hooks/useDashboardStats';
 import { useAIAssistant } from '@/features/admin/aiAssistant/hooks/useAIAssistant';
 import AIAssistantDrawer from '@/features/admin/aiAssistant/components/AIAssistantDrawer';
-import '@/features/admin/aiAssistant/components/AIAssistantDrawer.css';
+import '@/styles/features/aiAssistant.css';
 
 const { Header, Content, Sider } = Layout;
 const { Text } = Typography;

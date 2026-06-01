@@ -52,36 +52,49 @@ export const generateAncPdf = (data: Pregnancy, outputType: 'save' | 'datauri' =
     drawLine(y);
 
     y += 10;
+    // Fixed column positions for left/right layout
+    const leftLabelX = margin;
+    const rightLabelX = pageWidth / 2 + 5;
+
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(10);
+
+    // Row 1: ANC Reg. ID | Patient Code
     doc.setFont('helvetica', 'bold');
-    doc.text('ANC Reg. ID:', margin, y);
+    doc.text('ANC Reg. ID:', leftLabelX, y);
     doc.setFont('helvetica', 'normal');
-    doc.text(`ANC-${data.id.toString().padStart(4, '0')}`, margin + 25, y);
+    doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+    doc.text(`ANC-${data.id.toString().padStart(4, '0')}`, leftLabelX + doc.getTextWidth('ANC Reg. ID: '), y);
 
-    doc.setFont('helvetica', 'bold');
-    doc.text('Patient Code:', margin + 100, y);
-    doc.setFont('helvetica', 'normal');
-    doc.text(data.mother.patient_code, margin + 125, y);
-
-    y += 8;
-    doc.setFont('helvetica', 'bold');
-    doc.text('Full Name:', margin, y);
-    doc.setFont('helvetica', 'normal');
-    doc.text(formatName(data.mother.full_name), margin + 22, y);
-
-    doc.setFont('helvetica', 'bold');
-    doc.text('Risk Level:', margin + 100, y);
-    const risk = data.risk_level || 'Low';
-    doc.setTextColor(risk === 'High' ? 220 : risk === 'Medium' ? 255 : 0, risk === 'High' ? 0 : risk === 'Medium' ? 140 : 128, 0); // Red, Orange, Green
-    doc.text(risk.toUpperCase(), margin + 122, y);
-
-    y += 8;
     doc.setTextColor(0, 0, 0);
     doc.setFont('helvetica', 'bold');
-    doc.text('Contact No:', margin, y);
+    doc.text('Patient Code:', rightLabelX, y);
     doc.setFont('helvetica', 'normal');
-    doc.text(data.mother.phone, margin + 22, y);
+    doc.text(data.mother.patient_code, rightLabelX + doc.getTextWidth('Patient Code: '), y);
+
+    // Row 2: Full Name | Risk Level
+    y += 10;
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(0, 0, 0);
+    doc.text('Full Name:', leftLabelX, y);
+    doc.setFont('helvetica', 'normal');
+    doc.text(formatName(data.mother.full_name), leftLabelX + doc.getTextWidth('Full Name: '), y);
+
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(0, 0, 0);
+    doc.text('Risk Level:', rightLabelX, y);
+    const risk = data.risk_level || 'Low';
+    doc.setTextColor(risk === 'High' ? 220 : risk === 'Medium' ? 255 : 0, risk === 'High' ? 0 : risk === 'Medium' ? 140 : 128, 0);
+    doc.setFont('helvetica', 'bold');
+    doc.text(risk.toUpperCase(), rightLabelX + doc.getTextWidth('Risk Level: '), y);
+
+    // Row 3: Contact No
+    y += 10;
+    doc.setTextColor(0, 0, 0);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Contact No:', leftLabelX, y);
+    doc.setFont('helvetica', 'normal');
+    doc.text(data.mother.phone, leftLabelX + doc.getTextWidth('Contact No: '), y);
 
     // --- CLINICAL HIGHLIGHTS ---
     y += 15;
@@ -115,18 +128,26 @@ export const generateAncPdf = (data: Pregnancy, outputType: 'save' | 'datauri' =
         doc.text(String(values[i]), xPos + 17.5, y + 15, { align: 'center' });
     });
 
-    y += 30;
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(10);
+    y += 26;
     doc.setTextColor(0, 0, 0);
-    doc.text('LMP DATE:', margin, y);
-    doc.setFont('helvetica', 'normal');
-    doc.text(dayjs(data.lmp_date).format('DD MMM YYYY'), margin + 25, y);
+    doc.setFontSize(10);
+
+    // LMP Date | EDD Date — label on top line, value on line below
+    doc.setFont('helvetica', 'bold');
+    doc.text('LMP Date', leftLabelX, y);
 
     doc.setFont('helvetica', 'bold');
-    doc.text('EDD DATE:', margin + 100, y);
+    doc.setTextColor(0, 0, 0);
+    doc.text('EDD Date', rightLabelX, y);
+
+    y += 8;
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(0, 0, 0);
+    doc.text(dayjs(data.lmp_date).format('DD MMM YYYY'), leftLabelX, y);
+
     doc.setTextColor(220, 0, 0);
-    doc.text(dayjs(data.edd_date).format('DD MMM YYYY'), margin + 122, y);
+    doc.setFont('helvetica', 'bold');
+    doc.text(dayjs(data.edd_date).format('DD MMM YYYY'), rightLabelX, y);
 
     // --- VISIT LOG TABLE ---
     y += 15;

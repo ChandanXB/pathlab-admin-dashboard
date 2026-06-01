@@ -9,6 +9,7 @@ interface CouponFormModalProps {
   form: any;
   onSubmit: (values: any) => void;
   onCancel: () => void;
+  confirmLoading?: boolean;
   tests: any[];
   packages: any[];
 }
@@ -19,6 +20,7 @@ const CouponFormModal: React.FC<CouponFormModalProps> = ({
   form,
   onSubmit,
   onCancel,
+  confirmLoading,
   tests,
   packages,
 }) => {
@@ -71,6 +73,7 @@ const CouponFormModal: React.FC<CouponFormModalProps> = ({
       onCancel={onCancel}
       width={800}
       okText={editingCoupon ? 'Update' : 'Create'}
+      confirmLoading={confirmLoading}
       destroyOnClose
       centered
       style={{ top: 20 }}

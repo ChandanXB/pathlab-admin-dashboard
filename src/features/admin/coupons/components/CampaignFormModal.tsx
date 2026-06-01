@@ -12,6 +12,7 @@ interface CampaignFormModalProps {
   coupons: Coupon[];
   onSubmit: (values: any) => void;
   onCancel: () => void;
+  confirmLoading?: boolean;
 }
 
 const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
@@ -21,6 +22,7 @@ const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
   coupons,
   onSubmit,
   onCancel,
+  confirmLoading,
 }) => {
   useEffect(() => {
     if (visible && editingCampaign) {
@@ -87,6 +89,7 @@ const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
       onCancel={onCancel}
       width={850}
       okText={editingCampaign ? 'Update' : 'Create'}
+      confirmLoading={confirmLoading}
       destroyOnClose
       centered
     >

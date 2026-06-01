@@ -27,6 +27,7 @@ const CollectionAgentManager: React.FC = () => {
         agents,
         loadingAgents,
         loadingMoreAgents,
+        isSubmitting,
         agentPagination,
         agentFilters,
         setAgentFilters,
@@ -246,6 +247,7 @@ const CollectionAgentManager: React.FC = () => {
                 form={form}
                 onOk={handleModalOk}
                 onCancel={() => setIsModalOpen(false)}
+                loading={isSubmitting}
             />
         </div>
     );
