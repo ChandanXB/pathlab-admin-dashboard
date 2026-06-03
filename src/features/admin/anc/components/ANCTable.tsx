@@ -12,6 +12,9 @@ interface ANCTableProps {
     loading: boolean;
     onView: (record: Pregnancy) => void;
     onPreview: (record: Pregnancy) => void;
+    hasMore: boolean;
+    next: () => void;
+    loadingMore?: boolean;
     scroll?: { x?: number | string; y?: number | string };
 }
 
@@ -20,6 +23,9 @@ const ANCTable: React.FC<ANCTableProps> = ({
     loading,
     onView,
     onPreview,
+    hasMore,
+    next,
+    loadingMore,
     scroll,
 }) => {
     const calculateWeeks = (lmp: string): number => {
@@ -80,7 +86,7 @@ const ANCTable: React.FC<ANCTableProps> = ({
         },
         {
             title: <span style={{ whiteSpace: 'nowrap' }}>Status</span>,
-            key: 'status',
+            key: 'status_weeks',
             width: 130,
             render: (_: any, record: Pregnancy) => {
                 const weeks = calculateWeeks(record.lmp_date);
@@ -104,12 +110,12 @@ const ANCTable: React.FC<ANCTableProps> = ({
             },
         },
         {
-            title: <span style={{ whiteSpace: 'nowrap' }}>Risk Level</span>,
-            dataIndex: 'risk_level',
+            title: 'Risk Level',
             key: 'risk_level',
+            dataIndex: 'risk_level',
             width: 100,
             render: (risk: string) => (
-                <Tag color={risk === 'High' ? 'red' : risk === 'Medium' ? 'orange' : 'green'} style={{ margin: 0 }}>
+                <Tag color={risk === 'High' ? 'red' : risk === 'Medium' ? 'orange' : 'green'}>
                     {risk || 'Low'}
                 </Tag>
             ),
@@ -128,9 +134,20 @@ const ANCTable: React.FC<ANCTableProps> = ({
             ),
         },
         {
+            title: 'Status',
+            key: 'status',
+            dataIndex: 'status',
+            width: 100,
+            render: (status: string) => {
+                const s = status?.toLowerCase() || 'active';
+                const color = s === 'delivered' ? 'green' : s === 'closed' ? 'default' : 'processing';
+                return <Tag color={color}>{s.toUpperCase()}</Tag>;
+            },
+        },
+        {
             title: <span style={{ whiteSpace: 'nowrap' }}>Actions</span>,
             key: 'actions',
-            width: 90,
+            width: 110,
             fixed: 'right' as const,
             align: 'center' as const,
             render: (_: any, record: Pregnancy) => (
@@ -155,15 +172,16 @@ const ANCTable: React.FC<ANCTableProps> = ({
     ];
 
     return (
-        <InfiniteScrollTable
+        <InfiniteScrollTable<Pregnancy>
             columns={columns}
             dataSource={data}
             loading={loading}
-            loadingMore={false}
-            hasMore={false}
-            next={() => { }}
-            scroll={scroll}
+            hasMore={hasMore}
+            next={next}
+            loadingMore={loadingMore}
             rowKey="id"
+            scroll={scroll}
+            endMessage={<div style={{ textAlign: 'center', padding: '16px', color: colors.ui.label }}>You have reached the end of the list.</div>}
         />
     );
 };

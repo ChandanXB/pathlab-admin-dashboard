@@ -1,6 +1,6 @@
 import React from 'react';
-import { Typography, Button, Collapse, Timeline, Row, Col, Empty } from 'antd';
-import { HistoryOutlined, PlusOutlined } from '@ant-design/icons';
+import { Typography, Button, Collapse, Timeline, Row, Col, Empty, Tooltip, Modal } from 'antd';
+import { HistoryOutlined, PlusOutlined, EditOutlined, DeleteOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { colors } from '@/styles/colors';
 
@@ -9,9 +9,12 @@ const { Title, Text } = Typography;
 interface VisitLogSectionProps {
     visits: any[];
     onLogClick: () => void;
+    onUpdateVisit?: (visitId: number, data: any) => Promise<boolean>;
+    onDeleteVisit?: (visitId: number) => Promise<boolean>;
+    onEditClick?: (visit: any) => void;
 }
 
-const VisitLogSection: React.FC<VisitLogSectionProps> = ({ visits, onLogClick }) => {
+const VisitLogSection: React.FC<VisitLogSectionProps> = ({ visits, onLogClick, onDeleteVisit, onEditClick }) => {
     return (
         <>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
@@ -65,11 +68,44 @@ const VisitLogSection: React.FC<VisitLogSectionProps> = ({ visits, onLogClick })
                                             children: (
                                                 <div style={{ 
                                                     background: colors.ui.bgLight, 
-                                                    padding: '12px', 
+                                                    padding: '12px 64px 12px 12px', 
                                                     borderRadius: '12px', 
                                                     marginTop: '-10px',
-                                                    border: index === 0 ? `1px solid ${colors.primary}4D` : `1px solid ${colors.ui.border}`
+                                                    border: index === 0 ? `1px solid ${colors.primary}4D` : `1px solid ${colors.ui.border}`,
+                                                    position: 'relative'
                                                 }}>
+                                                    <div style={{ position: 'absolute', top: '8px', right: '8px', display: 'flex', gap: '4px' }}>
+                                                        {onEditClick && (
+                                                            <Tooltip title="Edit Visit">
+                                                                <Button 
+                                                                    type="text" 
+                                                                    size="small" 
+                                                                    icon={<EditOutlined style={{ color: colors.primary }} />} 
+                                                                    onClick={() => onEditClick(visit)}
+                                                                />
+                                                            </Tooltip>
+                                                        )}
+                                                        {onDeleteVisit && (
+                                                            <Tooltip title="Delete Visit">
+                                                                <Button 
+                                                                    type="text" 
+                                                                    size="small" 
+                                                                    icon={<DeleteOutlined style={{ color: '#ff4d4f' }} />} 
+                                                                    onClick={() => {
+                                                                        Modal.confirm({
+                                                                            title: 'Delete Visit Log',
+                                                                            icon: <ExclamationCircleOutlined style={{ color: '#ff4d4f' }} />,
+                                                                            content: 'Are you sure you want to delete this visit log? This cannot be undone.',
+                                                                            okText: 'Delete',
+                                                                            okType: 'danger',
+                                                                            cancelText: 'Cancel',
+                                                                            onOk: () => onDeleteVisit(visit.id)
+                                                                        });
+                                                                    }}
+                                                                />
+                                                            </Tooltip>
+                                                        )}
+                                                    </div>
                                                     <Row gutter={8}>
                                                         <Col span={8}>
                                                             <div style={{ color: colors.ui.label, fontSize: '10px' }}>WEIGHT</div>

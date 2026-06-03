@@ -9,7 +9,7 @@ interface SharedDetailDrawerProps {
     open: boolean;
     onClose: () => void;
     title: string | ReactNode;
-    subtitle?: string;
+    subtitle?: string | ReactNode;
     loading?: boolean;
     headerGradient?: string; // e.g. 'linear-gradient(135deg, #1890ff 0%, #096dd9 100%)'
     headerStats?: ReactNode; // A row of stats or tags for the header area

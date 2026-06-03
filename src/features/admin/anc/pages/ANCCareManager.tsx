@@ -16,9 +16,10 @@ import { colors } from '@/styles/colors';
 const { Title, Text } = Typography;
 
 const ANCCareManager: React.FC = () => {
-    const { pregnancies, loading, fetchPregnancyById, logVisit, updatePregnancy, createPregnancy, logRiskAssessment } = useANC();
+    const { pregnancies, loading, hasMore, loadMore, loadingMore, fetchPregnancyById, logVisit, updatePregnancy, updatePregnancyStatus, createPregnancy, logRiskAssessment, deletePregnancy, updateVisit, deleteVisit } = useANC();
     const [searchTerm, setSearchTerm] = useState('');
     const [riskFilter, setRiskFilter] = useState<string | null>(null);
+    const [statusFilter, setStatusFilter] = useState<string>('active');
     const [filteredData, setFilteredData] = useState<Pregnancy[]>([]);
     const [selectedId, setSelectedId] = useState<number | null>(null);
     const [drawerVisible, setDrawerVisible] = useState(false);
@@ -37,8 +38,11 @@ const ANCCareManager: React.FC = () => {
         if (riskFilter) {
             data = data.filter(p => p.risk_level === riskFilter);
         }
+        if (statusFilter !== 'all') {
+            data = data.filter(p => (p.status?.toLowerCase() || 'active') === statusFilter);
+        }
         setFilteredData(data);
-    }, [searchTerm, riskFilter, pregnancies]);
+    }, [searchTerm, riskFilter, statusFilter, pregnancies]);
 
     const handleView = (record: Pregnancy) => {
         setSelectedId(record.id);
@@ -185,7 +189,7 @@ const ANCCareManager: React.FC = () => {
 
             <Card styles={{ body: { padding: '16px' } }} style={{ borderRadius: '12px', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.03)' }}>
                 <Row gutter={[16, 16]} align="middle">
-                    <Col xs={24} md={12}>
+                    <Col xs={24} md={10}>
                         <Input
                             prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
                             placeholder="Search by patient name or code..."
@@ -194,7 +198,7 @@ const ANCCareManager: React.FC = () => {
                             allowClear
                         />
                     </Col>
-                    <Col xs={24} md={6}>
+                    <Col xs={24} md={5}>
                         <Select
                             placeholder="Filter by Risk Level"
                             style={{ width: '100%' }}
@@ -207,7 +211,21 @@ const ANCCareManager: React.FC = () => {
                             ]}
                         />
                     </Col>
-                    <Col xs={24} md={6}>
+                    <Col xs={24} md={5}>
+                        <Select
+                            placeholder="Filter by Status"
+                            style={{ width: '100%' }}
+                            value={statusFilter}
+                            onChange={(val) => setStatusFilter(val)}
+                            options={[
+                                { value: 'all', label: 'All Statuses' },
+                                { value: 'active', label: 'Active' },
+                                { value: 'delivered', label: 'Delivered' },
+                                { value: 'closed', label: 'Closed' },
+                            ]}
+                        />
+                    </Col>
+                    <Col xs={24} md={4}>
                         <div style={{ textAlign: isMobile ? 'left' : 'right' }}>
                             <Text type="secondary">Total Records: {filteredData.length}</Text>
                         </div>
@@ -222,7 +240,10 @@ const ANCCareManager: React.FC = () => {
                 <div ref={tableCardBodyRef} style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
                     <ANCTable
                         data={filteredData}
-                        loading={loading}
+                        loading={loading && filteredData.length === 0}
+                        hasMore={hasMore && !searchTerm && !riskFilter && statusFilter === 'active'} // disable infinite scroll while filtering locally
+                        next={loadMore}
+                        loadingMore={loadingMore}
                         onView={handleView}
                         onPreview={handlePreview}
                         scroll={{ x: 1100, y: tableHeight }}
@@ -238,6 +259,10 @@ const ANCCareManager: React.FC = () => {
                 onLogVisit={logVisit}
                 onUpdate={updatePregnancy}
                 onLogRisk={logRiskAssessment}
+                onDelete={deletePregnancy}
+                onUpdateStatus={updatePregnancyStatus}
+                onUpdateVisit={updateVisit}
+                onDeleteVisit={deleteVisit}
                 onSwitchJourney={(newId) => setSelectedId(newId)}
             />
 
