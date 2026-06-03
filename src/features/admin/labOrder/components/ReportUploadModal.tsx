@@ -449,8 +449,10 @@ const ReportUploadModal: React.FC<ReportUploadModalProps> = ({ visible, order, o
                                         style={{ marginBottom: 12, border: '1px solid #f0f0f0', borderRadius: 10, boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}
                                         bodyStyle={{ padding: '12px' }}
                                         title={
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-                                                <Text strong style={{ fontSize: 13, color: '#262626' }}>{tr.test?.test_name}</Text>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', gap: 8 }}>
+                                                <Text strong ellipsis={{ tooltip: true }} style={{ fontSize: 13, color: '#262626', flex: 1, minWidth: 0 }}>
+                                                    {tr.test?.test_name}
+                                                </Text>
                                                 <Form.Item
                                                     noStyle
                                                     shouldUpdate={(prev, curr) =>
@@ -463,7 +465,7 @@ const ReportUploadModal: React.FC<ReportUploadModalProps> = ({ visible, order, o
                                                         const result = getFieldValue(['results', tr.id.toString()]);
                                                         const indicator = getIndicatorMessage(result?.value, result?.min, result?.max);
                                                         return (
-                                                            <Space size={4}>
+                                                            <Space size={4} style={{ flexShrink: 0, whiteSpace: 'nowrap' }}>
                                                                 {indicator.icon}
                                                                 <Text style={{ fontSize: 11, fontWeight: 600, color: indicator.color }}>{indicator.text}</Text>
                                                             </Space>

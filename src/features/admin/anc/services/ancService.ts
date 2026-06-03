@@ -14,6 +14,7 @@ export interface Pregnancy {
     risk_level: string;
     report_url?: string;
     report_name?: string;
+    status: string;
     createdAt: string;
     updatedAt: string;
     mother: {
@@ -34,8 +35,8 @@ export interface Pregnancy {
 }
 
 export const ancService = {
-    getAllPregnancies: async () => {
-        const response = await apiClient.get('/pregnancies');
+    getAllPregnancies: async (page: number = 1, limit: number = 50) => {
+        const response = await apiClient.get('/pregnancies', { params: { page, limit } });
         return response.data;
     },
     getPregnancyById: async (id: number) => {
@@ -46,6 +47,10 @@ export const ancService = {
         const response = await apiClient.put(`/pregnancies/${id}`, data);
         return response.data;
     },
+    updatePregnancyStatus: async (id: number, status: string) => {
+        const response = await apiClient.patch(`/pregnancies/${id}/status`, { status });
+        return response.data;
+    },
     createPregnancy: async (data: any) => {
         const response = await apiClient.post('/pregnancies', data);
         return response.data;
@@ -54,12 +59,24 @@ export const ancService = {
         const response = await apiClient.post(`/pregnancies/${id}/visits`, data);
         return response.data;
     },
+    updateVisit: async (visitId: number, data: any) => {
+        const response = await apiClient.put(`/pregnancies/visits/${visitId}`, data);
+        return response.data;
+    },
+    deleteVisit: async (visitId: number) => {
+        const response = await apiClient.delete(`/pregnancies/visits/${visitId}`);
+        return response.data;
+    },
     logRiskAssessment: async (id: number, data: any) => {
         const response = await apiClient.post(`/pregnancies/${id}/risks`, data);
         return response.data;
     },
     shareAncCard: async (id: number, payload: { file_base64: string; mother_name: string; email: string }) => {
         const response = await apiClient.post(`/pregnancies/${id}/share`, payload);
+        return response.data;
+    },
+    deletePregnancy: async (id: number) => {
+        const response = await apiClient.delete(`/pregnancies/${id}`);
         return response.data;
     }
 };

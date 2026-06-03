@@ -4,13 +4,16 @@ import {
     Row,
     Col,
     Breadcrumb,
-    Spin
+    Spin,
+    Button,
+    Tooltip
 } from 'antd';
 import {
     CreditCardOutlined,
     UserOutlined,
     ExperimentOutlined,
-    FileTextOutlined
+    FileTextOutlined,
+    ReloadOutlined
 } from '@ant-design/icons';
 
 import StatCard from '@/shared/components/StatCard';
@@ -26,14 +29,14 @@ import '@/styles/features/dashboard.css';
 const { Title } = Typography;
 
 const Dashboard: React.FC = () => {
-    const { stats, loading, error } = useDashboardStats();
+    const { stats, loading, error, refresh } = useDashboardStats();
 
     const statsCards = [
         {
             title: 'Total Patients',
             value: stats.totalPatients.toLocaleString(),
-            trend: '+0%',
-            isUp: true,
+            trend: stats.trends.totalPatients.trend,
+            isUp: stats.trends.totalPatients.isUp,
             icon: <UserOutlined style={{ fontSize: 24 }} />,
             color: '#e6f7ff',
             iconColor: '#1890ff'
@@ -41,8 +44,8 @@ const Dashboard: React.FC = () => {
         {
             title: 'Active Tests',
             value: stats.activeTests.toLocaleString(),
-            trend: '+0%',
-            isUp: true,
+            trend: stats.trends.activeTests.trend,
+            isUp: stats.trends.activeTests.isUp,
             icon: <ExperimentOutlined style={{ fontSize: 24 }} />,
             color: '#f6ffed',
             iconColor: '#52c41a'
@@ -50,8 +53,8 @@ const Dashboard: React.FC = () => {
         {
             title: 'Pending Reports',
             value: stats.pendingReports.toLocaleString(),
-            trend: '-0%',
-            isUp: false,
+            trend: stats.trends.pendingReports.trend,
+            isUp: stats.trends.pendingReports.isUp,
             icon: <FileTextOutlined style={{ fontSize: 24 }} />,
             color: '#fff1f0',
             iconColor: '#ff4d4f'
@@ -59,8 +62,8 @@ const Dashboard: React.FC = () => {
         {
             title: 'Total Revenue',
             value: `₹${stats.totalRevenue.toLocaleString()}`,
-            trend: '+0%',
-            isUp: true,
+            trend: stats.trends.totalRevenue.trend,
+            isUp: stats.trends.totalRevenue.isUp,
             icon: <CreditCardOutlined style={{ fontSize: 24 }} />,
             color: '#fffbe6',
             iconColor: '#faad14'
@@ -77,12 +80,24 @@ const Dashboard: React.FC = () => {
 
     return (
         <div style={{ animation: 'fadeIn 0.5s ease', paddingBottom: 24 }}>
-            <div style={{ marginBottom: 24 }}>
-                <Breadcrumb items={[
-                    { title: 'Home' },
-                    { title: 'Dashboard' }
-                ]} />
-                <Title level={2} style={{ marginTop: 8 }}>Admin Analytics</Title>
+            <div style={{ marginBottom: 24, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
+                <div>
+                    <Breadcrumb items={[
+                        { title: 'Home' },
+                        { title: 'Dashboard' }
+                    ]} />
+                    <Title level={2} style={{ marginTop: 8, marginBottom: 0 }}>Admin Analytics</Title>
+                </div>
+                <Tooltip title="Refresh stats">
+                    <Button
+                        icon={<ReloadOutlined />}
+                        onClick={refresh}
+                        loading={loading}
+                        style={{ borderRadius: '8px' }}
+                    >
+                        Refresh
+                    </Button>
+                </Tooltip>
             </div>
 
             {/* Stats Section */}

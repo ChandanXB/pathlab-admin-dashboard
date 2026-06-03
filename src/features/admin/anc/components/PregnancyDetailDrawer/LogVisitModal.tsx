@@ -9,16 +9,37 @@ interface LogVisitModalProps {
     onCancel: () => void;
     onFinish: (values: any) => Promise<boolean>;
     currentWeeks: number;
+    initialData?: any;
 }
 
 const LogVisitModal: React.FC<LogVisitModalProps> = ({
     open,
     onCancel,
     onFinish,
-    currentWeeks
+    currentWeeks,
+    initialData
 }) => {
     const [form] = Form.useForm();
     const [submitting, setSubmitting] = useState(false);
+
+    React.useEffect(() => {
+        if (open) {
+            if (initialData) {
+                form.setFieldsValue({
+                    ...initialData,
+                    visit_date: initialData.visit_date ? dayjs(initialData.visit_date) : dayjs(),
+                });
+            } else {
+                form.setFieldsValue({
+                    visit_date: dayjs(),
+                    gestational_age_weeks: currentWeeks,
+                    fetal_movement: 'Normal'
+                });
+            }
+        } else {
+            form.resetFields();
+        }
+    }, [open, initialData, currentWeeks, form]);
 
     const handleSubmit = async () => {
         try {
@@ -36,23 +57,18 @@ const LogVisitModal: React.FC<LogVisitModalProps> = ({
 
     return (
         <SharedModal
-            title="Log Antenatal Visit"
+            title={initialData ? "Edit Antenatal Visit" : "Log Antenatal Visit"}
             open={open}
             onCancel={onCancel}
             onOk={handleSubmit}
             confirmLoading={submitting}
             centered
             width={600}
-            okText="Save Visit"
+            okText={initialData ? "Update Visit" : "Save Visit"}
         >
             <Form
                 form={form}
                 layout="vertical"
-                initialValues={{
-                    visit_date: dayjs(),
-                    gestational_age_weeks: currentWeeks,
-                    fetal_movement: 'Normal'
-                }}
                 style={{ marginTop: '20px' }}
             >
                 <Row gutter={16}>

@@ -25,6 +25,7 @@ const RegisterPregnancyModal: React.FC<RegisterPregnancyModalProps> = ({
     const [patients, setPatients] = useState<Patient[]>([]);
     const [fileList, setFileList] = useState<any[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
+    const [uploading, setUploading] = useState(false);
 
     // New patient modal states
     const [quickAddVisible, setQuickAddVisible] = useState(false);
@@ -43,6 +44,7 @@ const RegisterPregnancyModal: React.FC<RegisterPregnancyModalProps> = ({
 
     const handleFileUpload = async (file: File) => {
         try {
+            setUploading(true);
             const base64 = await fileToBase64(file);
             form.setFieldsValue({ report_url: base64, report_name: file.name });
             setFileList([{
@@ -55,6 +57,8 @@ const RegisterPregnancyModal: React.FC<RegisterPregnancyModalProps> = ({
         } catch (error) {
             message.error('Failed to process report file');
             return Upload.LIST_IGNORE;
+        } finally {
+            setUploading(false);
         }
     };
 
@@ -271,7 +275,7 @@ const RegisterPregnancyModal: React.FC<RegisterPregnancyModalProps> = ({
                         listType="picture"
                         accept="image/*,application/pdf"
                     >
-                        <Button icon={<UploadOutlined />} style={{ borderRadius: '8px' }}>Select Report File</Button>
+                        <Button icon={<UploadOutlined />} loading={uploading} style={{ borderRadius: '8px' }}>Select Report File</Button>
                     </Upload>
                 </Form.Item>
                 <Form.Item name="report_name" hidden><Input /></Form.Item>

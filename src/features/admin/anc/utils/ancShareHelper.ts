@@ -26,6 +26,15 @@ export const shareAncCardViaBackend = async ({
         return false;
     }
 
+    // Pre-validate email BEFORE generating the PDF to avoid wasting 5-10 seconds
+    if (!pregnancyData.mother.email) {
+        message.warning({
+            content: `No email on file for ${pregnancyData.mother.full_name}. Please update the patient profile before sharing.`,
+            duration: 5,
+        });
+        return false;
+    }
+
     try {
         // 1. Generate Canvas from HTML
         const canvas = await html2canvas(element, {

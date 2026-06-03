@@ -5,20 +5,51 @@ import { message } from 'antd';
 export const useANC = () => {
     const [pregnancies, setPregnancies] = useState<Pregnancy[]>([]);
     const [loading, setLoading] = useState(false);
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
 
-    const fetchPregnancies = useCallback(async () => {
-        setLoading(true);
+    const fetchPregnancies = useCallback(async (pageNum: number = 1, isLoadMore = false) => {
+        if (isLoadMore) {
+            setLoadingMore(true);
+        } else {
+            setLoading(true);
+        }
+        
         try {
-            const response = await ancService.getAllPregnancies();
+            const response = await ancService.getAllPregnancies(pageNum, 50); // limit 50
             if (response.success) {
-                setPregnancies(response.data);
+                const { data, totalPages } = response.data; // Now it returns { data, totalPages, ... }
+                // fallback if backend doesn't send pagination structure (e.g. still returning raw array somehow)
+                const items = Array.isArray(response.data) ? response.data : data || [];
+                
+                if (isLoadMore) {
+                    setPregnancies(prev => [...prev, ...items]);
+                } else {
+                    setPregnancies(items);
+                }
+                
+                // If we use the new pagination response format
+                if (totalPages !== undefined) {
+                    setHasMore(pageNum < totalPages);
+                } else {
+                    setHasMore(items.length === 50); // Fallback: if we got exactly limit items, assume there's more
+                }
+                setPage(pageNum);
             }
         } catch (error: any) {
             message.error('Failed to fetch pregnancy records');
         } finally {
             setLoading(false);
+            setLoadingMore(false);
         }
     }, []);
+
+    const loadMore = useCallback(() => {
+        if (!loading && !loadingMore && hasMore) {
+            fetchPregnancies(page + 1, true);
+        }
+    }, [fetchPregnancies, page, loading, loadingMore, hasMore]);
 
     const fetchPregnancyById = useCallback(async (id: number) => {
         setLoading(true);
@@ -45,6 +76,20 @@ export const useANC = () => {
             }
         } catch (error: any) {
             message.error('Failed to update pregnancy record');
+        }
+        return false;
+    }, [fetchPregnancies]);
+
+    const updatePregnancyStatus = useCallback(async (id: number, status: string) => {
+        try {
+            const response = await ancService.updatePregnancyStatus(id, status);
+            if (response.success) {
+                message.success('Pregnancy status updated successfully');
+                fetchPregnancies();
+                return true;
+            }
+        } catch (error: any) {
+            message.error('Failed to update pregnancy status');
         }
         return false;
     }, [fetchPregnancies]);
@@ -91,6 +136,48 @@ export const useANC = () => {
         return false;
     }, [fetchPregnancies]);
 
+    const updateVisit = useCallback(async (visitId: number, data: any) => {
+        try {
+            const response = await ancService.updateVisit(visitId, data);
+            if (response.success) {
+                message.success('Antenatal visit updated successfully');
+                fetchPregnancies();
+                return true;
+            }
+        } catch (error: any) {
+            message.error('Failed to update antenatal visit');
+        }
+        return false;
+    }, [fetchPregnancies]);
+
+    const deleteVisit = useCallback(async (visitId: number) => {
+        try {
+            const response = await ancService.deleteVisit(visitId);
+            if (response.success) {
+                message.success('Antenatal visit deleted successfully');
+                fetchPregnancies();
+                return true;
+            }
+        } catch (error: any) {
+            message.error('Failed to delete antenatal visit');
+        }
+        return false;
+    }, [fetchPregnancies]);
+
+    const deletePregnancy = useCallback(async (id: number) => {
+        try {
+            const response = await ancService.deletePregnancy(id);
+            if (response.success) {
+                message.success('Pregnancy record deleted successfully');
+                fetchPregnancies();
+                return true;
+            }
+        } catch (error: any) {
+            message.error('Failed to delete pregnancy record');
+        }
+        return false;
+    }, [fetchPregnancies]);
+
     // This hook must always be called after all useCallbacks and useStates
     useEffect(() => {
         fetchPregnancies();
@@ -99,11 +186,18 @@ export const useANC = () => {
     return {
         pregnancies,
         loading,
+        hasMore,
+        loadingMore,
         fetchPregnancies,
+        loadMore,
         fetchPregnancyById,
         updatePregnancy,
+        updatePregnancyStatus,
         logVisit,
         createPregnancy,
-        logRiskAssessment
+        logRiskAssessment,
+        deletePregnancy,
+        updateVisit,
+        deleteVisit
     };
 };
