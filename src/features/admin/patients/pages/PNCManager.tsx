@@ -5,9 +5,9 @@ import {
 } from 'antd';
 import {
     UserOutlined,
-    SafetyOutlined, CalendarOutlined, FilePdfOutlined,
+    SafetyOutlined, CalendarOutlined,
     DeleteOutlined, EyeOutlined, LineChartOutlined, CheckCircleOutlined,
-    SendOutlined, MessageOutlined
+    SendOutlined, MessageOutlined, DownloadOutlined
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { usePatients } from '../hooks/usePatients';
@@ -499,8 +499,9 @@ const PNCManager: React.FC = () => {
                             {(selectedChild.immunizations || []).length === 0 ? (
                                 <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No vaccinations recorded yet" />
                             ) : (
-                                <List
-                                    size="small"
+                                <div style={{ maxHeight: 350, overflowY: 'auto', paddingRight: 4 }}>
+                                    <List
+                                        size="small"
                                     dataSource={selectedChild.immunizations || []}
                                     renderItem={(imm: any) => (
                                         <List.Item
@@ -509,11 +510,32 @@ const PNCManager: React.FC = () => {
                                                     <Button
                                                         type="link"
                                                         size="small"
-                                                        icon={<FilePdfOutlined />}
-                                                        href={imm.document_url}
-                                                        target="_blank"
+                                                        icon={<DownloadOutlined />}
+                                                        onClick={() => {
+                                                            const url = imm.document_url;
+                                                            if (!url) return;
+                                                            const fileName = imm.document_name || `vaccination-${imm.vaccine?.vaccine_name || 'certificate'}`;
+                                                            fetch(url)
+                                                                .then(response => response.blob())
+                                                                .then(blob => {
+                                                                    const blobUrl = window.URL.createObjectURL(blob);
+                                                                    const link = document.createElement('a');
+                                                                    link.href = blobUrl;
+                                                                    // check if filename already has extension, if not and it's pdf add it
+                                                                    const isPdf = url.toLowerCase().includes('.pdf');
+                                                                    link.download = (isPdf && !fileName.toLowerCase().endsWith('.pdf')) ? `${fileName}.pdf` : fileName;
+                                                                    document.body.appendChild(link);
+                                                                    link.click();
+                                                                    document.body.removeChild(link);
+                                                                    window.URL.revokeObjectURL(blobUrl);
+                                                                })
+                                                                .catch(err => {
+                                                                    console.error('Download failed:', err);
+                                                                    window.open(url, '_blank');
+                                                                });
+                                                        }}
                                                     >
-                                                        {isMobile ? "" : "View Cert"}
+                                                        {isMobile ? "" : "Download"}
                                                     </Button>
                                                 ),
                                                 <Popconfirm
@@ -558,6 +580,7 @@ const PNCManager: React.FC = () => {
                                         </List.Item>
                                     )}
                                 />
+                                </div>
                             )}
                         </Card>
 
