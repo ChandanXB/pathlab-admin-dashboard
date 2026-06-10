@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Badge, Button, List, Typography, Avatar, Empty } from 'antd';
+import { Badge, Button, List, Typography, Avatar, Empty, Modal, Descriptions } from 'antd';
 import { BellOutlined, CheckCircleOutlined, InfoCircleOutlined, WarningOutlined, CloseOutlined, DeleteOutlined } from '@ant-design/icons';
 import colors from '@/styles/colors';
 import { useNotificationContext, type NotificationItem } from '@/shared/contexts/NotificationContext';
@@ -11,6 +11,8 @@ const { Text } = Typography;
 const NotificationBell: React.FC = () => {
     const { notifications, unreadCount, markAsRead, clearNotifications, deleteNotification } = useNotificationContext();
     const [open, setOpen] = useState(false);
+    const [selectedQuery, setSelectedQuery] = useState<NotificationItem | null>(null);
+    const [isQueryModalOpen, setIsQueryModalOpen] = useState(false);
     const navigate = useNavigate();
 
     const getIcon = (type: string) => {
@@ -23,7 +25,12 @@ const NotificationBell: React.FC = () => {
 
     const handleNotificationClick = (item: NotificationItem) => {
         // Navigate without marking as read — only the ✕ button marks as read
-        if (item.data?.orderId) {
+        if (item.data?.type === 'user_query') {
+            setSelectedQuery(item);
+            setIsQueryModalOpen(true);
+            setOpen(false);
+            markAsRead(item.id);
+        } else if (item.data?.orderId) {
             navigate(`/lab-orders?highlight=${item.data.orderId}`);
             setOpen(false);
         } else if (item.data?.order_id) {
@@ -173,6 +180,48 @@ const NotificationBell: React.FC = () => {
                     }}
                 />
             </SharedDetailDrawer>
+
+            <Modal
+                title={
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 18 }}>
+                        <InfoCircleOutlined style={{ color: colors.primary }} />
+                        <span>Query / Feedback Details</span>
+                    </div>
+                }
+                open={isQueryModalOpen}
+                onCancel={() => setIsQueryModalOpen(false)}
+                footer={[
+                    <Button key="close" type="primary" onClick={() => setIsQueryModalOpen(false)}>
+                        Close
+                    </Button>
+                ]}
+                width={500}
+                centered
+            >
+                {selectedQuery && (
+                    <div style={{ padding: '8px 0' }}>
+                        <Descriptions bordered column={1} size="small" labelStyle={{ fontWeight: 600, width: 120 }}>
+                            <Descriptions.Item label="Sender">{selectedQuery.data?.name || 'Unknown'}</Descriptions.Item>
+                            <Descriptions.Item label="Email">
+                                {selectedQuery.data?.email ? (
+                                    <a href={`mailto:${selectedQuery.data.email}`}>{selectedQuery.data.email}</a>
+                                ) : 'Not provided'}
+                            </Descriptions.Item>
+                            <Descriptions.Item label="Phone">
+                                {selectedQuery.data?.phone ? (
+                                    <a href={`tel:${selectedQuery.data.phone}`}>{selectedQuery.data.phone}</a>
+                                ) : 'Not provided'}
+                            </Descriptions.Item>
+                            <Descriptions.Item label="Subject">{selectedQuery.data?.subject || 'Feedback'}</Descriptions.Item>
+                            <Descriptions.Item label="Received At">{selectedQuery.time}</Descriptions.Item>
+                        </Descriptions>
+                        <div style={{ marginTop: 20, padding: 12, borderRadius: 8, backgroundColor: '#f8fafc', border: '1px solid #e2e8f0' }}>
+                            <Text strong style={{ display: 'block', marginBottom: 8, color: '#334155' }}>Message:</Text>
+                            <Text style={{ whiteSpace: 'pre-line', color: '#1e293b', fontSize: 14 }}>{selectedQuery.data?.message || selectedQuery.description}</Text>
+                        </div>
+                    </div>
+                )}
+            </Modal>
 
             <style>{`
                 .notification-item-hover:hover {

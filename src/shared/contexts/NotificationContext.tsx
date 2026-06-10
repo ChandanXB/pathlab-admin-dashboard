@@ -55,11 +55,17 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         }
     }, []);
 
-    // Load from API on mount
+    // Load from API on mount and start periodic polling
     useEffect(() => {
         const { isAuthenticated } = useAuthStore.getState();
         if (isAuthenticated) {
             fetchNotifications();
+
+            const interval = setInterval(() => {
+                fetchNotifications();
+            }, 15000); // Poll every 15 seconds
+
+            return () => clearInterval(interval);
         }
     }, [fetchNotifications]);
 
