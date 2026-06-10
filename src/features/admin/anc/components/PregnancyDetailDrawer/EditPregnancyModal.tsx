@@ -138,22 +138,22 @@ const EditPregnancyModal: React.FC<EditPregnancyModalProps> = ({
 
                 <Row gutter={16}>
                     <Col span={6}>
-                        <Form.Item name="gravida" label="Gravida (G)" rules={[{ required: true }]}>
+                        <Form.Item name="gravida" label="Gravida (G)">
                             <InputNumber min={1} style={{ width: '100%' }} />
                         </Form.Item>
                     </Col>
                     <Col span={6}>
-                        <Form.Item name="para" label="Para (P)" rules={[{ required: true }]}>
+                        <Form.Item name="para" label="Para (P)">
                             <InputNumber min={0} style={{ width: '100%' }} />
                         </Form.Item>
                     </Col>
                     <Col span={6}>
-                        <Form.Item name="abortions" label="Abortion (A)" rules={[{ required: true }]}>
+                        <Form.Item name="abortions" label="Abortion (A)">
                             <InputNumber min={0} style={{ width: '100%' }} />
                         </Form.Item>
                     </Col>
                     <Col span={6}>
-                        <Form.Item name="living_children" label="Living (L)" rules={[{ required: true }]}>
+                        <Form.Item name="living_children" label="Living (L)">
                             <InputNumber min={0} style={{ width: '100%' }} />
                         </Form.Item>
                     </Col>

@@ -132,29 +132,36 @@ const PregnancyDetailDrawer: React.FC<PregnancyDetailDrawerProps> = ({
     };
 
     const headerStats = data ? (
-        <Row gutter={16}>
+        <Row gutter={16} align="stretch">
             <Col span={12}>
-                <div style={{ background: 'rgba(255,255,255,0.15)', padding: '12px', borderRadius: '12px', backdropFilter: 'blur(4px)' }}>
+                <div style={{ background: 'rgba(255,255,255,0.15)', padding: '12px', borderRadius: '12px', backdropFilter: 'blur(4px)', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                     <Text style={{ color: '#fff', fontSize: '12px', display: 'block' }}>CONTACT</Text>
                     <Text style={{ color: '#fff', fontWeight: 600 }}>{data.mother.phone}</Text>
                 </div>
             </Col>
             <Col span={12}>
-                <div style={{ background: 'rgba(255,255,255,0.15)', padding: '12px', borderRadius: '12px', backdropFilter: 'blur(4px)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
-                        <Text style={{ color: '#fff', fontSize: '10px', display: 'block' }}>RISK ASSESSED</Text>
-                        <Tag color={data.risk_level === 'High' ? 'red' : data.risk_level === 'Medium' ? 'orange' : 'green'} style={{ border: 'none', margin: 0 }}>
-                            {data.risk_level || 'LOW RISK'}
-                        </Tag>
-                    </div>
-                    <Button 
-                        type="primary" 
-                        size="small" 
-                        icon={<AlertOutlined style={{ fontSize: '12px' }} />} 
-                        onClick={() => setRiskModalVisible(true)}
-                        style={{ height: '32px', borderRadius: '8px', background: 'rgba(255,255,255,0.2)', border: 'none' }}
-                    />
-                </div>
+                <Button 
+                    type="primary" 
+                    icon={<EditOutlined />} 
+                    onClick={() => setEditModalVisible(true)}
+                    style={{ 
+                        width: '100%', 
+                        height: '100%', 
+                        padding: '12px', 
+                        borderRadius: '12px', 
+                        background: 'rgba(255,255,255,0.15)', 
+                        backdropFilter: 'blur(4px)', 
+                        border: 'none', 
+                        color: '#fff', 
+                        fontWeight: 600,
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        boxShadow: 'none'
+                    }}
+                >
+                    EDIT DETAILS
+                </Button>
             </Col>
         </Row>
     ) : null;
@@ -243,18 +250,7 @@ const PregnancyDetailDrawer: React.FC<PregnancyDetailDrawerProps> = ({
                     <Card style={{ borderRadius: '16px', border: 'none', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', marginBottom: '20px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                             <Text style={{ fontWeight: 600, fontSize: '15px' }}>Pregnancy Progress</Text>
-                            <Space>
-                                <Button 
-                                    size="small" 
-                                    type="text" 
-                                    icon={<EditOutlined style={{ color: colors.primary }} />} 
-                                    onClick={() => setEditModalVisible(true)}
-                                    style={{ borderRadius: '6px' }}
-                                >
-                                    Edit Details
-                                </Button>
-                                <Tag color="processing" style={{ margin: 0, borderRadius: '4px' }}>Trimester {trimester}</Tag>
-                            </Space>
+                            <Tag color="processing" style={{ margin: 0, borderRadius: '4px' }}>Trimester {trimester}</Tag>
                         </div>
 
                         <Progress 

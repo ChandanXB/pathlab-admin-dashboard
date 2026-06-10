@@ -44,10 +44,11 @@ export const shareAncCardViaBackend = async ({
         });
         const imgData = canvas.toDataURL('image/png');
 
-        // 2. Create PDF via jsPDF
-        const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-        const pdfW = pdf.internal.pageSize.getWidth();
+        // 2. Create PDF via jsPDF with custom page height to prevent bottom cutoff
+        const tempPdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+        const pdfW = tempPdf.internal.pageSize.getWidth();
         const pdfH = (canvas.height * pdfW) / canvas.width;
+        const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [pdfW, pdfH] });
         pdf.addImage(imgData, 'PNG', 0, 0, pdfW, pdfH);
 
         // 3. Optional Local Download
@@ -83,9 +84,12 @@ export const downloadAncCardLocally = async (element: HTMLElement | null, fields
     try {
         const canvas = await html2canvas(element, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
         const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-        const pdfW = pdf.internal.pageSize.getWidth();
+        
+        const tempPdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+        const pdfW = tempPdf.internal.pageSize.getWidth();
         const pdfH = (canvas.height * pdfW) / canvas.width;
+        
+        const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [pdfW, pdfH] });
         pdf.addImage(imgData, 'PNG', 0, 0, pdfW, pdfH);
         pdf.save(`ANC_Card_${fields.patient_code}_${dayjs().format('YYYYMMDD')}.pdf`);
         message.success('Card downloaded successfully');
