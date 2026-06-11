@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Spin } from 'antd';
+import { Table } from 'antd';
 import type { TableProps } from 'antd';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import '@/styles/shared/InfiniteScrollTable.css';
+import TableBottomLoader from './TableBottomLoader';
 
 interface InfiniteScrollTableProps<T> extends Omit<TableProps<T>, 'pagination'> {
     hasMore: boolean;
@@ -45,16 +46,10 @@ const InfiniteScrollTable = <T extends object>({
         return () => clearTimeout(timeout);
     }, [dataSource]);
 
-    const loader = (
-        <div style={{ textAlign: 'center', padding: '10px' }}>
-            <Spin size="small" /> Loading more...
-        </div>
-    );
-
     return (
         <div
             className="infinite-scroll-table-wrapper"
-            style={{ flex: 1, display: 'flex', flexDirection: 'column' }}
+            style={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative' }}
         >
             <Table
                 {...props}
@@ -78,10 +73,23 @@ const InfiniteScrollTable = <T extends object>({
                 </InfiniteScroll>
             )}
 
-            {/* Manual indicators for smoother UI */}
-            <div style={{ flexShrink: 0 }}>
-                {loadingMore && loader}
-            </div>
+            {/* Floating Loading Indicator */}
+            {loadingMore && (
+                <div style={{
+                    position: 'absolute',
+                    bottom: '16px',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    zIndex: 100,
+                    background: '#fff',
+                    padding: '8px 24px',
+                    borderRadius: '24px',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                    border: '1px solid #f0f0f0'
+                }}>
+                    <TableBottomLoader loading={true} />
+                </div>
+            )}
         </div>
     );
 };

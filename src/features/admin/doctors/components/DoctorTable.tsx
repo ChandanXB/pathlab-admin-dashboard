@@ -59,7 +59,8 @@ const DoctorTable: React.FC<DoctorTableProps> = ({
             title: 'Email',
             dataIndex: 'email',
             key: 'email',
-            render: (email: string) => <span style={{ whiteSpace: 'nowrap' }}>{email}</span>
+            ellipsis: true,
+            render: (email: string) => email || '-'
         },
         {
             title: 'Status',

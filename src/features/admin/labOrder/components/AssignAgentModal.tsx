@@ -102,7 +102,7 @@ const AssignAgentModal: React.FC<AssignAgentModalProps> = ({ visible, order, onC
     const fetchAgents = async (forceGeocode = false) => {
         try {
             setFetchingAgents(true);
-            const response = await collectionAgentService.getAgents({ status: 'active' });
+            const response = await collectionAgentService.getAgents({ status: 'active', limit: 100 });
             const agentsData = response.data;
 
             if (window.google) {
