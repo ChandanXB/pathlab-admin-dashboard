@@ -90,7 +90,7 @@ const AdminLayout: React.FC = () => {
 
         const fetchAgents = async () => {
             try {
-                const response = await collectionAgentService.getAgents();
+                const response = await collectionAgentService.getAgents({ limit: 100 });
                 if (response.success) {
                     setAgents(response.data);
                 }

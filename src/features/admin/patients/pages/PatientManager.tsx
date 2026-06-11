@@ -194,9 +194,29 @@ const PatientManager: React.FC = () => {
     };
 
     return (
-        <Tabs
-            defaultActiveKey="patients"
-            style={{ height: '100%', display: 'flex', flexDirection: 'column' }}
+        <>
+            <style>{`
+                .patient-tabs > .ant-tabs-content-holder {
+                    flex: 1;
+                    overflow: hidden;
+                    display: flex;
+                    flex-direction: column;
+                }
+                .patient-tabs > .ant-tabs-content-holder > .ant-tabs-content {
+                    height: 100%;
+                    flex: 1;
+                    display: flex;
+                    flex-direction: column;
+                }
+                .patient-tabs > .ant-tabs-content-holder > .ant-tabs-content > .ant-tabs-tabpane {
+                    height: 100%;
+                    flex: 1;
+                }
+            `}</style>
+            <Tabs
+                className="patient-tabs"
+                defaultActiveKey="patients"
+                style={{ height: '100%', display: 'flex', flexDirection: 'column' }}
             items={[
                 {
                     key: 'patients',
@@ -267,13 +287,6 @@ const PatientManager: React.FC = () => {
                         scroll={{ x: isMobile ? 'max-content' : undefined, y: tableHeight }}
                     />
                 </div>
-                {patientPagination.hasMore && !loadingPatients && (
-                    <div style={{ textAlign: 'center', padding: '16px' }}>
-                        <Button onClick={loadMore} loading={loadingMorePatients}>
-                            Load More
-                        </Button>
-                    </div>
-                )}
             </Card>
 
             <PatientFormModal
@@ -312,6 +325,7 @@ const PatientManager: React.FC = () => {
                 }
             ]}
         />
+        </>
     );
 };
 
