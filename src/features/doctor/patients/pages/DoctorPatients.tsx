@@ -42,7 +42,18 @@ const DoctorPatients: React.FC = () => {
     const [detailDrawer, setDetailDrawer] = useState<{ visible: boolean; appointment: any }>({ visible: false, appointment: null });
 
     const [page, setPage] = useState(1);
+    const [loadingMore, setLoadingMore] = useState(false);
     const PAGE_SIZE = 10;
+
+
+    const handleLoadMore = () => {
+        if (loadingMore) return;
+        setLoadingMore(true);
+        setTimeout(() => {
+            setPage(p => p + 1);
+            setLoadingMore(false);
+        }, 600); // Simulate network delay to show the loader component
+    };
 
     useEffect(() => {
         setPage(1);
@@ -160,35 +171,56 @@ const DoctorPatients: React.FC = () => {
                 const fileUrl = parts[1]?.trim();
 
                 return (
-                    <Space direction="vertical" size="small" style={{ width: '100%' }}>
-                        <div style={{ padding: '6px 10px', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 6 }}>
-                            <Text strong style={{ fontSize: 11, color: '#64748b', display: 'block', textTransform: 'uppercase', marginBottom: 2 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, width: '100%', minWidth: 0 }}>
+                        {/* Patient Concern */}
+                        <div style={{
+                            padding: '6px 10px',
+                            backgroundColor: '#f8fafc',
+                            border: '1px solid #e2e8f0',
+                            borderRadius: 6,
+                            maxHeight: 80,
+                            overflowY: 'auto',
+                        }}>
+                            <Text strong style={{ fontSize: 11, color: '#64748b', display: 'block', textTransform: 'uppercase', marginBottom: 2, whiteSpace: 'nowrap' }}>
                                 Patient Concern:
                             </Text>
-                            <Text>{mainNote}</Text>
+                            <Text style={{ display: 'block', wordBreak: 'break-word', whiteSpace: 'pre-wrap', lineHeight: '1.4' }}>
+                                {mainNote}
+                            </Text>
                         </div>
 
+                        {/* Attached Report Button */}
                         {fileUrl && (
-                            <Button 
-                                type="dashed" 
-                                size="small" 
+                            <Button
+                                type="dashed"
+                                size="small"
                                 icon={<FileTextOutlined />}
                                 onClick={() => window.open(fileUrl, '_blank')}
-                                style={{ color: colors.primary, borderColor: colors.primary }}
+                                style={{ color: colors.primary, borderColor: colors.primary, alignSelf: 'flex-start' }}
                             >
                                 View Attached Report
                             </Button>
                         )}
 
+                        {/* Doctor Notes */}
                         {record.precaution && (
-                            <div style={{ padding: '6px 10px', backgroundColor: '#f6ffed', border: '1px solid #b7eb8f', borderRadius: 6 }}>
-                                <Text strong style={{ fontSize: 11, color: '#389e0d', display: 'block', textTransform: 'uppercase', marginBottom: 2 }}>
+                            <div style={{
+                                padding: '6px 10px',
+                                backgroundColor: '#f6ffed',
+                                border: '1px solid #b7eb8f',
+                                borderRadius: 6,
+                                maxHeight: 80,
+                                overflowY: 'auto',
+                            }}>
+                                <Text strong style={{ fontSize: 11, color: '#389e0d', display: 'block', textTransform: 'uppercase', marginBottom: 2, whiteSpace: 'nowrap' }}>
                                     <SafetyCertificateOutlined /> Doctor Notes:
                                 </Text>
-                                <Text type="secondary">{record.precaution}</Text>
+                                <Text type="secondary" style={{ display: 'block', wordBreak: 'break-word', whiteSpace: 'pre-wrap', lineHeight: '1.4' }}>
+                                    {record.precaution}
+                                </Text>
                             </div>
                         )}
-                    </Space>
+                    </div>
                 );
             }
         },
@@ -265,16 +297,19 @@ const DoctorPatients: React.FC = () => {
                 if (canReschedule || canCancel) {
                     items.push({ type: 'divider' });
                     
-                    if (canReschedule) {
-                        items.push({
-                            key: 'reschedule',
-                            label: 'Reschedule',
-                            icon: <CalendarOutlined style={{ color: '#f59e0b' }} />,
-                            onClick: () => setRescheduleModal({ visible: true, appointment: record })
-                        });
-                    }
+                    items.push({
+                        key: 'complete',
+                        label: 'Mark Completed',
+                        icon: <CheckCircleOutlined style={{ color: colors.success }} />,
+                        onClick: () => setStatusModal({ visible: true, appointment: record })
+                    });
+                }
 
-                    if (canCancel) {
+                if (record.status !== 'cancelled' && record.status !== 'completed') {
+                    if (items.length > 0 && items[items.length - 1]?.type !== 'divider') {
+                        items.push({ type: 'divider' });
+                    }
+                    if (record.status === 'scheduled' || record.status === 'pending') {
                         items.push({
                             key: 'cancel',
                             label: 'Cancel',
@@ -321,8 +356,9 @@ const DoctorPatients: React.FC = () => {
                         dataSource={displayedAppointments}
                         rowKey="id"
                         loading={loading}
+                        loadingMore={loadingMore}
                         hasMore={displayedAppointments.length < filteredAppointments.length}
-                        next={() => setPage(p => p + 1)}
+                        next={handleLoadMore}
                         scroll={{ y: 'calc(100vh - 380px)' }}
                     />
                 </div>
