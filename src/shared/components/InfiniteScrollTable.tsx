@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Table } from 'antd';
 import type { TableProps } from 'antd';
-import InfiniteScroll from 'react-infinite-scroll-component';
 import '@/styles/shared/InfiniteScrollTable.css';
 import TableBottomLoader from './TableBottomLoader';
 
@@ -16,7 +15,8 @@ interface InfiniteScrollTableProps<T> extends Omit<TableProps<T>, 'pagination'> 
 
 /**
  * A reusable Ant Design Table component with Infinite Scroll capabilities.
- * It wraps the Ant Design Table and integrates it with react-infinite-scroll-components.
+ * It manually attaches a scroll listener to the Antd table body to reliably
+ * trigger the `next` function when the user scrolls to the bottom.
  */
 const InfiniteScrollTable = <T extends object>({
     hasMore,
@@ -29,25 +29,58 @@ const InfiniteScrollTable = <T extends object>({
     height,
     ...props
 }: InfiniteScrollTableProps<T>) => {
-    const [scrollTarget, setScrollTarget] = useState<HTMLElement | null>(null);
+    const tableRef = useRef<HTMLDivElement>(null);
 
-    // We need to find the Ant Design table body to attach the scroll listener correctly
-    // if we want to keep the fixed header feature of Antd Table.
     useEffect(() => {
-        const findTableBody = () => {
-            const body = document.querySelector('.infinite-scroll-table-wrapper .ant-table-body') as HTMLElement;
-            if (body) {
-                setScrollTarget(body);
+        const tableNode = tableRef.current;
+        if (!tableNode) return;
+
+        let scrollTarget: HTMLElement | null = null;
+
+        const handleScroll = (e: Event) => {
+            if (loading || loadingMore || !hasMore) return;
+            const target = e.target as HTMLElement;
+            // Trigger when within 50px of the bottom
+            if (target.scrollHeight - target.scrollTop <= target.clientHeight + 50) {
+                next();
+            }
+        };
+
+        const attachListener = () => {
+            const body = tableNode.querySelector('.ant-table-body') as HTMLElement;
+            if (body && body !== scrollTarget) {
+                if (scrollTarget) {
+                    scrollTarget.removeEventListener('scroll', handleScroll);
+                }
+                scrollTarget = body;
+                scrollTarget.addEventListener('scroll', handleScroll);
+                
+                // If initial data doesn't fill the container, trigger next immediately
+                if (hasMore && !loadingMore && scrollTarget.scrollHeight <= scrollTarget.clientHeight) {
+                    next();
+                }
             }
         };
 
         // Delay slightly to ensure Antd has rendered the table internal structure
-        const timeout = setTimeout(findTableBody, 100);
-        return () => clearTimeout(timeout);
-    }, [dataSource]);
+        const timeout = setTimeout(attachListener, 100);
+
+        // Re-attach if DOM changes
+        const observer = new MutationObserver(attachListener);
+        observer.observe(tableNode, { childList: true, subtree: true });
+
+        return () => {
+            clearTimeout(timeout);
+            observer.disconnect();
+            if (scrollTarget) {
+                scrollTarget.removeEventListener('scroll', handleScroll);
+            }
+        };
+    }, [hasMore, loading, loadingMore, next, dataSource]);
 
     return (
         <div
+            ref={tableRef}
             className="infinite-scroll-table-wrapper"
             style={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative' }}
         >
@@ -59,19 +92,6 @@ const InfiniteScrollTable = <T extends object>({
                 scroll={scroll}
                 loading={loading && dataSource.length === 0}
             />
-
-            {scrollTarget && (
-                <InfiniteScroll
-                    dataLength={dataSource.length}
-                    next={next}
-                    hasMore={hasMore && !loadingMore} // Prevents double triggers
-                    loader={null}
-                    scrollableTarget={scrollTarget as any}
-                    scrollThreshold={0.9}
-                >
-                    <div />
-                </InfiniteScroll>
-            )}
 
             {/* Floating Loading Indicator */}
             {loadingMore && (
@@ -90,8 +110,16 @@ const InfiniteScrollTable = <T extends object>({
                     <TableBottomLoader loading={true} />
                 </div>
             )}
+            
+            {/* End Message */}
+            {!hasMore && dataSource.length > 0 && endMessage && (
+                <div style={{ textAlign: 'center', padding: '16px', color: '#888' }}>
+                    {endMessage}
+                </div>
+            )}
         </div>
     );
 };
 
 export default InfiniteScrollTable;
+
