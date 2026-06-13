@@ -134,17 +134,6 @@ const ConsultationManager: React.FC<ConsultationManagerProps> = ({ hideHeader = 
             },
         },
         {
-            title: 'Precaution Status',
-            key: 'precaution',
-            width: 140,
-            render: (_: any, record: any) => {
-                if (record.precaution) {
-                    return <Tag color="green" style={{ margin: 0, whiteSpace: 'nowrap' }}>Provided</Tag>;
-                }
-                return <Tag color="warning" style={{ margin: 0, whiteSpace: 'nowrap' }}>Pending</Tag>;
-            },
-        },
-        {
             title: 'Status',
             dataIndex: 'status',
             key: 'status',
@@ -204,6 +193,7 @@ const ConsultationManager: React.FC<ConsultationManagerProps> = ({ hideHeader = 
                     pagination={{ pageSize: 15 }}
                     scroll={{ x: 'max-content', y: 500 }}
                     size="middle"
+                    locale={{ emptyText: loading ? ' ' : undefined }}
                 />
             </Card>
         </div>

@@ -220,6 +220,7 @@ const CityTab: React.FC<{ isMobile: boolean }> = ({ isMobile }) => {
                 pagination={false}
                 size="middle"
                 scroll={{ y: 'calc(100vh - 350px)', x: isMobile ? 'max-content' : undefined }}
+                locale={{ emptyText: loading ? ' ' : undefined }}
             />
             {hasMore && (
                 <div 
@@ -463,6 +464,7 @@ const CenterTab: React.FC<{ isMobile: boolean }> = ({ isMobile }) => {
                 pagination={false}
                 size="middle"
                 scroll={{ y: 'calc(100vh - 350px)', x: isMobile ? 'max-content' : undefined }}
+                locale={{ emptyText: loading ? ' ' : undefined }}
             />
             {hasMore && (
                 <div 

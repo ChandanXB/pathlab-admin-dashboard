@@ -91,6 +91,7 @@ const InfiniteScrollTable = <T extends object>({
                 sticky
                 scroll={scroll}
                 loading={loading && dataSource.length === 0}
+                locale={{ emptyText: (loading && dataSource.length === 0) ? ' ' : undefined }}
             />
 
             {/* Floating Loading Indicator */}
