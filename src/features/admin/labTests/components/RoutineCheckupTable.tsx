@@ -208,6 +208,7 @@ const RoutineCheckupTable: React.FC<RoutineCheckupTableProps> = ({
             scroll={scroll}
             rowSelection={rowSelection}
             className="custom-table"
+            locale={{ emptyText: loading ? ' ' : undefined }}
         />
     );
 };
