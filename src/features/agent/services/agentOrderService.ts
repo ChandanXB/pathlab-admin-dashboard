@@ -71,9 +71,10 @@ export const agentOrderService = {
     /**
      * Get all orders assigned to this agent
      */
-    getMyOrders: async (agentId: number, params?: { status?: string }): Promise<{ data: AgentOrder[]; meta: any }> => {
+    getMyOrders: async (agentId: number, params?: { status?: string; search?: string }): Promise<{ data: AgentOrder[]; meta: any }> => {
         const queryParams: any = { agent_id: agentId, limit: 100 };
         if (params?.status) queryParams.status = params.status;
+        if (params?.search) queryParams.search = params.search;
         const response = await apiClient.get('/lab-orders', { params: queryParams });
         return response.data;
     },

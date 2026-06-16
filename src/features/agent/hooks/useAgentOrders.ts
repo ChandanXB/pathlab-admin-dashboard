@@ -9,6 +9,7 @@ export const useAgentOrders = () => {
     const [orders, setOrders] = useState<AgentOrder[]>([]);
     const [loading, setLoading] = useState(false);
     const [profile, setProfile] = useState<AgentProfile | null>(null);
+    const [filters, setFilters] = useState<{ search?: string }>({});
 
     const agentId = user?.agentId;
 
@@ -16,14 +17,14 @@ export const useAgentOrders = () => {
         if (!agentId) return;
         setLoading(true);
         try {
-            const response = await agentOrderService.getMyOrders(agentId);
+            const response = await agentOrderService.getMyOrders(agentId, filters);
             setOrders(response.data || []);
         } catch (error) {
             console.error('Failed to fetch orders', error);
         } finally {
             setLoading(false);
         }
-    }, [agentId]);
+    }, [agentId, filters]);
 
     const fetchProfile = useCallback(async () => {
         if (!agentId) return;
@@ -142,5 +143,7 @@ export const useAgentOrders = () => {
         markReached,
         markCollected,
         refresh: fetchOrders,
+        filters,
+        setFilters,
     };
 };

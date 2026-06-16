@@ -377,7 +377,7 @@ const AssignAgentModal: React.FC<AssignAgentModalProps> = ({ visible, order, onC
                                         }}
                                         allowClear
                                         showSearch
-                                        optionFilterProp="children"
+                                        optionFilterProp="label"
                                         size="small"
                                     >
                                         {sortedAgents.map(agent => {
@@ -387,7 +387,7 @@ const AssignAgentModal: React.FC<AssignAgentModalProps> = ({ visible, order, onC
                                                 : null;
 
                                             return (
-                                                <Option key={agent.id} value={agent.id} disabled={activeOrders > 0}>
+                                                <Option key={agent.id} value={agent.id} label={agent.name} disabled={activeOrders > 0}>
                                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                         <Space size={4}>
                                                             <span style={{ fontSize: '12px', textTransform: 'capitalize' }}>{agent.name}</span>
