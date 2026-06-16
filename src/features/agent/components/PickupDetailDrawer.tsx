@@ -375,8 +375,19 @@ const PickupDetailDrawer: React.FC<PickupDetailDrawerProps> = ({
                                         </Text>
                                     )}
                                 </div>
-                                <Tag color={tr.status === 'completed' ? 'success' : 'processing'} style={{ borderRadius: '8px' }}>
-                                    {tr.status}
+                                <Tag
+                                    color={
+                                        tr.status === 'completed' ? 'success' :
+                                        tr.status === 'collected' ? 'cyan' :
+                                        tr.status === 'pending' ? 'orange' :
+                                        'processing'
+                                    }
+                                    style={{ borderRadius: '8px' }}
+                                >
+                                    {tr.status === 'collected' ? 'Collected' :
+                                     tr.status === 'completed' ? 'Completed' :
+                                     tr.status === 'pending' ? 'Pending' :
+                                     tr.status}
                                 </Tag>
                             </div>
                         ))}

@@ -181,7 +181,6 @@ const ANCTable: React.FC<ANCTableProps> = ({
             loadingMore={loadingMore}
             rowKey="id"
             scroll={scroll}
-            endMessage={<div style={{ textAlign: 'center', padding: '16px', color: colors.ui.label }}>You have reached the end of the list.</div>}
         />
     );
 };

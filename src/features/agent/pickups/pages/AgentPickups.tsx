@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Typography, Card, Table, Tag, Button, Space, Input, Select, Row, Col, Tooltip } from 'antd';
+import { Typography, Card, Tag, Button, Space, Input, Select, Row, Col, Tooltip, Popconfirm, Modal, message } from 'antd';
 import {
     EnvironmentOutlined,
     PhoneOutlined,
@@ -12,12 +12,15 @@ import {
     SendOutlined,
     ClockCircleOutlined,
     ExperimentOutlined,
+    DeleteOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { useSearchParams } from 'react-router-dom';
 import { useAgentOrders } from '../../hooks/useAgentOrders';
 import PickupDetailDrawer from '../../components/PickupDetailDrawer';
 import type { AgentOrder } from '../../services/agentOrderService';
+import InfiniteScrollTable from '@/shared/components/InfiniteScrollTable';
+import { labOrderService } from '@/features/admin/labOrder/services/labOrderService';
 
 const { Text, Title } = Typography;
 
@@ -31,6 +34,8 @@ const AgentPickups: React.FC = () => {
         startPickup,
         markReached,
         markCollected,
+        refresh,
+        setFilters,
     } = useAgentOrders();
 
     const [searchParams] = useSearchParams();
@@ -39,25 +44,38 @@ const AgentPickups: React.FC = () => {
     const [selectedOrder, setSelectedOrder] = useState<AgentOrder | null>(null);
     const [drawerVisible, setDrawerVisible] = useState(false);
     const [searchText, setSearchText] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState<string>(urlStatus);
     const [assignmentFilter, setAssignmentFilter] = useState<string>('all');
+
+    const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+    const [displayLimit, setDisplayLimit] = useState(15);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const [screenSize, setScreenSize] = useState(window.innerWidth);
+    const isMobile = screenSize < 768;
 
     useEffect(() => {
         setStatusFilter(urlStatus);
     }, [urlStatus]);
 
-    const filteredOrders = orders.filter(order => {
-        // Search
-        if (searchText) {
-            const search = searchText.toLowerCase();
-            const matchesSearch =
-                order.order_code.toLowerCase().includes(search) ||
-                order.patient?.full_name?.toLowerCase().includes(search) ||
-                order.patient?.phone?.toLowerCase().includes(search) ||
-                order.address?.toLowerCase().includes(search);
-            if (!matchesSearch) return false;
-        }
+    useEffect(() => {
+        const handleResize = () => setScreenSize(window.innerWidth);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(searchText);
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [searchText]);
+
+    useEffect(() => {
+        setFilters({ search: debouncedSearch });
+    }, [debouncedSearch, setFilters]);
+
+    const filteredOrders = orders.filter(order => {
         // Status filter
         if (statusFilter !== 'all' && order.status !== statusFilter) return false;
 
@@ -66,6 +84,67 @@ const AgentPickups: React.FC = () => {
 
         return true;
     });
+
+    useEffect(() => {
+        setDisplayLimit(15);
+        setSelectedRowKeys([]);
+    }, [searchText, statusFilter, assignmentFilter]);
+
+    const handleLoadMore = () => {
+        if (displayLimit >= filteredOrders.length) return;
+        setLoadingMore(true);
+        setTimeout(() => {
+            setDisplayLimit(prev => Math.min(prev + 15, filteredOrders.length));
+            setLoadingMore(false);
+        }, 500);
+    };
+
+    const handleDelete = async (id: number) => {
+        const hide = message.loading('Deleting order...', 0);
+        try {
+            const res = await labOrderService.deleteOrder(id);
+            if (res.success) {
+                message.success('Order deleted successfully');
+                setSelectedRowKeys(prev => prev.filter(key => key !== id));
+                refresh();
+            } else {
+                message.error('Failed to delete order');
+            }
+        } catch (err: any) {
+            message.error(err.response?.data?.error || 'Failed to delete order');
+        } finally {
+            hide();
+        }
+    };
+
+    const handleBulkDelete = () => {
+        Modal.confirm({
+            title: 'Delete Selected Orders',
+            content: `Are you sure you want to permanently delete ${selectedRowKeys.length} selected orders? This action cannot be undone.`,
+            okText: 'Yes, Delete',
+            okType: 'danger',
+            cancelText: 'No',
+            style: { top: 80 },
+            onOk: async () => {
+                const ids = selectedRowKeys.map(Number);
+                const hide = message.loading(`Deleting ${ids.length} selected orders...`, 0);
+                try {
+                    const res = await labOrderService.bulkDeleteOrders(ids);
+                    if (res.success) {
+                        message.success('Selected orders deleted successfully');
+                        setSelectedRowKeys([]);
+                        refresh();
+                    } else {
+                        message.error('Failed to delete selected orders');
+                    }
+                } catch (err: any) {
+                    message.error(err.response?.data?.error || 'Failed to delete selected orders');
+                } finally {
+                    hide();
+                }
+            }
+        });
+    };
 
     const openDrawer = (order: AgentOrder) => {
         setSelectedOrder(order);
@@ -230,6 +309,25 @@ const AgentPickups: React.FC = () => {
                                 style={{ borderRadius: '6px' }}
                             />
                         </Tooltip>
+                        <Popconfirm
+                            title="Delete Order"
+                            description="Are you sure?"
+                            onConfirm={(e) => { e?.stopPropagation(); handleDelete(record.id); }}
+                            onCancel={(e) => e?.stopPropagation()}
+                            okText="Yes"
+                            cancelText="No"
+                            okButtonProps={{ danger: true }}
+                        >
+                            <Tooltip title="Delete">
+                                <Button
+                                    size="small"
+                                    danger
+                                    icon={<DeleteOutlined />}
+                                    onClick={(e) => e.stopPropagation()}
+                                    style={{ borderRadius: '6px' }}
+                                />
+                            </Tooltip>
+                        </Popconfirm>
                     </Space>
                 );
             }
@@ -239,11 +337,31 @@ const AgentPickups: React.FC = () => {
     return (
         <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {/* Header */}
-            <div style={{ marginBottom: '8px' }}>
-                <Title level={4} style={{ margin: 0 }}>All Assigned Pickups</Title>
-                <Text type="secondary">
-                    Showing {filteredOrders.length} of {orders.length} pickups
-                </Text>
+            <div style={{
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                justifyContent: 'space-between',
+                alignItems: isMobile ? 'stretch' : 'center',
+                gap: isMobile ? '16px' : '0',
+                marginBottom: '8px'
+            }}>
+                <div>
+                    <Title level={4} style={{ margin: 0 }}>All Assigned Pickups</Title>
+                    <Text type="secondary">
+                        Showing {Math.min(displayLimit, filteredOrders.length)} of {filteredOrders.length} pickups
+                    </Text>
+                </div>
+                {selectedRowKeys.length > 0 && (
+                    <Button
+                        type="primary"
+                        danger
+                        icon={<DeleteOutlined />}
+                        onClick={handleBulkDelete}
+                        style={{ borderRadius: '8px' }}
+                    >
+                        Delete ({selectedRowKeys.length})
+                    </Button>
+                )}
             </div>
 
             {/* Filters */}
@@ -290,17 +408,33 @@ const AgentPickups: React.FC = () => {
 
             {/* Table */}
             <Card style={{ borderRadius: '12px', flex: 1, overflow: 'hidden' }} styles={{ body: { padding: 0 } }}>
-                <Table
+                <InfiniteScrollTable
                     columns={columns}
-                    dataSource={filteredOrders}
+                    dataSource={filteredOrders.slice(0, displayLimit)}
                     loading={loading}
+                    loadingMore={loadingMore}
+                    hasMore={displayLimit < filteredOrders.length}
+                    next={handleLoadMore}
                     rowKey="id"
-                    pagination={{ pageSize: 15, showSizeChanger: false }}
+                    rowSelection={{
+                        selectedRowKeys,
+                        onChange: (keys) => setSelectedRowKeys(keys)
+                    }}
                     size="small"
                     scroll={{ x: 900, y: 'calc(100vh - 350px)' }}
                     rowClassName={(record) => record.priority === 'urgent' ? 'urgent-row' : ''}
                     onRow={(record) => ({
-                        onClick: () => openDrawer(record),
+                        onClick: (e: any) => {
+                            if (
+                                e.target.closest('.ant-dropdown-trigger') || 
+                                e.target.closest('button') || 
+                                e.target.closest('.anticon') ||
+                                e.target.closest('.ant-table-selection-column')
+                            ) {
+                                return;
+                            }
+                            openDrawer(record);
+                        },
                         style: { cursor: 'pointer' }
                     })}
                 />
