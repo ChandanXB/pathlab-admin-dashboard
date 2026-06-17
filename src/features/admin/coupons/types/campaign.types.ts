@@ -1,5 +1,7 @@
 import type { Coupon } from './coupon.types';
 
+export type BannerDisplayType = 'modal' | 'hero_carousel' | 'hero_banner' | 'event_banner';
+
 export interface Campaign {
   id: number;
   title: string;
@@ -19,6 +21,8 @@ export interface Campaign {
   scheduledShowTime?: string;
   displayDuration?: number;
   durationUnit?: 'minutes' | 'hours';
+  displayType?: BannerDisplayType;
+  sortOrder?: number;
 }
 
 export interface CampaignFormData {
@@ -36,4 +40,6 @@ export interface CampaignFormData {
   scheduledShowTime?: string;
   displayDuration?: number;
   durationUnit?: 'minutes' | 'hours';
+  displayType?: BannerDisplayType;
+  sortOrder?: number;
 }
