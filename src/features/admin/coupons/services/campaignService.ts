@@ -2,7 +2,7 @@ import axiosInstance from '@/config/apiClient';
 import type { CampaignFormData } from '../types/campaign.types';
 
 export const campaignService = {
-  getAllCampaigns: async (params?: { search?: string; page?: number; limit?: number; isActive?: boolean }) => {
+  getAllCampaigns: async (params?: { search?: string; page?: number; limit?: number; isActive?: boolean; displayType?: string }) => {
     const response = await axiosInstance.get('/campaigns', { params });
     return response.data;
   },

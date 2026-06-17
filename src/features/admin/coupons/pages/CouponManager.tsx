@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Card, Button, Form, Breadcrumb, Space, message, Input, Tabs, Drawer, Descriptions, Divider, Tag, Image } from 'antd';
-import { PlusOutlined, SearchOutlined } from '@ant-design/icons';
+import { Card, Button, Form, Breadcrumb, Space, message, Input, Tabs, Drawer, Descriptions, Divider, Tag, Image, Badge } from 'antd';
+import { PlusOutlined, SearchOutlined, PictureOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { couponService } from '../services/couponService';
 import { campaignService } from '../services/campaignService';
@@ -12,8 +12,12 @@ import CampaignTable from '../components/CampaignTable';
 import CampaignFormModal from '../components/CampaignFormModal';
 import SendCampaignModal from '../components/SendCampaignModal';
 import CampaignPreviewModal from '../components/CampaignPreviewModal';
+import HeroBannerTable from '../components/HeroBannerTable';
+import HeroBannerFormModal from '../components/HeroBannerFormModal';
 import axiosInstance from '@/config/apiClient';
 import { debounce } from '@/shared/utils/debounce';
+
+const HERO_DISPLAY_TYPES = 'hero_carousel,hero_banner,event_banner';
 
 const CouponManager: React.FC = () => {
   const [activeTab, setActiveTab] = useState('coupons');
@@ -45,9 +49,20 @@ const CouponManager: React.FC = () => {
   const [isPreviewModalVisible, setIsPreviewModalVisible] = useState(false);
   const [previewCampaign, setPreviewCampaign] = useState<Campaign | null>(null);
 
+  // Hero Banner States
+  const [heroBanners, setHeroBanners] = useState<Campaign[]>([]);
+  const [loadingHeroBanners, setLoadingHeroBanners] = useState(false);
+  const [loadingMoreHeroBanners, setLoadingMoreHeroBanners] = useState(false);
+  const [heroBannerPage, setHeroBannerPage] = useState(1);
+  const [hasMoreHeroBanners, setHasMoreHeroBanners] = useState(true);
+  const [isHeroBannerModalVisible, setIsHeroBannerModalVisible] = useState(false);
+  const [editingHeroBanner, setEditingHeroBanner] = useState<Campaign | null>(null);
+  const [submittingHeroBanner, setSubmittingHeroBanner] = useState(false);
+  const [heroBannerForm] = Form.useForm();
+
   // Drawer States
   const [isDrawerVisible, setIsDrawerVisible] = useState(false);
-  const [drawerType, setDrawerType] = useState<'coupon' | 'campaign'>('coupon');
+  const [drawerType, setDrawerType] = useState<'coupon' | 'campaign' | 'hero_banner'>('coupon');
   const [selectedRecord, setSelectedRecord] = useState<any>(null);
 
   // For applicability selection
@@ -97,8 +112,9 @@ const CouponManager: React.FC = () => {
       const response = await campaignService.getAllCampaigns({
         search: search,
         page: currentPage,
-        limit: 15
-      });
+        limit: 15,
+        displayType: 'modal',
+      } as any);
       
       const newCampaigns = response.data || [];
       const total = response.meta?.total || 0;
@@ -119,6 +135,39 @@ const CouponManager: React.FC = () => {
     }
   };
 
+  const fetchHeroBanners = async (currentPage: number, search: string, isLoadMore: boolean = false) => {
+    if (isLoadMore) {
+      setLoadingMoreHeroBanners(true);
+    } else {
+      setLoadingHeroBanners(true);
+    }
+
+    try {
+      const response = await campaignService.getAllCampaigns({
+        search: search,
+        page: currentPage,
+        limit: 15,
+        displayType: HERO_DISPLAY_TYPES,
+      } as any);
+
+      const newBanners = response.data || [];
+      const total = response.meta?.total || 0;
+
+      if (isLoadMore) {
+        setHeroBanners(prev => [...prev, ...newBanners]);
+      } else {
+        setHeroBanners(newBanners);
+      }
+
+      setHasMoreHeroBanners(heroBanners.length + newBanners.length < total);
+    } catch (error) {
+      message.error('Failed to fetch hero banners');
+    } finally {
+      setLoadingHeroBanners(false);
+      setLoadingMoreHeroBanners(false);
+    }
+  };
+
   const fetchDependencies = async () => {
     try {
       const [testsRes, packagesRes] = await Promise.all([
@@ -135,8 +184,10 @@ const CouponManager: React.FC = () => {
   useEffect(() => {
     if (activeTab === 'coupons') {
       fetchCoupons(1, searchText);
-    } else {
+    } else if (activeTab === 'campaigns') {
       fetchCampaigns(1, searchText);
+    } else if (activeTab === 'hero_banners') {
+      fetchHeroBanners(1, searchText);
     }
     fetchDependencies();
   }, [searchText, activeTab]);
@@ -157,6 +208,14 @@ const CouponManager: React.FC = () => {
     }
   };
 
+  const handleLoadMoreHeroBanners = () => {
+    if (!loadingMoreHeroBanners && hasMoreHeroBanners) {
+      const nextPage = heroBannerPage + 1;
+      setHeroBannerPage(nextPage);
+      fetchHeroBanners(nextPage, searchText, true);
+    }
+  };
+
   const handleView = (record: Coupon) => {
     setSelectedRecord(record);
     setDrawerType('coupon');
@@ -169,11 +228,18 @@ const CouponManager: React.FC = () => {
     setIsDrawerVisible(true);
   };
 
+  const handleViewHeroBanner = (record: Campaign) => {
+    setSelectedRecord(record);
+    setDrawerType('hero_banner');
+    setIsDrawerVisible(true);
+  };
+
   const debouncedSearch = useMemo(
     () => debounce((value: string) => {
       setSearchText(value);
       setPage(1);
       setCampaignPage(1);
+      setHeroBannerPage(1);
     }, 500),
     []
   );
@@ -183,10 +249,14 @@ const CouponManager: React.FC = () => {
       setEditingCoupon(null);
       form.resetFields();
       setIsModalVisible(true);
-    } else {
+    } else if (activeTab === 'campaigns') {
       setEditingCampaign(null);
       campaignForm.resetFields();
       setIsCampaignModalVisible(true);
+    } else if (activeTab === 'hero_banners') {
+      setEditingHeroBanner(null);
+      heroBannerForm.resetFields();
+      setIsHeroBannerModalVisible(true);
     }
   };
 
@@ -220,6 +290,22 @@ const CouponManager: React.FC = () => {
       fetchCampaigns(1, searchText);
     } catch (error) {
       message.error('Failed to delete campaign');
+    }
+  };
+
+  const handleEditHeroBanner = (record: Campaign) => {
+    setEditingHeroBanner(record);
+    setIsHeroBannerModalVisible(true);
+  };
+
+  const handleDeleteHeroBanner = async (id: number) => {
+    try {
+      await campaignService.deleteCampaign(id);
+      message.success('Hero banner deleted successfully');
+      setHeroBannerPage(1);
+      fetchHeroBanners(1, searchText);
+    } catch (error) {
+      message.error('Failed to delete hero banner');
     }
   };
 
@@ -274,6 +360,38 @@ const CouponManager: React.FC = () => {
     }
   };
 
+  const handleHeroBannerSubmit = async (values: any) => {
+    setSubmittingHeroBanner(true);
+    try {
+      if (editingHeroBanner) {
+        await campaignService.updateCampaign(editingHeroBanner.id, values);
+        message.success('Hero banner updated successfully');
+      } else {
+        await campaignService.createCampaign(values);
+        message.success('Hero banner created successfully');
+      }
+      setIsHeroBannerModalVisible(false);
+      setHeroBannerPage(1);
+      fetchHeroBanners(1, searchText);
+    } catch (error: any) {
+      message.error(error.response?.data?.message || 'Failed to save hero banner');
+    } finally {
+      setSubmittingHeroBanner(false);
+    }
+  };
+
+  const getAddButtonLabel = () => {
+    if (activeTab === 'coupons') return 'Create Coupon';
+    if (activeTab === 'campaigns') return 'Create Campaign';
+    return 'Add Hero Banner';
+  };
+
+  const getSearchPlaceholder = () => {
+    if (activeTab === 'coupons') return 'Search by code...';
+    if (activeTab === 'campaigns') return 'Search campaigns...';
+    return 'Search banners...';
+  };
+
   return (
     <div style={{ padding: '24px', height: '100%', display: 'flex', flexDirection: 'column' }}>
       <div style={{ marginBottom: '16px' }}>
@@ -284,13 +402,13 @@ const CouponManager: React.FC = () => {
         <h2 style={{ margin: 0 }}>Coupon Management</h2>
         <Space>
           <Input
-            placeholder={activeTab === 'coupons' ? "Search by code..." : "Search campaigns..."}
+            placeholder={getSearchPlaceholder()}
             prefix={<SearchOutlined />}
             onChange={(e) => debouncedSearch(e.target.value)}
             style={{ width: 250 }}
           />
           <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
-            {activeTab === 'coupons' ? 'Create Coupon' : 'Create Campaign'}
+            {getAddButtonLabel()}
           </Button>
         </Space>
       </div>
@@ -345,7 +463,57 @@ const CouponManager: React.FC = () => {
                   />
                 </div>
               )
-            }
+            },
+            {
+              key: 'hero_banners',
+              label: (
+                <Space size={4}>
+                  <PictureOutlined />
+                  Hero Banners
+                  {heroBanners.filter(b => b.isActive).length > 0 && (
+                    <Badge
+                      count={heroBanners.filter(b => b.isActive).length}
+                      size="small"
+                      style={{ backgroundColor: '#4361ee' }}
+                    />
+                  )}
+                </Space>
+              ),
+              children: (
+                <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                  {/* Info banner about hero types */}
+                  <div
+                    style={{
+                      background: 'linear-gradient(135deg, #f0f4ff 0%, #e8f0fe 100%)',
+                      border: '1px solid #c7d7fd',
+                      borderRadius: 8,
+                      padding: '8px 14px',
+                      marginBottom: 12,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 12,
+                      flexWrap: 'wrap',
+                    }}
+                  >
+                    <span style={{ fontSize: 12, color: '#4361ee', fontWeight: 600 }}>Banner Types:</span>
+                    <Tag color="blue">🎠 Carousel — Rotating hero slides</Tag>
+                    <Tag color="purple">🖼️ Hero Banner — Full-width static banner</Tag>
+                    <Tag color="orange">🎟️ Event Banner — Promotional strip below hero</Tag>
+                  </div>
+                  <HeroBannerTable
+                    data={heroBanners}
+                    loading={loadingHeroBanners}
+                    loadingMore={loadingMoreHeroBanners}
+                    hasMore={hasMoreHeroBanners}
+                    onEdit={handleEditHeroBanner}
+                    onView={handleViewHeroBanner}
+                    onDelete={handleDeleteHeroBanner}
+                    onLoadMore={handleLoadMoreHeroBanners}
+                    scroll={{ y: 'calc(100vh - 390px)' }}
+                  />
+                </div>
+              )
+            },
           ]}
         />
       </Card>
@@ -371,6 +539,15 @@ const CouponManager: React.FC = () => {
         confirmLoading={submittingCampaign}
       />
 
+      <HeroBannerFormModal
+        visible={isHeroBannerModalVisible}
+        editingBanner={editingHeroBanner}
+        form={heroBannerForm}
+        onSubmit={handleHeroBannerSubmit}
+        onCancel={() => setIsHeroBannerModalVisible(false)}
+        confirmLoading={submittingHeroBanner}
+      />
+
       <SendCampaignModal
         visible={isSendCampaignModalVisible}
         campaign={campaignToSend}
@@ -390,7 +567,7 @@ const CouponManager: React.FC = () => {
       />
 
       <Drawer
-        title={`${drawerType === 'coupon' ? 'Coupon' : 'Campaign'} Details`}
+        title={`${drawerType === 'coupon' ? 'Coupon' : drawerType === 'hero_banner' ? 'Hero Banner' : 'Campaign'} Details`}
         placement="right"
         width={500}
         onClose={() => setIsDrawerVisible(false)}
@@ -435,6 +612,43 @@ const CouponManager: React.FC = () => {
                   </Descriptions.Item>
                   <Descriptions.Item label="End Date">
                     {dayjs(selectedRecord.endDate).format('DD MMMM YYYY, hh:mm A')}
+                  </Descriptions.Item>
+                </Descriptions>
+              </>
+            ) : drawerType === 'hero_banner' ? (
+              <>
+                <Descriptions title="Banner Information" column={1} bordered>
+                  <Descriptions.Item label="Title"><strong>{selectedRecord.title}</strong></Descriptions.Item>
+                  <Descriptions.Item label="Subtitle">{selectedRecord.subtitle || 'N/A'}</Descriptions.Item>
+                  <Descriptions.Item label="Description">{selectedRecord.description || 'N/A'}</Descriptions.Item>
+                  <Descriptions.Item label="Type">
+                    <Tag color="blue">{selectedRecord.displayType?.replace('_', ' ').toUpperCase()}</Tag>
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Sort Order">#{selectedRecord.sortOrder ?? 0}</Descriptions.Item>
+                  <Descriptions.Item label="Status">
+                    <Tag color={selectedRecord.isActive ? 'success' : 'error'}>
+                      {selectedRecord.isActive ? 'ACTIVE' : 'INACTIVE'}
+                    </Tag>
+                  </Descriptions.Item>
+                </Descriptions>
+
+                <Divider />
+
+                <Descriptions title="Visuals & Action" column={1} bordered>
+                  <Descriptions.Item label="Banner Image">
+                    {selectedRecord.bannerImage ? (
+                      <Image src={selectedRecord.bannerImage} width="100%" style={{ borderRadius: '8px' }} />
+                    ) : 'No Banner'}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="CTA Text">{selectedRecord.ctaText || 'N/A'}</Descriptions.Item>
+                  <Descriptions.Item label="Target URL">{selectedRecord.targetUrl || 'N/A'}</Descriptions.Item>
+                </Descriptions>
+
+                <Divider />
+
+                <Descriptions title="Validity" column={1} bordered>
+                  <Descriptions.Item label="Start Date">
+                    {dayjs(selectedRecord.startDate).format('DD/MM/YY')} - {dayjs(selectedRecord.endDate).format('DD/MM/YY')}
                   </Descriptions.Item>
                 </Descriptions>
               </>
@@ -492,6 +706,3 @@ const CouponManager: React.FC = () => {
 };
 
 export default CouponManager;
-
-
-
