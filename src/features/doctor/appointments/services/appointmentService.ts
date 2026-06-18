@@ -58,5 +58,23 @@ export const appointmentService = {
     cancelAppointment: async (id: number, payload: { reason?: string }) => {
         const response = await apiClient.patch(`/appointments/${id}/cancel`, payload);
         return response.data;
+    },
+
+    /**
+     * Delete an appointment
+     * @param id The ID of the appointment
+     */
+    deleteAppointment: async (id: number) => {
+        const response = await apiClient.delete(`/appointments/${id}`);
+        return response.data;
+    },
+
+    /**
+     * Bulk delete appointments
+     * @param ids The list of appointment IDs to delete
+     */
+    bulkDeleteAppointments: async (ids: number[]) => {
+        const response = await apiClient.delete('/appointments/bulk', { data: { ids } });
+        return response.data;
     }
 };

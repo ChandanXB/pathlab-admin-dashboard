@@ -16,6 +16,7 @@ import HeroBannerTable from '../components/HeroBannerTable';
 import HeroBannerFormModal from '../components/HeroBannerFormModal';
 import axiosInstance from '@/config/apiClient';
 import { debounce } from '@/shared/utils/debounce';
+import { splitBannerImages } from '../utils/bannerUtils';
 
 const HERO_DISPLAY_TYPES = 'hero_carousel,hero_banner,event_banner';
 
@@ -637,7 +638,17 @@ const CouponManager: React.FC = () => {
                 <Descriptions title="Visuals & Action" column={1} bordered>
                   <Descriptions.Item label="Banner Image">
                     {selectedRecord.bannerImage ? (
-                      <Image src={selectedRecord.bannerImage} width="100%" style={{ borderRadius: '8px' }} />
+                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                        {splitBannerImages(selectedRecord.bannerImage).map((img, idx) => (
+                          <Image
+                            key={idx}
+                            src={img}
+                            width={120}
+                            height={72}
+                            style={{ objectFit: 'cover', borderRadius: '4px', border: '1px solid #f0f0f0' }}
+                          />
+                        ))}
+                      </div>
                     ) : 'No Banner'}
                   </Descriptions.Item>
                   <Descriptions.Item label="CTA Text">{selectedRecord.ctaText || 'N/A'}</Descriptions.Item>

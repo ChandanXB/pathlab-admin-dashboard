@@ -82,6 +82,12 @@ const DoctorDashboard: React.FC = () => {
         },
     ];
 
+    const recentAppointments = useMemo(() => {
+        return [...appointments]
+            .sort((a, b) => b.id - a.id)
+            .slice(0, 3);
+    }, [appointments]);
+
     const formatDoctorName = (name: string) => {
         if (!name) return 'Doctor';
         let cleanName = name.trim();
@@ -146,11 +152,11 @@ const DoctorDashboard: React.FC = () => {
                         styles={{ body: { flex: 1, display: 'flex', flexDirection: 'column' } }}
                     >
                         <Table
-                            dataSource={appointments}
+                            dataSource={recentAppointments}
                             columns={columns}
                             rowKey="id"
                             loading={loading}
-                            pagination={{ pageSize: 5 }}
+                            pagination={false}
                             style={{ flex: 1 }}
                         />
                     </Card>
@@ -199,9 +205,9 @@ const WeeklyConsultationTrend: React.FC<{ appointments: any[] }> = ({ appointmen
             bordered={false}
             className="shadow-sm"
             style={{ borderRadius: 12, height: '100%', width: '100%', display: 'flex', flexDirection: 'column' }}
-            styles={{ body: { flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' } }}
+            styles={{ body: { flex: 1, display: 'flex', flexDirection: 'column' } }}
         >
-            <div style={{ height: 260, display: 'flex', alignItems: 'flex-end', gap: '8%', padding: '10px 0 20px' }}>
+            <div style={{ flex: 1, display: 'flex', alignItems: 'flex-end', gap: '8%', padding: '10px 0 0', minHeight: 120 }}>
                 {weeklyData.counts.map((count, i) => {
                     const heightPct = Math.max((count / maxCount) * 100, 5);
                     return (
@@ -219,7 +225,7 @@ const WeeklyConsultationTrend: React.FC<{ appointments: any[] }> = ({ appointmen
                     );
                 })}
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: `1px solid #f0f0f0`, paddingTop: 12 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: `1px solid #f0f0f0`, paddingTop: 12, marginTop: 8 }}>
                 {weeklyData.labels.map((label, i) => (
                     <Text key={i} type="secondary" style={{ fontSize: 10, fontWeight: i === 6 ? 700 : 400 }}>{label}</Text>
                 ))}

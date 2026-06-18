@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import type { MenuProps } from 'antd';
-import { Card, Typography, Tag, Space, Button, Input, message, Dropdown } from 'antd';
+import { Card, Typography, Tag, Space, Button, Input, message, Dropdown, Modal } from 'antd';
 import { 
     CalendarOutlined, 
     SearchOutlined, 
@@ -12,7 +12,8 @@ import {
     EditOutlined, 
     CloseCircleOutlined,
     EyeOutlined,
-    CheckCircleOutlined 
+    CheckCircleOutlined,
+    DeleteOutlined
 } from '@ant-design/icons';
 import colors from '@/styles/colors';
 import { appointmentService } from '../../appointments/services/appointmentService';
@@ -40,6 +41,41 @@ const DoctorPatients: React.FC = () => {
     const [rescheduleModal, setRescheduleModal] = useState<{ visible: boolean; appointment: any }>({ visible: false, appointment: null });
     const [cancelModal, setCancelModal] = useState<{ visible: boolean; appointment: any }>({ visible: false, appointment: null });
     const [detailDrawer, setDetailDrawer] = useState<{ visible: boolean; appointment: any }>({ visible: false, appointment: null });
+    const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+
+    useEffect(() => {
+        setSelectedRowKeys([]);
+    }, [searchText, statusFilter, appointments]);
+
+    const handleBulkDelete = () => {
+        Modal.confirm({
+            title: 'Delete Selected Appointments',
+            content: `Are you sure you want to permanently delete ${selectedRowKeys.length} selected appointments? This action cannot be undone.`,
+            okText: 'Yes, Delete',
+            okType: 'danger',
+            cancelText: 'No',
+            style: { top: 80 },
+            onOk: async () => {
+                const total = selectedRowKeys.length;
+                const hide = message.loading(`Deleting ${total} selected appointment(s)...`, 0);
+                try {
+                    const ids = selectedRowKeys.map(Number);
+                    const res = await appointmentService.bulkDeleteAppointments(ids);
+                    if (res?.success) {
+                        message.success(`Successfully deleted all ${total} selected appointments`);
+                        setAppointments(prev => prev.filter(a => !selectedRowKeys.includes(a.id)));
+                        setSelectedRowKeys([]);
+                    } else {
+                        message.error('Failed to delete appointments');
+                    }
+                } catch (err: any) {
+                    message.error('Bulk delete failed: ' + (err.message || err));
+                } finally {
+                    hide();
+                }
+            }
+        });
+    };
 
     const [page, setPage] = useState(1);
     const [loadingMore, setLoadingMore] = useState(false);
@@ -320,6 +356,37 @@ const DoctorPatients: React.FC = () => {
                     }
                 }
 
+                if (items.length > 0 && items[items.length - 1]?.type !== 'divider') {
+                    items.push({ type: 'divider' });
+                }
+
+                items.push({
+                    key: 'delete',
+                    label: 'Delete',
+                    icon: <DeleteOutlined style={{ color: '#ef4444' }} />,
+                    danger: true,
+                    onClick: () => {
+                        Modal.confirm({
+                            title: 'Delete Appointment',
+                            content: 'Are you sure you want to permanently delete this appointment? This action cannot be undone.',
+                            okText: 'Yes, Delete',
+                            okType: 'danger',
+                            cancelText: 'No',
+                            onOk: async () => {
+                                try {
+                                    const res = await appointmentService.deleteAppointment(record.id);
+                                    if (res?.success) {
+                                        message.success('Appointment deleted successfully');
+                                        setAppointments(prev => prev.filter(a => a.id !== record.id));
+                                    }
+                                } catch (err) {
+                                    message.error('Failed to delete appointment');
+                                }
+                            }
+                        });
+                    }
+                });
+
                 return (
                     <Dropdown menu={{ items }} trigger={['click']} placement="bottomRight">
                         <Button type="primary" ghost size="small">
@@ -333,9 +400,29 @@ const DoctorPatients: React.FC = () => {
 
     return (
         <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-            <div style={{ marginBottom: 24, flexShrink: 0 }}>
-                <Title level={2} style={{ margin: 0 }}>My Patients & Appointments</Title>
-                <Text type="secondary">Manage your consultation requests and upcoming patient visits.</Text>
+            <div style={{ 
+                marginBottom: 24, 
+                flexShrink: 0,
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+            }}>
+                <div>
+                    <Title level={2} style={{ margin: 0 }}>My Patients & Appointments</Title>
+                    <Text type="secondary">Manage your consultation requests and upcoming patient visits.</Text>
+                </div>
+                {selectedRowKeys.length > 0 && (
+                    <Button
+                        type="primary"
+                        danger
+                        icon={<DeleteOutlined />}
+                        onClick={handleBulkDelete}
+                        size="large"
+                        style={{ borderRadius: '8px' }}
+                    >
+                        Delete ({selectedRowKeys.length})
+                    </Button>
+                )}
             </div>
 
             <Card styles={{ body: { padding: '24px', flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' } }} style={{ flex: 1, display: 'flex', flexDirection: 'column', borderRadius: 12, overflow: 'hidden', minHeight: 0 }} className="shadow-sm">
@@ -360,6 +447,10 @@ const DoctorPatients: React.FC = () => {
                         hasMore={displayedAppointments.length < filteredAppointments.length}
                         next={handleLoadMore}
                         scroll={{ y: 'calc(100vh - 380px)' }}
+                        rowSelection={{
+                            selectedRowKeys,
+                            onChange: (keys: React.Key[]) => setSelectedRowKeys(keys)
+                        }}
                     />
                 </div>
             </Card>

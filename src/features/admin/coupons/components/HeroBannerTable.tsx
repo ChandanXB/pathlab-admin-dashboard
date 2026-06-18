@@ -9,6 +9,7 @@ import {
 import type { Campaign, BannerDisplayType } from '../types/campaign.types';
 import dayjs from 'dayjs';
 import InfiniteScrollTable from '@/shared/components/InfiniteScrollTable';
+import { splitBannerImages } from '../utils/bannerUtils';
 
 interface HeroBannerTableProps {
   data: Campaign[];
@@ -72,10 +73,12 @@ const HeroBannerTable: React.FC<HeroBannerTableProps> = ({
       dataIndex: 'bannerImage',
       key: 'bannerImage',
       width: 90,
-      render: (url: string) =>
-        url ? (
+      render: (url: string) => {
+        const images = splitBannerImages(url);
+        const firstImage = images[0] || '';
+        return firstImage ? (
           <Image
-            src={url}
+            src={firstImage}
             width={60}
             height={36}
             style={{ objectFit: 'cover', borderRadius: 4 }}
@@ -95,7 +98,8 @@ const HeroBannerTable: React.FC<HeroBannerTableProps> = ({
           >
             <PictureOutlined style={{ color: '#bbb', fontSize: 16 }} />
           </div>
-        ),
+        );
+      },
     },
     {
       title: 'CTA',
