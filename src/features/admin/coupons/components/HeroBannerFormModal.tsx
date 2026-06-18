@@ -6,6 +6,7 @@ import {
 import { UploadOutlined, InfoCircleOutlined, MinusCircleOutlined, PlusOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import type { Campaign, BannerDisplayType } from '../types/campaign.types';
+import { splitBannerImages } from '../utils/bannerUtils';
 
 interface HeroBannerFormModalProps {
   visible: boolean;
@@ -49,7 +50,7 @@ const HeroBannerFormModal: React.FC<HeroBannerFormModalProps> = ({
     if (visible && editingBanner) {
       let bannerImages: string[] = [''];
       if (editingBanner.bannerImage) {
-        bannerImages = editingBanner.bannerImage.split(',').map(s => s.trim()).filter(Boolean);
+        bannerImages = splitBannerImages(editingBanner.bannerImage);
         if (bannerImages.length === 0) bannerImages = [''];
       }
       form.setFieldsValue({

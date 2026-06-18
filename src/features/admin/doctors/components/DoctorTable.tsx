@@ -1,6 +1,6 @@
 import React from 'react';
-import { Space, Tag, Avatar } from 'antd';
-import { UserOutlined } from '@ant-design/icons';
+import { Space, Tag, Avatar, Button, Tooltip, Popconfirm } from 'antd';
+import { UserOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import InfiniteScrollTable from '@/shared/components/InfiniteScrollTable';
 import type { Doctor } from '../types/doctor.types';
 import { formatName, formatDoctorName } from '@/shared/utils/nameUtils';
@@ -23,6 +23,8 @@ const DoctorTable: React.FC<DoctorTableProps> = ({
     loading,
     loadingMore,
     hasMore,
+    onEdit,
+    onDelete,
     onRowClick,
     onLoadMore,
     scroll,
@@ -72,6 +74,37 @@ const DoctorTable: React.FC<DoctorTableProps> = ({
                 </Tag>
             ),
         },
+        {
+            title: 'Actions',
+            key: 'actions',
+            width: 100,
+            render: (_: any, record: Doctor) => (
+                <div onClick={(e) => e.stopPropagation()}>
+                    <Space size={4}>
+                        <Tooltip title="Edit Doctor">
+                            <Button
+                                type="text"
+                                size="small"
+                                icon={<EditOutlined />}
+                                onClick={() => onEdit(record)}
+                            />
+                        </Tooltip>
+                        <Popconfirm
+                            title="Delete Doctor"
+                            description="Are you sure you want to delete this doctor?"
+                            onConfirm={() => onDelete(record.id)}
+                            okText="Yes"
+                            cancelText="No"
+                            okButtonProps={{ danger: true }}
+                        >
+                            <Tooltip title="Delete">
+                                <Button type="text" size="small" danger icon={<DeleteOutlined />} />
+                            </Tooltip>
+                        </Popconfirm>
+                    </Space>
+                </div>
+            ),
+        },
     ];
 
     return (
@@ -86,7 +119,16 @@ const DoctorTable: React.FC<DoctorTableProps> = ({
             scroll={scroll}
             rowSelection={rowSelection}
             onRow={(record) => ({
-                onClick: () => onRowClick(record),
+                onClick: (e: any) => {
+                    if (
+                        e.target.closest('.ant-table-selection-column') || 
+                        e.target.closest('button') || 
+                        e.target.closest('.anticon')
+                    ) {
+                        return;
+                    }
+                    onRowClick(record);
+                },
                 style: { cursor: 'pointer' }
             })}
         />

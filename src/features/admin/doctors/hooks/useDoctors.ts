@@ -89,11 +89,15 @@ export const useDoctors = (enabled: boolean = true) => {
         }
     };
 
-    const deleteDoctor = async (id: number) => {
+    const deleteDoctor = async (id: number, showToast: boolean = true, refresh: boolean = true) => {
         try {
             await doctorService.deleteDoctor(id);
-            message.success('Doctor removed successfully');
-            setDoctorFilters((prev) => ({ ...prev, page: 1 }));
+            if (showToast) {
+                message.success('Doctor removed successfully');
+            }
+            if (refresh) {
+                setDoctorFilters((prev) => ({ ...prev, page: 1 }));
+            }
             return true;
         } catch (error: any) {
             return false;
