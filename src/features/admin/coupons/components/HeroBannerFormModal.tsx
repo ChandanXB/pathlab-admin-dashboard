@@ -159,6 +159,14 @@ const HeroBannerFormModal: React.FC<HeroBannerFormModalProps> = ({
       confirmLoading={confirmLoading}
       destroyOnClose
       centered
+      styles={{
+        body: {
+          maxHeight: 'calc(100vh - 200px)',
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          paddingRight: '8px'
+        }
+      }}
     >
       <Form form={form} layout="vertical">
         {/* Banner Type Selection */}
