@@ -111,7 +111,10 @@ const DoctorManager: React.FC = () => {
 
     const handleEdit = (doctor: Doctor) => {
         setEditingDoctor(doctor);
-        form.setFieldsValue(doctor);
+        form.setFieldsValue({
+            ...doctor,
+            phone: doctor.phone ? doctor.phone.replace(/^\+91/, '') : ''
+        });
         setIsModalOpen(true);
     };
 
@@ -146,11 +149,15 @@ const DoctorManager: React.FC = () => {
             } else {
                 delete values.commission_rate;
             }
+            const payload = {
+                ...values,
+                phone: values.phone ? (values.phone.startsWith('+91') ? values.phone : `+91${values.phone}`) : undefined
+            };
             if (editingDoctor) {
-                const success = await updateDoctor(editingDoctor.id, values);
+                const success = await updateDoctor(editingDoctor.id, payload);
                 if (success) setIsModalOpen(false);
             } else {
-                const success = await createDoctor(values);
+                const success = await createDoctor(payload);
                 if (success) setIsModalOpen(false);
             }
         } catch (error) {

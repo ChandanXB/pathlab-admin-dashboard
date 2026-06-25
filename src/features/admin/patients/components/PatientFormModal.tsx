@@ -88,7 +88,7 @@ const PatientFormModal: React.FC<PatientFormModalProps> = ({
                                 { pattern: /^[0-9]{10}$/, message: 'Please enter valid 10-digit phone number' },
                             ]}
                         >
-                            <Input placeholder="e.g., 9876543210" maxLength={10} />
+                            <Input addonBefore="+91" placeholder="9876543210" maxLength={10} />
                         </Form.Item>
                     </Col>
 
@@ -108,7 +108,7 @@ const PatientFormModal: React.FC<PatientFormModalProps> = ({
                                 },
                             ]}
                         >
-                            <Input placeholder="e.g., 9876543210" maxLength={10} />
+                            <Input addonBefore="+91" placeholder="9876543210" maxLength={10} />
                         </Form.Item>
                     </Col>
                 </Row>

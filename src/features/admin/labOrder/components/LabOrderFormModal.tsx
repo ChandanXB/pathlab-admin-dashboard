@@ -126,10 +126,16 @@ const LabOrderFormModal: React.FC<LabOrderFormModalProps> = ({
                 value: editingOrder.patient_id
             }]);
 
+            const fieldsToSet: any = {
+                email: editingOrder.patient.email,
+                alternate_phone: editingOrder.patient.alternate_phone ? editingOrder.patient.alternate_phone.replace(/^\+91/, '') : ''
+            };
+
             if (editingOrder.test_results) {
-                const initialTestIds = editingOrder.test_results.map(tr => tr.test_id);
-                form.setFieldsValue({ test_ids: initialTestIds });
+                fieldsToSet.test_ids = editingOrder.test_results.map(tr => tr.test_id);
             }
+
+            form.setFieldsValue(fieldsToSet);
         }
     }, [editingOrder, form]);
 
@@ -248,33 +254,37 @@ const LabOrderFormModal: React.FC<LabOrderFormModalProps> = ({
                     </Col>
                 </Row>
 
-                <Divider style={{ margin: '12px 0' }}>Schedule Details</Divider>
-                <Row gutter={16}>
-                    <Col span={12}>
-                        <Form.Item name="scheduled_date" label="Scheduled Collection Date">
-                            <DatePicker style={{ width: '100%' }} placeholder="Select date" format="DD/MM/YY" />
-                        </Form.Item>
-                    </Col>
-                    <Col span={12}>
-                        <Form.Item name="scheduled_time" label="Scheduled Collection Slot">
-                            <Select placeholder="Select time slot" options={[
-                                { label: '07:00 AM - 08:00 AM', value: '07:00 AM - 08:00 AM' },
-                                { label: '08:00 AM - 09:00 AM', value: '08:00 AM - 09:00 AM' },
-                                { label: '09:00 AM - 10:00 AM', value: '09:00 AM - 10:00 AM' },
-                                { label: '10:00 AM - 11:00 AM', value: '10:00 AM - 11:00 AM' },
-                                { label: '11:00 AM - 12:00 PM', value: '11:00 AM - 12:00 PM' },
-                                { label: '12:00 PM - 01:00 PM', value: '12:00 PM - 01:00 PM' },
-                                { label: '01:00 PM - 02:00 PM', value: '01:00 PM - 02:00 PM' },
-                                { label: '02:00 PM - 03:00 PM', value: '02:00 PM - 03:00 PM' },
-                                { label: '03:00 PM - 04:00 PM', value: '03:00 PM - 04:00 PM' },
-                                { label: '04:00 PM - 05:00 PM', value: '04:00 PM - 05:00 PM' },
-                                { label: '05:00 PM - 06:00 PM', value: '05:00 PM - 06:00 PM' },
-                                { label: '06:00 PM - 07:00 PM', value: '06:00 PM - 07:00 PM' },
-                                { label: '07:00 PM - 08:00 PM', value: '07:00 PM - 08:00 PM' },
-                            ]} />
-                        </Form.Item>
-                    </Col>
-                </Row>
+                {orderType === 'home_collection' && (
+                    <>
+                        <Divider style={{ margin: '12px 0' }}>Schedule Details</Divider>
+                        <Row gutter={16}>
+                            <Col span={12}>
+                                <Form.Item name="scheduled_date" label="Scheduled Collection Date">
+                                    <DatePicker style={{ width: '100%' }} placeholder="Select date" format="DD/MM/YY" />
+                                </Form.Item>
+                            </Col>
+                            <Col span={12}>
+                                <Form.Item name="scheduled_time" label="Scheduled Collection Slot">
+                                    <Select placeholder="Select time slot" options={[
+                                        { label: '07:00 AM - 08:00 AM', value: '07:00 AM - 08:00 AM' },
+                                        { label: '08:00 AM - 09:00 AM', value: '08:00 AM - 09:00 AM' },
+                                        { label: '09:00 AM - 10:00 AM', value: '09:00 AM - 10:00 AM' },
+                                        { label: '10:00 AM - 11:00 AM', value: '10:00 AM - 11:00 AM' },
+                                        { label: '11:00 AM - 12:00 PM', value: '11:00 AM - 12:00 PM' },
+                                        { label: '12:00 PM - 01:00 PM', value: '12:00 PM - 01:00 PM' },
+                                        { label: '01:00 PM - 02:00 PM', value: '01:00 PM - 02:00 PM' },
+                                        { label: '02:00 PM - 03:00 PM', value: '02:00 PM - 03:00 PM' },
+                                        { label: '03:00 PM - 04:00 PM', value: '03:00 PM - 04:00 PM' },
+                                        { label: '04:00 PM - 05:00 PM', value: '04:00 PM - 05:00 PM' },
+                                        { label: '05:00 PM - 06:00 PM', value: '05:00 PM - 06:00 PM' },
+                                        { label: '06:00 PM - 07:00 PM', value: '06:00 PM - 07:00 PM' },
+                                        { label: '07:00 PM - 08:00 PM', value: '07:00 PM - 08:00 PM' },
+                                    ]} />
+                                </Form.Item>
+                            </Col>
+                        </Row>
+                    </>
+                )}
 
                 <Row gutter={16}>
                     <Col span={12}>
@@ -310,8 +320,14 @@ const LabOrderFormModal: React.FC<LabOrderFormModalProps> = ({
                         </Form.Item>
                     </Col>
                     <Col span={12}>
-                        <Form.Item name="alternate_phone" label="Alternate Phone">
-                            <Input placeholder="Secondary contact number" />
+                        <Form.Item 
+                            name="alternate_phone" 
+                            label="Alternate Phone"
+                            rules={[
+                                { pattern: /^[0-9]{10}$/, message: 'Please enter valid 10-digit phone number' }
+                            ]}
+                        >
+                            <Input addonBefore="+91" placeholder="9876543210" maxLength={10} />
                         </Form.Item>
                     </Col>
                 </Row>

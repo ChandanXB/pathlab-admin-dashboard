@@ -1,11 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Card, Button, Form, Typography, Space, Badge, Checkbox, Divider, Modal } from 'antd';
-import { PlusOutlined, ExperimentOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Card, Button, Form, Typography, Space, Badge, Checkbox, Divider, Modal, message } from 'antd';
+import { PlusOutlined, ExperimentOutlined, DeleteOutlined, DownloadOutlined } from '@ant-design/icons';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useLabOrders } from '../hooks/useLabOrders';
 import { LabOrderTable, LabOrderFilters, LabOrderFormModal, LabOrderDetailDrawer, AssignAgentModal, ReportUploadModal } from '../components';
 import LabOrderProofModal from '../components/LabOrderProofModal';
 import type { LabOrder } from '../types/labOrder.types';
+import { labOrderService } from '../services/labOrderService';
+import { exportOrdersToCSV } from '../utils/exportUtils';
 
 import dayjs from 'dayjs';
 
@@ -53,6 +55,38 @@ const LabOrderManager: React.FC = () => {
     ]);
     const [form] = Form.useForm();
     const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+    const [exporting, setExporting] = useState(false);
+
+    const handleExport = async () => {
+        try {
+            setExporting(true);
+            if (selectedRowKeys.length > 0) {
+                // Export only selected rows
+                const selectedOrders = orders.filter(o => selectedRowKeys.includes(o.id));
+                exportOrdersToCSV(selectedOrders);
+                message.success(`Exported ${selectedOrders.length} selected orders`);
+            } else {
+                // Fetch all matching orders based on current filters
+                // Ignore page and limit pagination to get all matches
+                const response = await labOrderService.getOrders({
+                    ...filters,
+                    page: 1,
+                    limit: pagination.total || 1000
+                });
+                if (response.success && response.data) {
+                    exportOrdersToCSV(response.data);
+                    message.success(`Exported ${response.data.length} orders`);
+                } else {
+                    message.error('Failed to retrieve orders for export');
+                }
+            }
+        } catch (error: any) {
+            console.error('Export Error:', error);
+            message.error('An error occurred while exporting orders');
+        } finally {
+            setExporting(false);
+        }
+    };
 
     // Reset selection when filters change (excluding page and limit)
     useEffect(() => {
@@ -219,6 +253,7 @@ const LabOrderManager: React.FC = () => {
         const payload = {
             ...values,
             scheduled_date: values.scheduled_date ? values.scheduled_date.toISOString() : undefined,
+            alternate_phone: values.alternate_phone ? (values.alternate_phone.startsWith('+91') ? values.alternate_phone : `+91${values.alternate_phone}`) : undefined,
         };
 
         if (editingOrder) {
@@ -323,6 +358,20 @@ const LabOrderManager: React.FC = () => {
                         </Button>
                     )}
                     <Button
+                        type="default"
+                        icon={<DownloadOutlined />}
+                        onClick={handleExport}
+                        loading={exporting}
+                        size={isMobile ? "middle" : "large"}
+                        style={{
+                            borderRadius: '8px',
+                            width: isMobile ? '100%' : 'auto',
+                            borderColor: '#d9d9d9'
+                        }}
+                    >
+                        {selectedRowKeys.length > 0 ? `Export Selected (${selectedRowKeys.length})` : 'Export Excel'}
+                    </Button>
+                    <Button
                         type="primary"
                         icon={<PlusOutlined />}
                         onClick={handleAdd}
@@ -395,6 +444,10 @@ const LabOrderManager: React.FC = () => {
                 order={selectedOrder}
                 onClose={handleDrawerClose}
                 onUploadReport={handleUploadReport}
+                onAssignAgent={(order) => {
+                    setSelectedOrderId(order.id);
+                    setIsAssignModalVisible(true);
+                }}
             />
 
             <AssignAgentModal
