@@ -136,6 +136,8 @@ const PatientManager: React.FC = () => {
         setEditingPatient(patient);
         form.setFieldsValue({
             ...patient,
+            phone: patient.phone ? patient.phone.replace(/^\+91/, '') : '',
+            emergency_phone: patient.emergency_phone ? patient.emergency_phone.replace(/^\+91/, '') : ''
         });
         setIsModalVisible(true);
     };
@@ -175,11 +177,16 @@ const PatientManager: React.FC = () => {
     }, []);
 
     const handleSubmit = async (values: any) => {
+        const payload = {
+            ...values,
+            phone: values.phone ? (values.phone.startsWith('+91') ? values.phone : `+91${values.phone}`) : undefined,
+            emergency_phone: values.emergency_phone ? (values.emergency_phone.startsWith('+91') ? values.emergency_phone : `+91${values.emergency_phone}`) : undefined
+        };
         let success = false;
         if (editingPatient) {
-            success = await updatePatient(editingPatient.id, values);
+            success = await updatePatient(editingPatient.id, payload);
         } else {
-            success = await createPatient(values);
+            success = await createPatient(payload);
         }
 
         if (success) {

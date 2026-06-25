@@ -70,7 +70,10 @@ const CollectionAgentManager: React.FC = () => {
 
     const handleEdit = (agent: CollectionAgent) => {
         setEditingAgent(agent);
-        form.setFieldsValue(agent);
+        form.setFieldsValue({
+            ...agent,
+            phone: agent.phone ? agent.phone.replace(/^\+91/, '') : ''
+        });
         setIsModalOpen(true);
     };
 
@@ -110,11 +113,15 @@ const CollectionAgentManager: React.FC = () => {
     const handleModalOk = async () => {
         try {
             const values = await form.validateFields();
+            const payload = {
+                ...values,
+                phone: values.phone ? (values.phone.startsWith('+91') ? values.phone : `+91${values.phone}`) : undefined
+            };
             let success = false;
             if (editingAgent) {
-                success = await updateAgent(editingAgent.id, values);
+                success = await updateAgent(editingAgent.id, payload);
             } else {
-                success = await createAgent(values);
+                success = await createAgent(payload);
             }
             if (success) setIsModalOpen(false);
         } catch (error) {

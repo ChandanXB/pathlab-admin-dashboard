@@ -125,9 +125,12 @@ const AgentFormModal: React.FC<AgentFormModalProps> = ({
                                 <Form.Item
                                     name="phone"
                                     label="Phone Number"
-                                    rules={[{ required: true, message: 'Please enter phone number' }]}
+                                    rules={[
+                                        { required: true, message: 'Please enter phone number' },
+                                        { pattern: /^[0-9]{10}$/, message: 'Please enter a valid 10-digit phone number' }
+                                    ]}
                                 >
-                                    <Input prefix={<PhoneOutlined style={{ color: colors.primary }} />} placeholder="e.g. +91 9876543210" size="large" />
+                                    <Input addonBefore="+91" placeholder="9876543210" size="large" maxLength={10} />
                                 </Form.Item>
                             </Col>
                             <Col span={24}>

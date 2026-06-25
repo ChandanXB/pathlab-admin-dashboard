@@ -28,9 +28,10 @@ interface LabOrderDetailDrawerProps {
     order: LabOrder | null;
     onClose: () => void;
     onUploadReport: (order: LabOrder) => void;
+    onAssignAgent?: (order: LabOrder) => void;
 }
 
-const LabOrderDetailDrawer: React.FC<LabOrderDetailDrawerProps> = ({ open, order, onClose, onUploadReport }) => {
+const LabOrderDetailDrawer: React.FC<LabOrderDetailDrawerProps> = ({ open, order, onClose, onUploadReport, onAssignAgent }) => {
 
     if (!order) return null;
 
@@ -212,8 +213,12 @@ const LabOrderDetailDrawer: React.FC<LabOrderDetailDrawerProps> = ({ open, order
                         style={{
                             borderRadius: '8px',
                             background: order.collection_agent ? '#f6ffed' : '#fff7e6',
-                            border: order.collection_agent ? '1px solid #b7eb8f' : '1px solid #ffd591'
+                            border: order.collection_agent ? '1px solid #b7eb8f' : '1px dashed #ffd591',
+                            cursor: onAssignAgent ? 'pointer' : 'default',
+                            transition: 'all 0.2s',
                         }}
+                        onClick={() => onAssignAgent && onAssignAgent(order)}
+                        hoverable={!!onAssignAgent}
                     >
                         {order.collection_agent ? (
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -222,13 +227,22 @@ const LabOrderDetailDrawer: React.FC<LabOrderDetailDrawerProps> = ({ open, order
                                     <br />
                                     <Text type="secondary"><PhoneOutlined /> {order.collection_agent.phone}</Text>
                                 </div>
-                                <Tag color="success">SELECTED</Tag>
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px' }}>
+                                    <Tag color="success">SELECTED</Tag>
+                                    {onAssignAgent && (
+                                        <Text type="secondary" style={{ fontSize: '11px' }}>Click to change agent</Text>
+                                    )}
+                                </div>
                             </div>
                         ) : (
                             <div style={{ textAlign: 'center', padding: '10px 0' }}>
                                 <Text type="warning" strong>No Agent Assigned Yet</Text>
                                 <br />
-                                <Text type="secondary" style={{ fontSize: '11px' }}>Use the "Assign Agent" icon in the table to link an agent.</Text>
+                                {onAssignAgent ? (
+                                    <Text type="secondary" style={{ fontSize: '11px' }}>Click here to assign a collection agent</Text>
+                                ) : (
+                                    <Text type="secondary" style={{ fontSize: '11px' }}>Use the "Assign Agent" icon in the table to link an agent.</Text>
+                                )}
                             </div>
                         )}
                     </Card>

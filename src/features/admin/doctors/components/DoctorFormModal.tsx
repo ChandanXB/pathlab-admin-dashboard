@@ -122,15 +122,13 @@ const DoctorFormModal: React.FC<DoctorFormModalProps> = ({
                     <Form.Item
                         name="phone"
                         label="Phone Number"
-                        rules={[{ required: true, message: 'Please enter phone number' }]}
-                        getValueFromEvent={(e) => {
-                            let val = e.target.value.replace(/[^\d+]/g, '');
-                            if (val.startsWith('+91')) return val.slice(0, 13);
-                            if (val.startsWith('91')) return val.slice(0, 12);
-                            return val.slice(0, 10);
-                        }}
+                        rules={[
+                            { required: true, message: 'Please enter phone number' },
+                            { pattern: /^[0-9]{10}$/, message: 'Please enter a valid 10-digit phone number' }
+                        ]}
+                        getValueFromEvent={(e) => e.target.value.replace(/\D/g, '').slice(0, 10)}
                     >
-                        <Input placeholder="9999999999" />
+                        <Input addonBefore="+91" placeholder="9876543210" maxLength={10} />
                     </Form.Item>
 
                     <Form.Item
