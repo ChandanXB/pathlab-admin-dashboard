@@ -131,6 +131,7 @@ const RoutineCheckupFormModal: React.FC<RoutineCheckupFormModalProps> = (props) 
                             name="image_url" 
                             label="Package Image" 
                             style={{ margin: 0 }}
+                            getValueFromEvent={() => form.getFieldValue('image_url')}
                         >
                             <Upload
                                 maxCount={1}
