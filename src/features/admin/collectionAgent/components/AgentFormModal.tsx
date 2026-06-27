@@ -2,7 +2,6 @@ import React from 'react';
 import { Form, Input, Select, Divider, Typography, Space, Tabs, Upload, message, Row, Col } from 'antd';
 import {
     EnvironmentTwoTone,
-    PhoneOutlined,
     MailOutlined,
     LockOutlined,
     CarOutlined,

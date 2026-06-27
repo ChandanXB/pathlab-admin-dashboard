@@ -141,11 +141,17 @@ const CampaignFormModal: React.FC<CampaignFormModalProps> = ({
           <Col span={8}>
             <Form.Item name="couponId" label="Link Coupon (Optional)" style={{ marginBottom: '12px' }}>
               <Select placeholder="Select a coupon" allowClear>
-                {coupons.map(coupon => (
-                  <Select.Option key={coupon.id} value={coupon.id}>
-                    {coupon.code}
-                  </Select.Option>
-                ))}
+                {coupons
+                  .filter(coupon => {
+                    const isCurrentlyLinked = editingCampaign?.couponId === coupon.id;
+                    const isExpired = dayjs().isAfter(dayjs(coupon.endDate));
+                    return isCurrentlyLinked || (coupon.status === 'active' && !isExpired);
+                  })
+                  .map(coupon => (
+                    <Select.Option key={coupon.id} value={coupon.id}>
+                      {coupon.code}
+                    </Select.Option>
+                  ))}
               </Select>
             </Form.Item>
           </Col>
