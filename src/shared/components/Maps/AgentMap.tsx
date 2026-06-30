@@ -25,6 +25,7 @@ interface AgentMapProps {
     height?: string | number;
     showFitButton?: boolean;
     assigning?: boolean;
+    currentAgentId?: number;
 }
 
 const AgentMap: React.FC<AgentMapProps> = ({
@@ -36,7 +37,8 @@ const AgentMap: React.FC<AgentMapProps> = ({
     directions,
     height = 370,
     showFitButton = true,
-    assigning = false
+    assigning = false,
+    currentAgentId
 }) => {
     const mapRef = useRef<google.maps.Map | null>(null);
 
@@ -125,10 +127,13 @@ const AgentMap: React.FC<AgentMapProps> = ({
                             position={{ lat: Number(agent.latitude), lng: Number(agent.longitude) }}
                             onClick={() => onAgentSelect(agent)}
                             icon={{
-                                url: (agent._count?.lab_orders || 0) > 0
-                                    ? 'http://maps.google.com/mapfiles/ms/icons/yellow-dot.png'
-                                    : 'http://maps.google.com/mapfiles/ms/icons/green-dot.png'
+                                url: agent.id === currentAgentId
+                                    ? 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png'
+                                    : (agent._count?.lab_orders || 0) > 0
+                                        ? 'http://maps.google.com/mapfiles/ms/icons/yellow-dot.png'
+                                        : 'http://maps.google.com/mapfiles/ms/icons/green-dot.png'
                             }}
+                            zIndex={agent.id === currentAgentId ? 9 : undefined}
                         />
                     )
                 ))}
@@ -143,15 +148,31 @@ const AgentMap: React.FC<AgentMapProps> = ({
                             <Text strong style={{ fontSize: '12px', display: 'block' }}>{selectedAgent.name}</Text>
                             <Text type="secondary" style={{ fontSize: '10px' }}>{selectedAgent.phone}</Text>
                             <div style={{ marginTop: '8px' }}>
-                                <Button
-                                    type="primary"
-                                    size="small"
-                                    disabled={(selectedAgent._count?.lab_orders || 0) > 0 || assigning}
-                                    onClick={() => onAssign(selectedAgent)}
-                                    style={{ borderRadius: '6px', fontSize: '11px' }}
-                                >
-                                    Assign Sample
-                                </Button>
+                                {selectedAgent.id === currentAgentId ? (
+                                    <Button
+                                        size="small"
+                                        style={{
+                                            borderRadius: '6px',
+                                            fontSize: '11px',
+                                            background: '#f6ffed',
+                                            borderColor: '#52c41a',
+                                            color: '#52c41a',
+                                            cursor: 'default'
+                                        }}
+                                    >
+                                        ✓ Currently Assigned
+                                    </Button>
+                                ) : (
+                                    <Button
+                                        type="primary"
+                                        size="small"
+                                        disabled={(selectedAgent._count?.lab_orders || 0) > 0 || assigning}
+                                        onClick={() => onAssign(selectedAgent)}
+                                        style={{ borderRadius: '6px', fontSize: '11px' }}
+                                    >
+                                        Assign Sample
+                                    </Button>
+                                )}
                             </div>
                         </div>
                     </InfoWindow>

@@ -22,6 +22,7 @@ export interface AgentOrder {
     payment_proof_url: string | null;
     collected_at: string | null;
     reached_at: string | null;
+    accepted_at: string | null;
     createdAt: string;
     updatedAt: string;
     patient: {

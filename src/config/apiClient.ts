@@ -26,6 +26,13 @@ apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 let isHandlingAuthError = false;
 
 const handleAuthExpired = () => {
+    // If user already has no token, they logged out intentionally — don't show error
+    const currentToken = useAuthStore.getState().token;
+    if (!currentToken) return;
+
+    // If already on login page, no need to show the toast or redirect
+    if (window.location.pathname === '/login') return;
+
     if (isHandlingAuthError) return; // Already handling — skip duplicates
     isHandlingAuthError = true;
 
