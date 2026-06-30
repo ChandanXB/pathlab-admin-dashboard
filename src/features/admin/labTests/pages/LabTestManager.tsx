@@ -636,6 +636,8 @@ const LabTestManager: React.FC = () => {
                 form={testForm}
                 onSubmit={handleTestSubmit}
                 loading={isTestSubmitting}
+                onSearchCategories={searchAllCategories}
+                loadingCategories={loadingCategories}
                 onCancel={() => {
                     setIsTestModalVisible(false);
                     testForm.resetFields();

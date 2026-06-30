@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Select, Space, Typography, Badge, Button, Alert, Card } from 'antd';
+import { Modal, Select, Space, Typography, Badge, Button, Alert, Card, Tag } from 'antd';
 import {
     EnvironmentOutlined,
     UserAddOutlined,
     CheckCircleOutlined,
     ReloadOutlined,
     SendOutlined,
-    CompassOutlined
+    CompassOutlined,
+    UserOutlined,
 } from '@ant-design/icons';
 import type { LabOrder } from '../types/labOrder.types';
 import { collectionAgentService, type CollectionAgent } from '@/features/admin/collectionAgent/services/collectionAgentService';
@@ -263,6 +264,7 @@ const AssignAgentModal: React.FC<AssignAgentModalProps> = ({ visible, order, onC
                             onAssign={handleAssign}
                             directions={directions}
                             assigning={assigning}
+                            currentAgentId={order.collection_agent_id ?? undefined}
                         />
                     </div>
 
@@ -381,19 +383,41 @@ const AssignAgentModal: React.FC<AssignAgentModalProps> = ({ visible, order, onC
                                         size="small"
                                     >
                                         {sortedAgents.map(agent => {
+                                            const isCurrentlyAssigned = agent.id === order.collection_agent_id;
                                             const activeOrders = agent._count?.lab_orders || 0;
+                                            const isBusy = activeOrders > 0 && !isCurrentlyAssigned;
                                             const dist = geocodedPickup && agent.latitude
                                                 ? calculateDistance(geocodedPickup.lat, geocodedPickup.lng, agent.latitude, agent.longitude!)
                                                 : null;
 
                                             return (
-                                                <Option key={agent.id} value={agent.id} label={agent.name} disabled={activeOrders > 0}>
+                                                <Option
+                                                    key={agent.id}
+                                                    value={agent.id}
+                                                    label={agent.name}
+                                                    disabled={isBusy}
+                                                    style={isCurrentlyAssigned ? { background: '#f6ffed', borderLeft: '3px solid #52c41a' } : {}}
+                                                >
                                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                         <Space size={4}>
-                                                            <span style={{ fontSize: '12px', textTransform: 'capitalize' }}>{agent.name}</span>
+                                                            {isCurrentlyAssigned && (
+                                                                <UserOutlined style={{ color: '#52c41a', fontSize: '11px' }} />
+                                                            )}
+                                                            <span style={{
+                                                                fontSize: '12px',
+                                                                textTransform: 'capitalize',
+                                                                color: isCurrentlyAssigned ? '#52c41a' : undefined,
+                                                                fontWeight: isCurrentlyAssigned ? 600 : undefined
+                                                            }}>
+                                                                {agent.name}
+                                                            </span>
                                                             {dist && <Text type="secondary" style={{ fontSize: '10px' }}>({dist} km)</Text>}
                                                         </Space>
-                                                        <Badge count={activeOrders} color={activeOrders > 0 ? 'orange' : 'green'} style={{ fontSize: '10px' }} />
+                                                        {isCurrentlyAssigned ? (
+                                                            <Tag color="success" style={{ fontSize: '10px', padding: '0 4px', margin: 0 }}>ASSIGNED</Tag>
+                                                        ) : (
+                                                            <Badge count={activeOrders} color={activeOrders > 0 ? 'orange' : 'green'} style={{ fontSize: '10px' }} />
+                                                        )}
                                                     </div>
                                                 </Option>
                                             );
@@ -420,6 +444,7 @@ const AssignAgentModal: React.FC<AssignAgentModalProps> = ({ visible, order, onC
                         <div style={{ background: '#e6f7ff', padding: '8px 12px', borderRadius: '8px', border: '1px solid #91d5ff' }}>
                             <Title level={5} style={{ color: '#0050b3', marginBottom: '4px', fontSize: '13px' }}>Legend</Title>
                             <Space direction="vertical" size={2}>
+                                <Space size={8}><Badge color="blue" style={{ fontSize: '11px' }} /> <Text style={{ fontSize: '11px' }}>Currently Assigned Agent</Text></Space>
                                 <Space size={8}><Badge status="success" style={{ fontSize: '11px' }} /> <Text style={{ fontSize: '11px' }}>Agent Available</Text></Space>
                                 <Space size={8}><Badge status="warning" style={{ fontSize: '11px' }} /> <Text style={{ fontSize: '11px' }}>Agent Occupied</Text></Space>
                                 <Space size={8}><Badge status="error" style={{ fontSize: '11px' }} /> <Text style={{ fontSize: '11px' }}>Pickup Location</Text></Space>

@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Form, Input, InputNumber, Select, Switch } from 'antd';
 import SharedModal from '@/shared/components/SharedModal';
+import { debounce } from '@/shared/utils/debounce';
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -13,6 +14,8 @@ interface TestFormModalProps {
     onSubmit: (values: any) => void;
     onCancel: () => void;
     loading?: boolean;
+    onSearchCategories?: (query: string) => void;
+    loadingCategories?: boolean;
 }
 
 const TestFormModal: React.FC<TestFormModalProps> = ({
@@ -23,7 +26,17 @@ const TestFormModal: React.FC<TestFormModalProps> = ({
     onSubmit,
     onCancel,
     loading,
+    onSearchCategories,
+    loadingCategories,
 }) => {
+    // Debounced backend search — fires 350ms after user stops typing
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const handleCategorySearch = useCallback(
+        debounce((value: string) => {
+            onSearchCategories?.(value);
+        }, 350),
+        [onSearchCategories]
+    );
     return (
         <SharedModal
             title={editingTest ? 'Edit Lab Test' : 'Add New Lab Test'}
@@ -60,9 +73,17 @@ const TestFormModal: React.FC<TestFormModalProps> = ({
                     label="Category"
                     rules={[{ required: true, message: 'Please select a category' }]}
                 >
-                    <Select placeholder="Select category" showSearch>
+                    <Select
+                        placeholder="Search and select category..."
+                        showSearch
+                        filterOption={false}
+                        onSearch={handleCategorySearch}
+                        loading={loadingCategories}
+                        optionLabelProp="label"
+                        notFoundContent={loadingCategories ? 'Searching...' : 'No categories found'}
+                    >
                         {categories.map((cat: any) => (
-                            <Option key={cat.id} value={cat.id}>
+                            <Option key={cat.id} value={cat.id} label={cat.category_name}>
                                 {cat.category_name}
                             </Option>
                         ))}

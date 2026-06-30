@@ -75,15 +75,22 @@ const AgentPickups: React.FC = () => {
         setFilters({ search: debouncedSearch });
     }, [debouncedSearch, setFilters]);
 
-    const filteredOrders = orders.filter(order => {
-        // Status filter
-        if (statusFilter !== 'all' && order.status !== statusFilter) return false;
+    const filteredOrders = orders
+        .filter(order => {
+            // Status filter
+            if (statusFilter !== 'all' && order.status !== statusFilter) return false;
 
-        // Assignment filter
-        if (assignmentFilter !== 'all' && order.assignment_status !== assignmentFilter) return false;
+            // Assignment filter
+            if (assignmentFilter !== 'all' && order.assignment_status !== assignmentFilter) return false;
 
-        return true;
-    });
+            return true;
+        })
+        .sort((a, b) => {
+            // Sort by accepted_at (assignment time) descending — newest assigned first
+            const aTime = a.accepted_at ? new Date(a.accepted_at).getTime() : new Date(a.updatedAt).getTime();
+            const bTime = b.accepted_at ? new Date(b.accepted_at).getTime() : new Date(b.updatedAt).getTime();
+            return bTime - aTime;
+        });
 
     useEffect(() => {
         setDisplayLimit(15);
@@ -169,7 +176,7 @@ const AgentPickups: React.FC = () => {
         {
             title: 'Order',
             key: 'order',
-            width: 160,
+            width: 180,
             render: (_: any, record: AgentOrder) => (
                 <Space direction="vertical" size={0}>
                     <Text strong style={{ fontSize: '13px' }}>{record.order_code}</Text>
@@ -177,6 +184,12 @@ const AgentPickups: React.FC = () => {
                         <ClockCircleOutlined style={{ marginRight: '4px' }} />
                         {dayjs(record.createdAt).format('DD MMM, hh:mm A')}
                     </Text>
+                    {record.accepted_at && (
+                        <Text style={{ fontSize: '11px', color: '#52c41a' }}>
+                            <CheckOutlined style={{ marginRight: '4px' }} />
+                            Assigned: {dayjs(record.accepted_at).format('DD MMM, hh:mm A')}
+                        </Text>
+                    )}
                     {record.priority !== 'normal' && (
                         <Tag color={record.priority === 'urgent' ? 'error' : 'warning'}
                             icon={<ThunderboltOutlined />}
