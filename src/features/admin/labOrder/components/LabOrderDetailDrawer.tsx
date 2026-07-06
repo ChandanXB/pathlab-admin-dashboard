@@ -14,6 +14,7 @@ import {
     FileImageOutlined,
     FilePdfOutlined,
     CloudUploadOutlined,
+    AppstoreOutlined,
 } from '@ant-design/icons';
 import SharedDetailDrawer from '@/shared/components/SharedDetailDrawer';
 import type { LabOrder } from '../types/labOrder.types';
@@ -263,6 +264,28 @@ const LabOrderDetailDrawer: React.FC<LabOrderDetailDrawerProps> = ({ open, order
                                     <Text type="secondary" style={{ fontSize: '12px' }}>TIME</Text>
                                     <Text strong>{dayjs(`2000-01-01 ${order.appointment.appointment_time}`).format('hh:mm A')}</Text>
                                 </Space>
+                            </Space>
+                        </Card>
+                    </div>
+                )}
+
+                {/* Booked Packages */}
+                {order.booked_package_names && order.booked_package_names.length > 0 && (
+                    <div>
+                        <Title level={5}><AppstoreOutlined /> Booked Packages</Title>
+                        <Card size="small" style={{ borderRadius: '8px', background: '#f9f0ff', border: '1px solid #d3adf7' }}>
+                            <Space direction="vertical" size={6} style={{ width: '100%' }}>
+                                {order.booked_package_names.map((pkgName, idx) => (
+                                    <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <Tag
+                                            icon={<AppstoreOutlined />}
+                                            color="purple"
+                                            style={{ fontWeight: 600, fontSize: '13px', padding: '4px 10px', borderRadius: '6px', margin: 0 }}
+                                        >
+                                            {pkgName}
+                                        </Tag>
+                                    </div>
+                                ))}
                             </Space>
                         </Card>
                     </div>

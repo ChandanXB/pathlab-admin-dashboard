@@ -13,6 +13,8 @@ export interface RoutineCheckup {
     age_group?: string;
     status: string;
     image_url?: string;
+    banner_text?: string;
+    banner_color?: string;
     createdAt: string;
     updatedAt: string;
     categories?: Array<{
@@ -41,6 +43,8 @@ export interface RoutineCheckupCreateDTO {
     age_group?: string;
     status?: string;
     image_url?: string;
+    banner_text?: string;
+    banner_color?: string;
 }
 
 export interface RoutineCheckupUpdateDTO extends Partial<RoutineCheckupCreateDTO> { }

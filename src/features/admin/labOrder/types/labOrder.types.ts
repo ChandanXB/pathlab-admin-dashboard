@@ -63,6 +63,7 @@ export interface LabOrder {
         discountType: string;
         discountValue: string | number;
     };
+    booked_package_names?: string[];
 }
 
 export interface LabOrderQueryParams {
