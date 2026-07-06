@@ -441,6 +441,27 @@ const ReportUploadModal: React.FC<ReportUploadModalProps> = ({ visible, order, o
                             </Space>
                         </div>
                         <div style={{ flex: 1, overflowY: 'auto', padding: '10px 12px' }}>
+                            {/* Booked Package Names Banner */}
+                            {order?.booked_package_names && order.booked_package_names.length > 0 && (
+                                <div style={{
+                                    marginBottom: 12,
+                                    padding: '8px 12px',
+                                    background: '#f9f0ff',
+                                    border: '1px solid #d3adf7',
+                                    borderRadius: '8px'
+                                }}>
+                                    <Text strong style={{ fontSize: '11px', color: '#722ed1', display: 'block', marginBottom: 4 }}>
+                                        📦 BOOKED PACKAGE(S)
+                                    </Text>
+                                    <Space wrap size={4}>
+                                        {order.booked_package_names.map((pkgName, idx) => (
+                                            <Tag key={idx} color="purple" style={{ fontWeight: 600, margin: 0 }}>
+                                                {pkgName}
+                                            </Tag>
+                                        ))}
+                                    </Space>
+                                </div>
+                            )}
                             <Form form={form} layout="vertical" size="small" onValuesChange={onValuesChange}>
                                 {order?.test_results?.map((tr) => (
                                     <Card

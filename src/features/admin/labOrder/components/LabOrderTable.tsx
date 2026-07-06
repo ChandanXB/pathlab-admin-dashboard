@@ -10,7 +10,8 @@ import {
     UserAddOutlined,
     UserSwitchOutlined,
     CloudUploadOutlined,
-    CameraOutlined
+    CameraOutlined,
+    AppstoreOutlined
 } from '@ant-design/icons';
 
 import InfiniteScrollTable from '@/shared/components/InfiniteScrollTable';
@@ -140,17 +141,40 @@ const LabOrderTable: React.FC<LabOrderTableProps> = ({
         {
             title: <span style={{ whiteSpace: 'nowrap' }}>Tests</span>,
             key: 'tests',
-            width: 140,
+            width: 160,
             render: (_: any, record: LabOrder) => {
                 const results = record.test_results || [];
-                if (results.length === 0) return '-';
+                const packageNames = record.booked_package_names || [];
+                if (results.length === 0 && packageNames.length === 0) return '-';
 
                 const maxVisible = 1;
                 const visible = results.slice(0, maxVisible);
                 const remaining = results.length - maxVisible;
 
                 return (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxWidth: '120px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxWidth: '140px' }}>
+                        {/* Package name tags — always shown at top */}
+                        {packageNames.map((pkgName, idx) => (
+                            <Tooltip key={`pkg-${idx}`} title={pkgName}>
+                                <Tag
+                                    icon={<AppstoreOutlined />}
+                                    color="purple"
+                                    style={{
+                                        margin: 0,
+                                        maxWidth: '100%',
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                        whiteSpace: 'nowrap',
+                                        display: 'inline-block',
+                                        verticalAlign: 'bottom',
+                                        fontWeight: 600
+                                    }}
+                                >
+                                    {pkgName}
+                                </Tag>
+                            </Tooltip>
+                        ))}
+                        {/* Individual test tags */}
                         {visible.map((tr, idx) => (
                             <Tag
                                 key={idx}

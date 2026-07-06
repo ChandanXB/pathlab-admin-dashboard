@@ -3,6 +3,8 @@ export interface LabTestCategory {
     category_name: string;
     description?: string;
     status: 'active' | 'inactive';
+    banner_text?: string;
+    banner_color?: string;
     createdAt: string;
     updatedAt: string;
 }
