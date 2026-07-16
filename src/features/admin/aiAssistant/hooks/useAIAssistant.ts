@@ -23,7 +23,7 @@ const QUICK_PROMPTS = [
 const GREETING: ChatMessage = {
     id: 'greeting',
     role: 'assistant',
-    content: `👋 Hello! I'm **PathLab AI**, your intelligent analytics assistant.\n\nI have access to your **live dashboard data** — orders, revenue, patients, and more. Ask me anything or use the quick prompts below!\n\n_Try: "How are my orders doing today?"_`,
+    content: `👋 Hello! I'm **Medoq AI**, your intelligent analytics assistant.\n\nI have access to your **live dashboard data** — orders, revenue, patients, and more. Ask me anything or use the quick prompts below!\n\n_Try: "How are my orders doing today?"_`,
     timestamp: new Date(),
 };
 

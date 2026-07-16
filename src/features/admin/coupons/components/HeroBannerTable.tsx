@@ -106,8 +106,8 @@ const HeroBannerTable: React.FC<HeroBannerTableProps> = ({
       dataIndex: 'ctaText',
       key: 'ctaText',
       width: 100,
-      render: (text: string) =>
-        text ? (
+      render: (text: string, record: Campaign) =>
+        text && record.displayType !== 'event_banner' ? (
           <Tag style={{ fontSize: 11 }}>{text}</Tag>
         ) : (
           <Typography.Text type="secondary">—</Typography.Text>
