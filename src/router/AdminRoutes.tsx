@@ -15,6 +15,7 @@ import ANCCareManager from '@/features/admin/anc/pages/ANCCareManager';
 import PNCManager from '@/features/admin/patients/pages/PNCManager';
 import CouponManager from '@/features/admin/coupons/pages/CouponManager';
 import ConsultationManager from '@/features/admin/consultations/pages/ConsultationManager';
+import SettingsManager from '@/features/admin/settings/pages/SettingsManager';
 
 export const adminRoutes: RouteObject = {
     path: '/',
@@ -37,6 +38,7 @@ export const adminRoutes: RouteObject = {
         { path: 'profile', element: <AdminProfile /> },
         { path: 'coupons', element: <CouponManager /> },
         { path: 'consultations', element: <ConsultationManager /> },
+        { path: 'settings', element: <SettingsManager /> },
         { path: '*', element: <Navigate to="/" replace /> },
     ],
 };

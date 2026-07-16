@@ -101,7 +101,7 @@ const AIAssistantDrawer: React.FC<Props> = ({
                     </div>
                     <div>
                         <div style={{ color: '#fff', fontWeight: 700, fontSize: 14, lineHeight: 1.2 }}>
-                            PathLab AI
+                            Medoq AI
                         </div>
                         <div style={{ color: 'rgba(255,255,255,0.55)', fontSize: 11, lineHeight: 1 }}>
                             Analytics Assistant · Live Data

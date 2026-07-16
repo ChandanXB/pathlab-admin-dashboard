@@ -11,6 +11,7 @@ import {
     MedicineBoxOutlined,
     PercentageOutlined,
     RobotOutlined,
+    SettingOutlined,
 } from '@ant-design/icons';
 
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
@@ -191,6 +192,7 @@ const AdminLayout: React.FC = () => {
         },
         { key: '/service-cities', icon: <GlobalOutlined />, label: 'Service Cities' },
         { key: '/coupons', icon: <PercentageOutlined />, label: 'Coupon & Campaign' },
+        { key: '/settings', icon: <SettingOutlined />, label: 'Settings' },
     ];
 
     const userMenu = {
@@ -393,7 +395,7 @@ const AdminLayout: React.FC = () => {
 
                     <Space size="middle">
                         <NotificationBell />
-                        <Tooltip title="PathLab AI Assistant" placement="bottom">
+                        <Tooltip title="Medoq AI Assistant" placement="bottom">
                             <Button
                                 id="ai-assistant-btn"
                                 className="ai-header-btn"

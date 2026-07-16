@@ -301,6 +301,14 @@ const HeroBannerFormModal: React.FC<HeroBannerFormModalProps> = ({
               </Form.List>
             </div>
           </>
+        ) : selectedType === 'event_banner' ? (
+          <Row gutter={16}>
+            <Col span={24}>
+              <Form.Item name="subtitle" label="Subtitle / Tagline" style={{ marginBottom: '12px' }}>
+                <Input placeholder="e.g. Book Now & Save Big on Routine Checkups" />
+              </Form.Item>
+            </Col>
+          </Row>
         ) : (
           <Row gutter={16}>
             <Col span={12}>
@@ -334,12 +342,14 @@ const HeroBannerFormModal: React.FC<HeroBannerFormModalProps> = ({
 
         {/* CTA + Target URL + Sort Order */}
         <Row gutter={16}>
-          <Col span={8}>
-            <Form.Item name="ctaText" label="CTA Button Text" style={{ marginBottom: '12px' }}>
-              <Input placeholder="e.g. Book Now" />
-            </Form.Item>
-          </Col>
-          <Col span={10}>
+          {selectedType !== 'event_banner' && (
+            <Col span={8}>
+              <Form.Item name="ctaText" label="CTA Button Text" style={{ marginBottom: '12px' }}>
+                <Input placeholder="e.g. Book Now" />
+              </Form.Item>
+            </Col>
+          )}
+          <Col span={selectedType !== 'event_banner' ? 10 : 18}>
             <Form.Item name="targetUrl" label="Target URL" style={{ marginBottom: '12px' }}>
               <Input placeholder="e.g. /packages or https://..." />
             </Form.Item>
