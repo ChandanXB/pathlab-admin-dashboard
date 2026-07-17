@@ -13,6 +13,7 @@ import type { LabOrder } from '../types/labOrder.types';
 import { collectionAgentService, type CollectionAgent } from '@/features/admin/collectionAgent/services/collectionAgentService';
 import { labOrderService } from '../services/labOrderService';
 import { calculateDistance } from '@/shared/utils/geo.utils';
+import { formatName } from '@/shared/utils/nameUtils';
 import AgentMap from '@/shared/components/Maps/AgentMap';
 
 const { Text, Title } = Typography;
@@ -166,7 +167,7 @@ const AssignAgentModal: React.FC<AssignAgentModalProps> = ({ visible, order, onC
 
         Modal.confirm({
             title: agentId ? 'Confirm Assignment' : 'Confirm Unassign',
-            content: agentId ? `Assign this order to ${agentName}?` : 'Are you sure you want to remove the current agent?',
+            content: agentId ? `Assign this order to ${formatName(agentName)}?` : 'Are you sure you want to remove the current agent?',
             okText: agentId ? 'Confirm' : 'Unassign',
             okButtonProps: { danger: !agentId },
             onOk: async () => {
