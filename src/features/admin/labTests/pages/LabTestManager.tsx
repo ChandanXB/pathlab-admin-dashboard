@@ -278,6 +278,31 @@ const LabTestManager: React.FC = () => {
 
     // ===== DYNAMIC HEIGHT CALCULATION =====
     useEffect(() => {
+        // Measure current heights of all containers and update state if > 0
+        const measureContainers = () => {
+            if (testContainerRef.current) {
+                const h = testContainerRef.current.getBoundingClientRect().height;
+                if (h > 0) setTestTableHeight(Math.max(200, h - 50));
+            }
+            if (categoryContainerRef.current) {
+                const h = categoryContainerRef.current.getBoundingClientRect().height;
+                if (h > 0) setCategoryTableHeight(Math.max(200, h - 50));
+            }
+            if (routineContainerRef.current) {
+                const h = routineContainerRef.current.getBoundingClientRect().height;
+                if (h > 0) setRoutineTableHeight(Math.max(200, h - 50));
+            }
+        };
+
+        // Measure at multiple points to handle tab animation / layout timing
+        // t0: right after React commits DOM updates
+        // t1: after 100ms (catches Ant Design tab fade transitions)
+        // t2: after 300ms (safety net for slow layouts)
+        measureContainers();
+        const t1 = setTimeout(measureContainers, 100);
+        const t2 = setTimeout(measureContainers, 300);
+
+        // ResizeObserver to handle window resize after initial mount
         const observer = new ResizeObserver((entries) => {
             for (const entry of entries) {
                 if (entry.target === testContainerRef.current) {
@@ -294,8 +319,27 @@ const LabTestManager: React.FC = () => {
         if (categoryContainerRef.current) observer.observe(categoryContainerRef.current);
         if (routineContainerRef.current) observer.observe(routineContainerRef.current);
 
-        return () => observer.disconnect();
+        return () => {
+            clearTimeout(t1);
+            clearTimeout(t2);
+            observer.disconnect();
+        };
     }, [activeTab]);
+
+    // Re-measure table heights after data finishes loading (data load changes container height)
+    useEffect(() => {
+        if (!loadingCategories && categoryContainerRef.current) {
+            const h = categoryContainerRef.current.getBoundingClientRect().height;
+            if (h > 0) setCategoryTableHeight(Math.max(200, h - 50));
+        }
+    }, [loadingCategories]);
+
+    useEffect(() => {
+        if (!loadingTests && testContainerRef.current) {
+            const h = testContainerRef.current.getBoundingClientRect().height;
+            if (h > 0) setTestTableHeight(Math.max(200, h - 50));
+        }
+    }, [loadingTests]);
 
     // ===== INFINITE SCROLL =====
     const fetchMoreTests = useCallback(() => {
@@ -595,6 +639,11 @@ const LabTestManager: React.FC = () => {
                                                 onEdit={handleEditSelectedCategory}
                                                 onDelete={handleDeleteSelectedCategories}
                                                 editDisabled={selectedCategoryKeys.length !== 1}
+                                                deletePopconfirmTitle={
+                                                    selectedCategoryKeys.length === 1
+                                                        ? "Are you sure you want to delete this category? Deleting it will also delete all of its associated tests."
+                                                        : `Are you sure you want to delete the ${selectedCategoryKeys.length} selected categories? Deleting them will also delete all of their associated tests.`
+                                                }
                                             />
                                         ) : (
                                             <CategoryFilters
@@ -684,14 +733,18 @@ const LabTestManager: React.FC = () => {
                     flex: 1;
                     display: flex;
                     flex-direction: column;
+                    overflow: hidden;
                 }
                 .ant-tabs-content {
-                    height: 100%;
-                }
-                .ant-tabs-tabpane {
-                    height: 100%;
+                    flex: 1;
                     display: flex;
                     flex-direction: column;
+                }
+                .ant-tabs-tabpane {
+                    flex: 1;
+                    display: flex;
+                    flex-direction: column;
+                    overflow: hidden;
                 }
             `}</style>
         </div>
